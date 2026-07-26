@@ -1,1 +1,334 @@
 @import "tailwindcss";
+
+:root {
+  --color-cream: #faf9f5;
+  --color-cream-100: #f5f4ed;
+  --color-cream-200: #f0eee6;
+  --color-ink: #141413;
+  --color-ink-700: #30302e;
+  --color-ink-500: #5e5d59;
+  --color-ink-300: #87867f;
+  --color-border: #e8e6dc;
+  --color-border-strong: #b0aea5;
+  --color-clay: #d97757;
+  --color-clay-hover: #c6613f;
+  --color-error: #bf4d43;
+  --color-error-bg: #faeceb;
+  --color-success: #4b7a4a;
+  --color-success-bg: #eef4ec;
+  --color-focus: #2c84db;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---- Buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 11px 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.btn-primary {
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-ink-700);
+}
+
+.btn-clay {
+  background: var(--color-clay);
+  color: #fff;
+}
+.btn-clay:hover:not(:disabled) {
+  background: var(--color-clay-hover);
+}
+
+.btn-secondary {
+  background: var(--color-border);
+  color: var(--color-ink-700);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-ink-500);
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--color-ink);
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+/* ---- Form fields ---- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-500);
+}
+
+.input,
+select.input {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--color-ink);
+  background: #fff;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input::placeholder {
+  color: var(--color-ink-300);
+}
+
+.input:focus {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px rgba(44, 132, 219, 0.15);
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon .input {
+  padding-right: 44px;
+}
+
+.input-icon-btn {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--color-ink-500);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.input-icon-btn:hover {
+  color: var(--color-ink);
+  background: var(--color-cream-200);
+}
+
+/* ---- Cards / surfaces ---- */
+
+.card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.04);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink-500);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.chip.active {
+  background: var(--color-ink);
+  color: var(--color-cream);
+  border-color: var(--color-ink);
+}
+
+.alert {
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.alert-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+.alert-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+/* ---- Loader: spark mark ---- */
+
+@keyframes spark-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spark {
+  color: var(--color-clay);
+  display: inline-block;
+  animation: spark-spin 0.9s steps(8, end) infinite;
+  transform-origin: center;
+}
+
+/* ---- Loader: thinking dot-wave (same keyframe Claude uses for its reply indicator) ---- */
+
+@keyframes row-dot-wave {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+.thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: row-dot-wave 1.4s ease-in-out infinite;
+}
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ---- Nav ---- */
+
+.app-nav {
+  background: var(--color-cream);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-nav a.nav-link {
+  font-size: 14px;
+  color: var(--color-ink-500);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.app-nav a.nav-link:hover {
+  color: var(--color-ink);
+  background: var(--color-cream-200);
+}
+.app-nav a.nav-link.active {
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.prose {
+  color: var(--color-ink-700);
+  line-height: 1.7;
+}
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: var(--color-ink);
+}
+.prose a {
+  color: var(--color-clay);
+}
+.prose code {
+  background: var(--color-cream-200);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+.prose blockquote {
+  border-left: 3px solid var(--color-clay);
+  margin-left: 0;
+  padding-left: 16px;
+  color: var(--color-ink-500);
+}

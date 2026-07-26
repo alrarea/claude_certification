@@ -1,6 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { AuthLayout } from "../components/AuthLayout";
+import { TextField } from "../components/TextField";
+import { PasswordField } from "../components/PasswordField";
+import { Button } from "../components/Button";
+import { Alert } from "../components/Alert";
 
 export function Register() {
   const navigate = useNavigate();
@@ -28,41 +33,35 @@ export function Register() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-16 space-y-4">
-      <h1 className="text-xl font-semibold">Register</h1>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input
-          className="w-full border rounded px-3 py-2"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          className="w-full border rounded px-3 py-2"
+    <AuthLayout title="Create your account" subtitle="Start prepping for CCAF / CCAP">
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <TextField label="Name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <TextField
+          label="Email"
           type="email"
           placeholder="you@alignminds.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <input
-          className="w-full border rounded px-3 py-2"
-          type="password"
+        <PasswordField
+          label="Password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-black text-white rounded px-3 py-2 disabled:opacity-50"
-        >
+        {error && <Alert kind="error">{error}</Alert>}
+        <Button type="submit" loading={submitting} block>
           {submitting ? "Sending code..." : "Create account"}
-        </button>
+        </Button>
       </form>
-    </div>
+      <p className="text-sm text-center" style={{ marginTop: 20, color: "var(--color-ink-500)" }}>
+        Already have an account?{" "}
+        <Link to="/login" style={{ color: "var(--color-clay)" }}>
+          Log in
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }

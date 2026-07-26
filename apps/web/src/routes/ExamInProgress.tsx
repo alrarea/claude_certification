@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { AppShell } from "../components/AppShell";
+import { FullPageLoader } from "../components/FullPageLoader";
+import { Button } from "../components/Button";
+import { Alert } from "../components/Alert";
 
 interface ExamQuestion {
   questionId: string;
@@ -40,11 +44,7 @@ export function ExamInProgress() {
         method: "POST",
         body: JSON.stringify({ selectedOptionId: optionId }),
       });
-      setQuestions((qs) =>
-        qs.map((item, i) =>
-          i === current ? { ...item, selectedOptionId: optionId, ...result } : item
-        )
-      );
+      setQuestions((qs) => qs.map((item, i) => (i === current ? { ...item, selectedOptionId: optionId, ...result } : item)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit answer");
     }
@@ -59,20 +59,30 @@ export function ExamInProgress() {
     }
   }
 
-  if (questions.length === 0) return <div className="max-w-2xl mx-auto mt-12">Loading...</div>;
+  if (questions.length === 0) {
+    return (
+      <AppShell maxWidth={700}>
+        <FullPageLoader label="Loading exam..." />
+      </AppShell>
+    );
+  }
 
   const q = questions[current];
   const showFeedback = feedbackMode === "immediate" && q.selectedOptionId;
 
   return (
-    <div className="max-w-2xl mx-auto mt-12 space-y-4">
-      <p className="text-sm text-gray-600">
+    <AppShell maxWidth={700}>
+      <p className="text-sm" style={{ color: "var(--color-ink-500)", marginBottom: 8 }}>
         Question {current + 1} of {questions.length}
       </p>
-      <h1 className="text-lg font-medium">{q.questionText}</h1>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      <h1 style={{ fontSize: 22, marginBottom: 20 }}>{q.questionText}</h1>
+      {error && (
+        <div style={{ marginBottom: 16 }}>
+          <Alert kind="error">{error}</Alert>
+        </div>
+      )}
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-3" style={{ marginBottom: 28 }}>
         {q.options.map((o) => {
           const isSelected = q.selectedOptionId === o.id;
           const isCorrectOption = showFeedback && q.correctOptionId === o.id;
@@ -81,38 +91,43 @@ export function ExamInProgress() {
               <button
                 onClick={() => !q.selectedOptionId && selectAnswer(o.id)}
                 disabled={!!q.selectedOptionId}
-                className={`w-full text-left border rounded px-3 py-2 ${
-                  isSelected ? "border-black" : ""
-                } ${isCorrectOption ? "bg-green-50 border-green-600" : ""}`}
+                className="card"
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "14px 18px",
+                  cursor: q.selectedOptionId ? "default" : "pointer",
+                  borderColor: isSelected ? "var(--color-ink)" : undefined,
+                  background: isCorrectOption ? "var(--color-success-bg)" : "#fff",
+                  fontSize: 15,
+                }}
               >
                 {o.optionText}
               </button>
               {showFeedback && q.explanations?.[o.id] && (
-                <p className="text-xs text-gray-600 ml-2 mt-1">{q.explanations[o.id]}</p>
+                <p className="text-xs" style={{ color: "var(--color-ink-500)", marginLeft: 4, marginTop: 6 }}>
+                  {q.explanations[o.id]}
+                </p>
               )}
             </div>
           );
         })}
       </div>
 
-      <div className="flex justify-between pt-4">
-        <button
-          onClick={() => setCurrent((i) => Math.max(0, i - 1))}
-          disabled={current === 0}
-          className="text-sm underline disabled:opacity-30"
-        >
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={() => setCurrent((i) => Math.max(0, i - 1))} disabled={current === 0}>
           Previous
-        </button>
+        </Button>
         {current < questions.length - 1 ? (
-          <button onClick={() => setCurrent((i) => i + 1)} className="text-sm underline">
+          <Button variant="secondary" onClick={() => setCurrent((i) => i + 1)}>
             Next
-          </button>
+          </Button>
         ) : (
-          <button onClick={finish} className="bg-black text-white rounded px-3 py-2">
+          <Button variant="clay" onClick={finish}>
             Finish exam
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

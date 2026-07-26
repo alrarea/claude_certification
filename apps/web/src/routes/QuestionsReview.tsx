@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
+import { AppShell } from "../components/AppShell";
+import { FullPageLoader } from "../components/FullPageLoader";
+import { Button } from "../components/Button";
+import { Alert } from "../components/Alert";
 
 interface PendingQuestion {
   id: string;
@@ -14,6 +18,7 @@ interface PendingQuestion {
 export function QuestionsReview() {
   const [pending, setPending] = useState<PendingQuestion[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
     const data = await apiFetch("/questions/pending");
@@ -21,7 +26,9 @@ export function QuestionsReview() {
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));
+    load()
+      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
+      .finally(() => setLoading(false));
   }, []);
 
   async function review(id: string, decision: "approved" | "rejected") {
@@ -33,34 +40,48 @@ export function QuestionsReview() {
     }
   }
 
-  return (
-    <div className="max-w-2xl mx-auto mt-12 space-y-6">
-      <h1 className="text-xl font-semibold">Pending questions ({pending.length})</h1>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+  if (loading) {
+    return (
+      <AppShell maxWidth={720}>
+        <FullPageLoader label="Loading pending questions..." />
+      </AppShell>
+    );
+  }
 
-      {pending.map((q) => (
-        <div key={q.id} className="border rounded p-4 space-y-2">
-          <p className="text-xs text-gray-500">
-            {q.certification} · {q.topicTitle} · {q.difficulty} · {q.source}
-          </p>
-          <p className="font-medium">{q.questionText}</p>
-          <ul className="text-sm space-y-1">
-            {q.options.map((o) => (
-              <li key={o.id} className={o.isCorrect ? "text-green-700 font-medium" : ""}>
-                {o.optionText} - {o.explanation}
-              </li>
-            ))}
-          </ul>
-          <div className="flex gap-3">
-            <button onClick={() => review(q.id, "approved")} className="text-sm text-green-700 underline">
-              Approve
-            </button>
-            <button onClick={() => review(q.id, "rejected")} className="text-sm text-red-700 underline">
-              Reject
-            </button>
-          </div>
+  return (
+    <AppShell maxWidth={720}>
+      <h1 style={{ fontSize: 28, marginBottom: 20 }}>Pending questions ({pending.length})</h1>
+      {error && (
+        <div style={{ marginBottom: 16 }}>
+          <Alert kind="error">{error}</Alert>
         </div>
-      ))}
-    </div>
+      )}
+
+      <div className="flex flex-col gap-4">
+        {pending.map((q) => (
+          <div key={q.id} className="card flex flex-col gap-3" style={{ padding: 24 }}>
+            <p className="text-xs" style={{ color: "var(--color-ink-500)" }}>
+              {q.certification} · {q.topicTitle} · {q.difficulty} · {q.source}
+            </p>
+            <p style={{ fontWeight: 500 }}>{q.questionText}</p>
+            <ul className="flex flex-col gap-1 text-sm">
+              {q.options.map((o) => (
+                <li key={o.id} style={o.isCorrect ? { color: "var(--color-success)", fontWeight: 500 } : undefined}>
+                  {o.optionText} — {o.explanation}
+                </li>
+              ))}
+            </ul>
+            <div className="flex gap-3">
+              <Button size="sm" variant="secondary" onClick={() => review(q.id, "approved")}>
+                Approve
+              </Button>
+              <Button size="sm" variant="ghost" style={{ color: "var(--color-error)" }} onClick={() => review(q.id, "rejected")}>
+                Reject
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </AppShell>
   );
 }

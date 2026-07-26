@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
+import { AppShell } from "../components/AppShell";
+import { FullPageLoader } from "../components/FullPageLoader";
+import { Alert } from "../components/Alert";
+import { Button } from "../components/Button";
 
 interface AdminUser {
   id: string;
@@ -17,6 +21,7 @@ export function AdminUsers() {
   const [myRole, setMyRole] = useState<string | null>(null);
   const [otpByUser, setOtpByUser] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
     const data = await apiFetch("/admin/users");
@@ -24,8 +29,10 @@ export function AdminUsers() {
   }
 
   useEffect(() => {
-    apiFetch("/profile").then((p) => setMyRole(p.role));
-    load().catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));
+    Promise.all([
+      apiFetch("/profile").then((p) => setMyRole(p.role)),
+      load().catch((err) => setError(err instanceof Error ? err.message : "Failed to load")),
+    ]).finally(() => setLoading(false));
   }, []);
 
   async function setRole(userId: string, role: "user" | "admin") {
@@ -48,51 +55,68 @@ export function AdminUsers() {
 
   const isSuperAdmin = myRole === "super_admin";
 
+  if (loading) {
+    return (
+      <AppShell maxWidth={960}>
+        <FullPageLoader label="Loading users..." />
+      </AppShell>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto mt-12 space-y-4">
-      <h1 className="text-xl font-semibold">Users</h1>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="text-left border-b">
-            <th className="py-2">Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Verified</th>
-            <th>Topics started</th>
-            <th>Topics completed</th>
-            {isSuperAdmin && <th>Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-b">
-              <td className="py-2">{u.name}</td>
-              <td>{u.email}</td>
-              <td>{u.role}</td>
-              <td>{u.emailVerified ? "yes" : "no"}</td>
-              <td>{u.topicsStarted}</td>
-              <td>{u.topicsCompleted}</td>
-              {isSuperAdmin && (
-                <td className="space-x-2">
-                  {u.role !== "super_admin" && (
-                    <button
-                      onClick={() => setRole(u.id, u.role === "admin" ? "user" : "admin")}
-                      className="text-xs underline"
-                    >
-                      {u.role === "admin" ? "Revoke admin" : "Make admin"}
-                    </button>
-                  )}
-                  <button onClick={() => viewOtp(u.id)} className="text-xs underline">
-                    View OTP
-                  </button>
-                  {otpByUser[u.id] && <div className="text-xs text-gray-600">{otpByUser[u.id]}</div>}
-                </td>
-              )}
+    <AppShell maxWidth={960}>
+      <h1 style={{ fontSize: 28, marginBottom: 20 }}>Users</h1>
+      {error && (
+        <div style={{ marginBottom: 16 }}>
+          <Alert kind="error">{error}</Alert>
+        </div>
+      )}
+      <div className="card" style={{ overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <thead>
+            <tr style={{ textAlign: "left", background: "var(--color-cream-100)", borderBottom: "1px solid var(--color-border)" }}>
+              <th style={{ padding: "12px 16px" }}>Name</th>
+              <th style={{ padding: "12px 16px" }}>Email</th>
+              <th style={{ padding: "12px 16px" }}>Role</th>
+              <th style={{ padding: "12px 16px" }}>Verified</th>
+              <th style={{ padding: "12px 16px" }}>Started</th>
+              <th style={{ padding: "12px 16px" }}>Completed</th>
+              {isSuperAdmin && <th style={{ padding: "12px 16px" }}>Actions</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
+                <td style={{ padding: "12px 16px" }}>{u.name}</td>
+                <td style={{ padding: "12px 16px", color: "var(--color-ink-500)" }}>{u.email}</td>
+                <td style={{ padding: "12px 16px" }}>{u.role}</td>
+                <td style={{ padding: "12px 16px" }}>{u.emailVerified ? "yes" : "no"}</td>
+                <td style={{ padding: "12px 16px" }}>{u.topicsStarted}</td>
+                <td style={{ padding: "12px 16px" }}>{u.topicsCompleted}</td>
+                {isSuperAdmin && (
+                  <td style={{ padding: "12px 16px" }}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {u.role !== "super_admin" && (
+                        <Button size="sm" variant="secondary" onClick={() => setRole(u.id, u.role === "admin" ? "user" : "admin")}>
+                          {u.role === "admin" ? "Revoke admin" : "Make admin"}
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" onClick={() => viewOtp(u.id)}>
+                        View OTP
+                      </Button>
+                    </div>
+                    {otpByUser[u.id] && (
+                      <div className="text-xs" style={{ color: "var(--color-ink-500)", marginTop: 4 }}>
+                        {otpByUser[u.id]}
+                      </div>
+                    )}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </AppShell>
   );
 }

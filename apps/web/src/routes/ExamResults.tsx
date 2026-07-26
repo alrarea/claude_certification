@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { AppShell } from "../components/AppShell";
+import { FullPageLoader } from "../components/FullPageLoader";
+import { Alert } from "../components/Alert";
 
 interface Results {
   scorePct: number;
@@ -20,43 +23,68 @@ export function ExamResults() {
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load results"));
   }, [id]);
 
-  if (error) return <div className="max-w-2xl mx-auto mt-12 text-red-600">{error}</div>;
-  if (!results) return <div className="max-w-2xl mx-auto mt-12">Loading...</div>;
+  if (error) {
+    return (
+      <AppShell maxWidth={700}>
+        <Alert kind="error">{error}</Alert>
+      </AppShell>
+    );
+  }
+  if (!results) {
+    return (
+      <AppShell maxWidth={700}>
+        <FullPageLoader label="Scoring exam..." />
+      </AppShell>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto mt-12 space-y-6">
-      <h1 className="text-2xl font-semibold">Score: {results.scorePct.toFixed(0)}%</h1>
+    <AppShell maxWidth={700}>
+      <div className="card flex flex-col items-center" style={{ padding: "32px 24px", marginBottom: 28 }}>
+        <span className="text-sm" style={{ color: "var(--color-ink-500)" }}>
+          Your score
+        </span>
+        <span style={{ fontFamily: "var(--font-serif)", fontSize: 56, color: "var(--color-clay)" }}>
+          {results.scorePct.toFixed(0)}%
+        </span>
+      </div>
 
-      <div>
-        <h2 className="font-medium mb-2">By topic</h2>
-        <ul className="space-y-1 text-sm">
+      <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+        <h2 style={{ fontSize: 17, marginBottom: 12 }}>By topic</h2>
+        <ul className="flex flex-col gap-2 text-sm">
           {results.byTopic.map((t) => (
-            <li key={t.topicId}>
-              {t.title}: {t.correct}/{t.total}
+            <li key={t.topicId} className="flex items-center justify-between">
+              <span>{t.title}</span>
+              <span style={{ color: "var(--color-ink-500)" }}>
+                {t.correct}/{t.total}
+              </span>
             </li>
           ))}
         </ul>
       </div>
 
-      <div>
-        <h2 className="font-medium mb-2">By difficulty</h2>
-        <ul className="space-y-1 text-sm">
+      <div className="card" style={{ padding: 24, marginBottom: 20 }}>
+        <h2 style={{ fontSize: 17, marginBottom: 12 }}>By difficulty</h2>
+        <ul className="flex flex-col gap-2 text-sm">
           {results.byDifficulty.map((d) => (
-            <li key={d.difficulty}>
-              {d.difficulty}: {d.correct}/{d.total}
+            <li key={d.difficulty} className="flex items-center justify-between">
+              <span style={{ textTransform: "capitalize" }}>{d.difficulty}</span>
+              <span style={{ color: "var(--color-ink-500)" }}>
+                {d.correct}/{d.total}
+              </span>
             </li>
           ))}
         </ul>
       </div>
 
       {results.missed.length > 0 && (
-        <div>
-          <h2 className="font-medium mb-2">Missed questions</h2>
-          <ul className="space-y-2 text-sm">
+        <div className="card" style={{ padding: 24 }}>
+          <h2 style={{ fontSize: 17, marginBottom: 12 }}>Missed questions</h2>
+          <ul className="flex flex-col gap-3 text-sm">
             {results.missed.map((m) => (
               <li key={m.questionId}>
-                {m.questionText}{" "}
-                <Link to={`/learn/ccaf/${m.topicId}`} className="underline text-blue-700">
+                <p style={{ marginBottom: 4 }}>{m.questionText}</p>
+                <Link to={`/learn/ccaf/${m.topicId}`} style={{ color: "var(--color-clay)" }}>
                   Review {m.topicTitle} →
                 </Link>
               </li>
@@ -64,6 +92,6 @@ export function ExamResults() {
           </ul>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }

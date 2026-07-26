@@ -2,6 +2,11 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../lib/AuthContext";
+import { AuthLayout } from "../components/AuthLayout";
+import { TextField } from "../components/TextField";
+import { PasswordField } from "../components/PasswordField";
+import { Button } from "../components/Button";
+import { Alert } from "../components/Alert";
 
 export function Login() {
   const navigate = useNavigate();
@@ -30,37 +35,34 @@ export function Login() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-16 space-y-4">
-      <h1 className="text-xl font-semibold">Log in</h1>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input
-          className="w-full border rounded px-3 py-2"
+    <AuthLayout title="Log in" subtitle="Welcome back to Claude Certification Prep">
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <TextField
+          label="Email"
           type="email"
           placeholder="you@alignminds.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <input
-          className="w-full border rounded px-3 py-2"
-          type="password"
+        <PasswordField
+          label="Password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-black text-white rounded px-3 py-2 disabled:opacity-50"
-        >
-          Log in
-        </button>
+        {error && <Alert kind="error">{error}</Alert>}
+        <Button type="submit" loading={submitting} block>
+          {submitting ? "Logging in..." : "Log in"}
+        </Button>
       </form>
-      <p className="text-sm text-gray-600">
-        No account? <Link to="/register" className="underline">Register</Link>
+      <p className="text-sm text-center" style={{ marginTop: 20, color: "var(--color-ink-500)" }}>
+        No account?{" "}
+        <Link to="/register" style={{ color: "var(--color-clay)" }}>
+          Register
+        </Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 }

@@ -2,6 +2,10 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../lib/AuthContext";
+import { AuthLayout } from "../components/AuthLayout";
+import { TextField } from "../components/TextField";
+import { Button } from "../components/Button";
+import { Alert } from "../components/Alert";
 
 export function RegisterVerify() {
   const navigate = useNavigate();
@@ -43,38 +47,33 @@ export function RegisterVerify() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-16 space-y-4">
-      <h1 className="text-xl font-semibold">Enter verification code</h1>
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input
-          className="w-full border rounded px-3 py-2"
+    <AuthLayout title="Enter verification code" subtitle="We emailed you a 6-digit code">
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <TextField
+          label="Email"
           type="email"
           placeholder="you@alignminds.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <input
-          className="w-full border rounded px-3 py-2"
+        <TextField
+          label="Verification code"
           placeholder="6-digit code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           maxLength={6}
           required
         />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        {resent && <p className="text-green-600 text-sm">New code sent.</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-black text-white rounded px-3 py-2 disabled:opacity-50"
-        >
+        {error && <Alert kind="error">{error}</Alert>}
+        {resent && <Alert kind="success">New code sent.</Alert>}
+        <Button type="submit" loading={submitting} block>
           Verify
-        </button>
-        <button type="button" onClick={onResend} className="w-full text-sm text-gray-600 underline">
+        </Button>
+        <Button type="button" variant="ghost" onClick={onResend}>
           Resend code
-        </button>
+        </Button>
       </form>
-    </div>
+    </AuthLayout>
   );
 }
