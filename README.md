@@ -83,27 +83,55 @@ Three tiers, not two:
 
 ## Deployed
 
-Live sandbox deploy (`ampx sandbox --once --profile alrarea`), stack
-`amplify-claudecertification-User-sandbox-5254175739`:
+**Production (real git-based CI/CD, per spec Section 4)** — Amplify app
+`d3pa26vi81zujd`, connected to this repo's `main` branch. Every push to `main`
+now automatically deploys *both* the backend (`ampx pipeline-deploy`, run by
+Amplify's build service) and the frontend (Vite build), per `amplify.yml`:
 
 ```
-API (Lambda Function URL): https://22wqfi355dgznjqh5yzoofy72u0yizrc.lambda-url.us-east-1.on.aws/
+Frontend (Amplify Hosting): https://main.d3pa26vi81zujd.amplifyapp.com/
+API (Lambda Function URL):  https://nc74e5qqb3fl5khw7uvw272e240zwtoy.lambda-url.us-east-1.on.aws/
 ```
 
-Verified live against this exact deployed Lambda (not just local dev): login as
-`tech@alignminds.com` returns a real JWT with the correct `role` claim,
-`/profile`, `/admin/users`, and `/courses/ccaf/topics` all respond correctly,
-and `/auth/register` fails cleanly with a 502 (SES sender not yet verified —
-expected, see SES status above) rather than crashing.
+Verified live end-to-end against this exact production deployment (not just
+local dev, not just the personal sandbox below): CORS preflight from the real
+frontend origin succeeds, login/`profile`/`admin/users`/`courses` all respond
+correctly through the actual Function URL the frontend's own built JS bundle
+calls.
 
-There's no frontend hosting yet — `ampx sandbox` only deploys the backend
-Lambda. `apps/web`'s Amplify Hosting deployment (git-connected CI/CD per spec
-Section 4) is a separate, not-yet-done step, and needs `FRONTEND_ORIGIN` set to
-its real URL afterward (for CORS) before the two can talk to each other.
+**Personal sandbox** (`ampx sandbox`, for fast local iteration before pushing)
+is a separate stack, `amplify-claudecertification-User-sandbox-5254175739`,
+Function URL `https://22wqfi355dgznjqh5yzoofy72u0yizrc.lambda-url.us-east-1.on.aws/`.
+Deploy it with `npm run db:generate` (see below - do not skip) then
+`npx ampx sandbox --once --profile alrarea`. It has its own copy of every
+secret (`/amplify/claudecertification/User-sandbox-<hash>/...` in SSM) and its
+own S3 bucket - changes here never touch production until you push.
 
-To redeploy after a code change: `npm run db:generate`
-(see below - **do not skip this**, plain `prisma generate` isn't enough) then
-`npx ampx sandbox --once --profile alrarea`.
+### Setting up the production app (one-time, already done - notes for reference)
+
+- `aws amplify create-app --repository ... --access-token $(gh auth token) --platform WEB` -
+  connects the repo; a GitHub PAT avoids the interactive "authorize the Amplify
+  GitHub App" console click.
+- An **IAM service role** (trust policy: `amplify.amazonaws.com`) must be
+  attached via `--iam-service-role-arn` - without it, `ampx pipeline-deploy`
+  fails with `BootstrapDetectionError` (Amplify's build service runs in an
+  AWS-managed account and needs a role in *this* account to deploy the CDK
+  stack). Attached `AdministratorAccess` here, matching what this account's CDK
+  bootstrap already grants its own `CloudFormationExecutionRole` - not a new
+  escalation pattern, just extending the same one to Amplify's build service.
+- **Secrets use a different SSM path than the sandbox**: not
+  `/amplify/<appId>/<branch>/...` as the sandbox's own
+  `/amplify/<appName>/<identifier>-sandbox-<hash>/...` pattern might suggest,
+  but `/amplify/shared/<appId>/<NAME>` (or the exact per-environment path
+  `/amplify/<appId>/<branch>-branch-<hash>/<NAME>` - the shared path is simpler
+  since it doesn't depend on a generated hash and works for any branch).
+  Check `aws lambda get-function-configuration`'s `AMPLIFY_SSM_ENV_CONFIG` env
+  var on a deployed function to see exactly which paths it's trying.
+- `FRONTEND_ORIGIN` was set as an app-level env var (not a secret) *before* the
+  first deploy, to Amplify's own predictable
+  `https://<branch>.<appId>.amplifyapp.com` domain - known immediately after
+  `create-app`, unlike the backend's Function URL (random, only known after
+  that phase's own deploy completes each time).
 
 ## Two real serverless-bundling bugs found and fixed during deploy
 
@@ -149,6 +177,44 @@ crashes at runtime instead of erroring at build time.
 
 Both fixes were verified with a real `ampx sandbox` deploy + live HTTP
 requests against the deployed Function URL, not just locally.
+
+## Getting the CI/CD pipeline itself working (five more real bugs)
+
+None of these were reachable via `ampx sandbox` (run from a developer machine
+with an already-built `node_modules`) - only a real `git push` through
+Amplify's actual build service surfaced them, one at a time, each fixed and
+re-pushed:
+
+1. **Monorepo build spec format.** Setting `AMPLIFY_MONOREPO_APP_ROOT` makes
+   Amplify expect its own multi-app `applications: [...]` YAML shape, which
+   conflicts with a single custom `backend:`/`frontend:` `amplify.yml`. Fix:
+   dropped that env var - the custom build spec already handles workspace
+   targeting directly (`npm run build --workspace=apps/web`).
+2. **`npm ci` vs `npm install`.** A peer-dependency override inside the AWS
+   Amplify construct libraries themselves (a `zod` version conflict between
+   `@aws-amplify/backend-output-schemas` and this project's own `zod`) leaves
+   `package-lock.json` in a shape `npm ci`'s strict sync check rejects -
+   reproducible with a clean local `npm install` too, so it's a real npm/dependency-graph
+   quirk, not a CI-only artifact. `npm install` (less strict) just works.
+3. **Extensionless relative imports.** `ampx sandbox` tolerates
+   `from "./resource"`; `ampx pipeline-deploy`'s loader does exact-match module
+   resolution and doesn't try `.js` either (that's the usual TS-ESM convention
+   for *compiled* output, and doesn't apply here since nothing compiles these
+   files first) - only the literal `.ts` extension resolves. Required
+   `allowImportingTsExtensions` + `noEmit` in `tsconfig.json` to let `tsc`
+   accept that syntax.
+4. **Missing IAM service role.** Covered above under "Setting up the
+   production app" - `BootstrapDetectionError` without it.
+5. **Prisma client never generated in CI.** A fresh `npm install` doesn't run
+   `prisma generate` (nothing here relies on a postinstall hook for it), and
+   even if it did, the WASM patch still needs to run explicitly - added both
+   as explicit `amplify.yml` build commands rather than assuming either
+   happens implicitly.
+
+Debugging method throughout: `aws amplify get-job` for step-level status,
+pulling the pre-signed S3 log URL for the failing step's actual output
+(`BUILD`/`DEPLOY`/`VERIFY`), fixing exactly what that log said, redeploying,
+repeating - not guessing.
 
 ## Exam engine + question bank (spec Sections 10/11)
 
