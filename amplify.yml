@@ -10,6 +10,14 @@ backend:
         # reproducible with a clean `npm install` locally too. npm install
         # handles it fine; ci's extra strictness isn't worth fighting here.
         - npm install --cache .npm --prefer-offline
+        # A fresh CI install doesn't auto-run `prisma generate` (nothing in
+        # this repo relies on a postinstall hook for it), and even if it did,
+        # our own post-generate WASM patch (see packages/db/scripts/patch-prisma-wasm.js)
+        # still needs to run explicitly - `npm run generate` chains both.
+        # `prisma generate` needs *some* DATABASE_URL value to satisfy schema
+        # validation, even though it never connects - doesn't need to be real.
+        - export DATABASE_URL="${DATABASE_URL:-postgresql://placeholder:placeholder@localhost:5432/placeholder}"
+        - npm run generate --workspace=@claude-cert/db
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
