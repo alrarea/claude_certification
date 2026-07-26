@@ -12,7 +12,8 @@
     "deploy": "ampx pipeline-deploy",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:api": "tsx amplify/functions/api/dev-server.ts",
-    "db:migrate": "npm run migrate:dev --workspace=@claude-cert/db",
+    "db:migrate": "npm run migrate:deploy --workspace=@claude-cert/db",
+    "db:generate": "npm run generate --workspace=@claude-cert/db",
     "db:seed": "npm run seed --workspace=@claude-cert/db",
     "db:migrate-guides": "npm run migrate:guides --workspace=@claude-cert/db"
   },
@@ -21,7 +22,7 @@
     "@claude-cert/shared": "*",
     "hono": "^4.12.32",
     "jose": "^6.2.4",
-    "@node-rs/argon2": "^2.0.2",
+    "hash-wasm": "^4.12.0",
     "@aws-sdk/client-sesv2": "^3.1095.0",
     "@anthropic-ai/sdk": "^0.115.0",
     "zod": "^3.23.8"

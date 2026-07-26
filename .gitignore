@@ -9,3 +9,4 @@ build/
 *.log
 .DS_Store
 db-credentials.csv
+amplify_outputs.json

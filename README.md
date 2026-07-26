@@ -80,34 +80,74 @@ Three tiers, not two:
   `APP_ENC_SECRET`.
 - Three roles instead of two (see above).
 
-## Verified so far / open risk
+## Deployed
 
-- **Full stack verified live** against the real database via
-  `npm run dev:api` (`@hono/node-server`, not yet a real Lambda deploy):
-  register → OTP encrypted+stored → super_admin reads the real OTP via
-  `/admin/users/:id/otp` → verify with that code → real JWT issued with the
-  correct `role` claim → login → `/profile` returns the right role →
-  `/courses/ccaf/topics` and topic detail/progress-marking all work against
-  the migrated guide content. Role separation confirmed live: an `admin` can
-  list/view all users' stats but gets 403 on OTP-view and role-change;
-  only `super_admin` can do those two things.
-- Confirmed via `tsc --noEmit` that `amplify/`, `packages/db`, `packages/shared`,
-  and `apps/web` all typecheck cleanly, and `apps/web` builds with `vite build`.
-- Confirmed via a standalone `esbuild --bundle` dry run of `handler.ts` that the
-  whole dependency graph resolves — **except** `@node-rs/argon2`, whose native
-  `.node` binary esbuild cannot inline into a single bundle (`No loader is
-  configured for ".node" files`). Amplify Gen 2's `FunctionBundlingOptions`
-  (`amplify/functions/api/resource.ts`) currently only exposes a `minify` flag —
-  no documented `external`/`nodeModules` escape hatch was found in the installed
-  package's type definitions. **This needs to be resolved before the first real
-  `ampx sandbox` deploy**, by one of:
-  1. Just try `ampx sandbox` first — Gen 2's bundler may already special-case
-     native addons (unverified either way without a real deploy).
-  2. If it doesn't, use the function's `layers` option (per its doc comment,
-     the layer key "externalizes the module dependency so it doesn't get
-     bundled") to keep `@node-rs/argon2` out of the bundle.
-  3. Only as a last resort, and with explicit sign-off (the spec specifies
-     argon2id in Section 6/12), swap to Node's built-in `crypto.scrypt`.
+Live sandbox deploy (`ampx sandbox --once --profile alrarea`), stack
+`amplify-claudecertification-User-sandbox-5254175739`:
+
+```
+API (Lambda Function URL): https://22wqfi355dgznjqh5yzoofy72u0yizrc.lambda-url.us-east-1.on.aws/
+```
+
+Verified live against this exact deployed Lambda (not just local dev): login as
+`tech@alignminds.com` returns a real JWT with the correct `role` claim,
+`/profile`, `/admin/users`, and `/courses/ccaf/topics` all respond correctly,
+and `/auth/register` fails cleanly with a 502 (SES sender not yet verified —
+expected, see SES status above) rather than crashing.
+
+There's no frontend hosting yet — `ampx sandbox` only deploys the backend
+Lambda. `apps/web`'s Amplify Hosting deployment (git-connected CI/CD per spec
+Section 4) is a separate, not-yet-done step, and needs `FRONTEND_ORIGIN` set to
+its real URL afterward (for CORS) before the two can talk to each other.
+
+To redeploy after a code change: `npm run db:generate`
+(see below - **do not skip this**, plain `prisma generate` isn't enough) then
+`npx ampx sandbox --once --profile alrarea`.
+
+## Two real serverless-bundling bugs found and fixed during deploy
+
+Both were only reachable by actually deploying, not by local dev or `tsc`/`vite
+build` - Amplify Gen 2's Lambda bundler (esbuild, no exposed config for
+external modules or copying non-JS asset files - `resource.ts`'s
+`FunctionBundlingOptions` only has `minify`) silently produces a Lambda that
+crashes at runtime instead of erroring at build time.
+
+1. **`@node-rs/argon2`'s native binary.** `npm install` on this Windows dev
+   machine only fetches the Windows `.node` binary; the deployed Lambda (Amazon
+   Linux) crashed with `Failed to load native binding`. Fixed by switching
+   `lib/password.ts` to **`hash-wasm`**'s argon2id (pure WebAssembly, same
+   algorithm, no per-OS binary to get wrong - see the comment in that file).
+
+2. **Prisma's native query engine.** Same root cause, one layer down:
+   `@prisma/client`'s default "library" engine is also a native `.node`
+   binary, and even after fixing that (`binaryTargets = ["native",
+   "rhel-openssl-3.0.x"]`), the correct engine file still wasn't being copied
+   next to the bundle at deploy time (`ENOENT`). Fixed with two changes,
+   **both required**:
+   - `schema.prisma`'s generator: `engineType = "client"` + the `@prisma/adapter-pg`
+     driver adapter (`src/client.ts`) - this switches to Prisma's WASM query
+     compiler instead of a native engine binary at all.
+   - The WASM compiler still loads its `.wasm` file from disk at runtime by
+     default, which hits the exact same "bundler doesn't copy extra files"
+     problem. `packages/db/scripts/patch-prisma-wasm.js` patches the generated
+     client to inline the wasm bytes as a base64 string directly in the JS
+     instead, so there's no separate file to lose - **must run after every
+     `prisma generate`**, which is why `npm run generate` (not the bare
+     `prisma generate` CLI command) is now the documented command everywhere.
+     Read that script's top comment before touching it; it's inherently a bit
+     fragile (depends on the exact shape of Prisma's generated code) and will
+     need updating if a future Prisma version changes that shape.
+
+   A third, smaller issue surfaced alongside this: the `pg` driver (used by
+   the adapter) treats `sslmode=require` as an alias for `verify-full` (full
+   CA chain validation), which fails against RDS's cert chain. `src/client.ts`
+   strips `sslmode`/`connection_limit` from `DATABASE_URL` and configures TLS
+   (`ssl: { rejectUnauthorized: false }`) and pool size (`max: 2`) explicitly
+   instead - still encrypted, just without chain verification, consistent
+   with the spec's own stated security model (Section 4).
+
+Both fixes were verified with a real `ampx sandbox` deploy + live HTTP
+requests against the deployed Function URL, not just locally.
 
 ## Known limitations (this phase)
 
@@ -124,7 +164,8 @@ Three tiers, not two:
 Set via `ampx sandbox secret set <name>` (stored in SSM Parameter Store, Standard
 tier — never Secrets Manager, never Advanced parameters, per spec Section 4b):
 
-- `DATABASE_URL` — Postgres connection string, `sslmode=require`, low `connection_limit`
+- `DATABASE_URL` — plain Postgres connection string, no query params needed
+  (TLS/pool size are configured in code - see `src/client.ts`)
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
 - `APP_ENC_SECRET` — 32 bytes, base64-encoded (AES-256-GCM: Anthropic API keys and OTP codes)
 - `SES_FROM_ADDRESS` — verified sender address (see SES status above)
@@ -148,8 +189,21 @@ Prisma CLI commands.
 ```
 npm run dev:api    # runs the Hono app locally via @hono/node-server, http://localhost:8787
 npm run dev:web    # frontend, http://localhost:5173
-npx ampx sandbox    # deploy the Lambda + Function URL to a personal sandbox stack
+npm run db:generate                        # after any schema.prisma change - required, see below
+npx ampx sandbox --once --profile alrarea  # deploy the Lambda + Function URL
 ```
 
 `dev:api` is the fast local loop for iterating on routes — no redeploy needed
 per change, unlike `ampx sandbox`.
+
+**`npm run generate` (not the bare `prisma generate` CLI command) everywhere** -
+it chains a required post-processing patch, see "Two real serverless-bundling
+bugs" below. Using the bare CLI command will silently produce a client that
+works locally but crashes once deployed.
+
+Migrations run via `migrate deploy` (`npm run db:migrate`), not `migrate dev` -
+the app's DB role intentionally has no `CREATEDB` grant (least privilege on a
+shared instance), which `migrate dev`'s shadow database needs. When the schema
+changes, generate the SQL offline first
+(`npx prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/<timestamp>_<name>/migration.sql`,
+plus a same-shaped folder + `migration_lock.toml`), review it, then `migrate deploy`.

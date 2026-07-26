@@ -1,5 +1,14 @@
+// Driver adapters + WASM query compiler (stable by default in this Prisma
+// version, no preview flag needed): no native/per-OS query-engine binary at
+// all. Needed because Amplify Gen 2 controls the esbuild bundling config for
+// us (defineFunction exposes no way to mark packages external or copy binary
+// assets), so the usual binaryTargets fix - which requires the bundler to
+// physically copy a .so.node file next to the bundle - isn't reachable from
+// this project. See src/client.ts for the PrismaPg adapter wiring. Same
+// reasoning as the argon2 -> hash-wasm swap in lib/password.ts.
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "client"
 }
 
 datasource db {

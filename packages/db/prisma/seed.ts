@@ -1,4 +1,4 @@
-import { hash } from "@node-rs/argon2";
+import { hashPassword } from "../../../amplify/functions/api/lib/password";
 import { prisma } from "../src/client";
 
 async function main() {
@@ -31,7 +31,7 @@ async function main() {
   if (!initialPassword) {
     throw new Error("SUPER_ADMIN_INITIAL_PASSWORD is not set - required to seed the super_admin account");
   }
-  const passwordHash = await hash(initialPassword);
+  const passwordHash = await hashPassword(initialPassword);
   await prisma.user.upsert({
     where: { email: superAdminEmail },
     update: { role: "super_admin", emailVerifiedAt: new Date() },
