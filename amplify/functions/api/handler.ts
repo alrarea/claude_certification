@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { handle } from "hono/aws-lambda";
 import { authRoutes } from "./routes/auth.ts";
 import { profileRoutes } from "./routes/profile.ts";
@@ -8,19 +7,13 @@ import { adminRoutes } from "./routes/admin.ts";
 import { examRoutes } from "./routes/exams.ts";
 import { questionRoutes } from "./routes/questions.ts";
 
+// CORS is handled entirely by the Lambda Function URL's own native CORS
+// config (see backend.ts) - not duplicated here with Hono's cors()
+// middleware. Both together produced two Access-Control-Allow-Origin values
+// on the same response, which browsers reject outright (a header can only
+// have one value) - this is exactly what caused every real cross-origin
+// request from the deployed frontend to fail as a CORS error.
 const app = new Hono();
-
-app.use(
-  "*",
-  cors({
-    origin: (origin) => {
-      const allowed = process.env.FRONTEND_ORIGIN;
-      return origin === allowed ? origin : undefined;
-    },
-    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-  })
-);
 
 app.get("/health", (c) => c.json({ ok: true }));
 

@@ -1,4 +1,9 @@
-const API_URL = import.meta.env.VITE_API_URL as string;
+// Strip any trailing slash - the Lambda Function URL CDK gives us (used to
+// compute VITE_API_URL at build time, see amplify.yml) always ends in "/",
+// and every path below already starts with "/", so leaving it in produces
+// double-slash URLs (e.g. ".../auth//login") that some servers/CDNs 404 or
+// otherwise mishandle.
+const API_URL = (import.meta.env.VITE_API_URL as string).replace(/\/+$/, "");
 
 let accessToken: string | null = null;
 
