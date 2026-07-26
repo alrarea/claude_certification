@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCAR-P Complete Study Guide — Claude Certified Architect Professional</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap');
+
+:root {
+  --bg:#0b0f1a; --bg2:#111827; --bg3:#1a2235;
+  --border:#1f2d42; --text:#e2e8f0; --muted:#6b7fa3;
+  --accent:#6366f1; --accent2:#38bdf8; --accent3:#f59e0b;
+  --green:#34d399; --red:#f87171; --pink:#e879f9;
+  --d1:#6366f1; --d2:#38bdf8; --d3:#f59e0b;
+  --d4:#34d399; --d5:#f87171; --d6:#e879f9; --d7:#fb923c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px}
+
+/* HERO */
+.hero{background:linear-gradient(160deg,#090d1a 0%,#12103a 40%,#0b1a2e 100%);padding:72px 24px 56px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 65% 55% at 50% -5%,rgba(99,102,241,.18) 0%,transparent 70%);pointer-events:none}
+.pro-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,.14);border:1px solid rgba(99,102,241,.4);border-radius:20px;padding:6px 18px;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}
+h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,54px);font-weight:700;line-height:1.1;color:var(--text);margin-bottom:16px}
+h1 span{color:var(--accent)}
+.hero-sub{color:var(--muted);font-size:16px;max-width:600px;margin:0 auto 36px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px}
+.chip{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px}
+.chip strong{color:var(--accent2)}
+
+/* EXPLAIN BOX — plain language summary */
+.explain-box{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(56,189,248,.06));border:1px solid rgba(99,102,241,.25);border-radius:14px;padding:28px 32px;margin:40px 0 0}
+.explain-box h3{font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:14px}
+.explain-box p{font-size:14px;color:var(--text);margin-bottom:10px}
+.explain-box p:last-child{margin-bottom:0}
+
+/* NAV */
+nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;position:sticky;top:0;z-index:100;display:flex;gap:0;overflow-x:auto}
+nav a{display:block;padding:13px 14px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.02em}
+nav a:hover{color:var(--text);border-bottom-color:var(--accent)}
+
+/* LAYOUT */
+.container{max-width:920px;margin:0 auto;padding:0 24px}
+
+/* SECTIONS */
+section{padding:60px 0;border-top:1px solid var(--border)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+h2{font-family:'Fraunces',serif;font-size:clamp(20px,3vw,32px);font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.2}
+.sec-intro{color:var(--muted);max-width:700px;margin-bottom:32px;font-size:14px;line-height:1.8}
+h3{font-size:17px;font-weight:700;color:var(--text);margin:36px 0 12px}
+h4{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2);margin:24px 0 10px}
+p{margin-bottom:14px;font-size:14px}
+
+/* DOMAIN BANNER */
+.db{border-radius:14px;padding:22px 28px;margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.db.d1{background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.22)}
+.db.d2{background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.22)}
+.db.d3{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.22)}
+.db.d4{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.22)}
+.db.d5{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.22)}
+.db.d6{background:rgba(232,121,249,.07);border:1px solid rgba(232,121,249,.22)}
+.db.d7{background:rgba(251,146,60,.07);border:1px solid rgba(251,146,60,.22)}
+.dn{font-size:44px;font-weight:700;font-family:'Fraunces',serif;opacity:.22;line-height:1}
+.db-body h2{margin-bottom:4px}
+.pct-pill{display:inline-block;padding:3px 12px;border-radius:99px;font-size:11px;font-weight:700;margin-bottom:6px}
+.d1 .pct-pill{background:rgba(99,102,241,.18);color:var(--d1)}
+.d2 .pct-pill{background:rgba(56,189,248,.18);color:var(--d2)}
+.d3 .pct-pill{background:rgba(245,158,11,.18);color:var(--d3)}
+.d4 .pct-pill{background:rgba(52,211,153,.18);color:var(--d4)}
+.d5 .pct-pill{background:rgba(248,113,113,.18);color:var(--d5)}
+.d6 .pct-pill{background:rgba(232,121,249,.18);color:var(--d6)}
+.d7 .pct-pill{background:rgba(251,146,60,.18);color:var(--d7)}
+
+/* DOMAIN OVERVIEW GRID */
+.dg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:28px 0}
+.dc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;cursor:default;transition:transform .2s}
+.dc:hover{transform:translateY(-2px)}
+.dc.d1{border-top:3px solid var(--d1)}.dc.d2{border-top:3px solid var(--d2)}.dc.d3{border-top:3px solid var(--d3)}.dc.d4{border-top:3px solid var(--d4)}.dc.d5{border-top:3px solid var(--d5)}.dc.d6{border-top:3px solid var(--d6)}.dc.d7{border-top:3px solid var(--d7)}
+.dc .pct{font-size:26px;font-weight:700;margin-bottom:4px}
+.d1 .pct{color:var(--d1)}.d2 .pct{color:var(--d2)}.d3 .pct{color:var(--d3)}.d4 .pct{color:var(--d4)}.d5 .pct{color:var(--d5)}.d6 .pct{color:var(--d6)}.d7 .pct{color:var(--d7)}
+.dc h3{font-size:13px;font-weight:700;margin:0 0 6px}
+.dc p{font-size:12px;color:var(--muted);margin:0;line-height:1.5}
+
+/* PROGRESS BARS */
+.pbw{padding:28px 0 8px}
+.pbl{font-size:12px;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between}
+.pb{height:7px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:12px}
+.pbf{height:100%;border-radius:99px}
+
+/* CALLOUTS */
+.callout{border-radius:10px;padding:16px 20px;margin:18px 0;font-size:13px;line-height:1.7}
+.callout.key{background:rgba(99,102,241,.07);border-left:3px solid var(--accent)}
+.callout.warn{background:rgba(248,113,113,.07);border-left:3px solid var(--red)}
+.callout.tip{background:rgba(52,211,153,.07);border-left:3px solid var(--green)}
+.callout.exam{background:rgba(245,158,11,.07);border-left:3px solid var(--accent3)}
+.callout.plain{background:rgba(56,189,248,.07);border-left:3px solid var(--accent2)}
+.cl{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.callout.key .cl{color:var(--accent)}.callout.warn .cl{color:var(--red)}.callout.tip .cl{color:var(--green)}.callout.exam .cl{color:var(--accent3)}.callout.plain .cl{color:var(--accent2)}
+
+/* SIMPLE EXPLANATION BOXES */
+.simple{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:16px 0}
+.simple .simple-label{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:6px}
+.simple p{font-size:13px;margin:0;color:var(--text)}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;font-size:13px;margin:16px 0}
+th{background:var(--bg3);color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid rgba(31,45,66,.6);vertical-align:top;line-height:1.6}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+
+/* LISTS */
+ul.tl{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px;margin:14px 0}
+ul.tl li{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;display:flex;align-items:flex-start;gap:8px}
+ul.tl li::before{content:'›';color:var(--accent);font-weight:700;font-size:15px;flex-shrink:0;margin-top:1px}
+
+/* CHECKLIST */
+.cl-list{list-style:none;margin:12px 0}
+.cl-list li{padding:8px 0;border-bottom:1px solid rgba(31,45,66,.5);font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.cl-list li:last-child{border-bottom:none}
+.cl-list li::before{content:'□';color:var(--accent);flex-shrink:0;font-size:15px;margin-top:1px}
+
+/* COMPARE */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.cmp-col{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.cmp-col h5{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.cmp-col.good h5{color:var(--green)}.cmp-col.bad h5{color:var(--red)}
+.cmp-col ul{list-style:none}.cmp-col ul li{font-size:12px;padding:4px 0;color:var(--muted)}
+.cmp-col.good ul li::before{content:'✓ ';color:var(--green)}
+.cmp-col.bad ul li::before{content:'✗ ';color:var(--red)}
+
+/* CODE */
+code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--accent2)}
+pre{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:18px 20px;overflow-x:auto;margin:14px 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;color:var(--accent2)}
+
+/* SAMPLE Q */
+.sq{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin:20px 0}
+.sq .q-num{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sq .q-text{font-size:14px;font-weight:500;color:var(--text);margin-bottom:16px;line-height:1.7}
+.sq .opts{list-style:none}
+.sq .opts li{font-size:13px;padding:8px 12px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;color:var(--muted);cursor:default}
+.sq .opts li.correct{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.06)}
+.sq .rationale{font-size:12px;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border);line-height:1.6}
+.sq .rationale strong{color:var(--green)}
+
+/* QUICK REF GRID */
+.qr{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0}
+.qr-i{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.qr-i .qk{font-size:10px;color:var(--muted);margin-bottom:3px}
+.qr-i .qv{font-size:14px;font-weight:700;color:var(--accent3)}
+
+/* COMPARE TO FOUNDATIONS */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.vs-col{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px}
+.vs-col h5{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.vs-col.f h5{color:var(--d4)}.vs-col.p h5{color:var(--d1)}
+.vs-col ul{list-style:none}.vs-col ul li{font-size:12px;padding:4px 0;color:var(--muted);border-bottom:1px solid rgba(31,45,66,.4)}
+.vs-col ul li:last-child{border-bottom:none}
+
+/* FOOTER */
+footer{background:var(--bg2);border-top:1px solid var(--border);text-align:center;padding:40px 24px;color:var(--muted);font-size:12px}
+footer strong{color:var(--text)}
+
+@media(max-width:600px){.cmp,.vs{grid-template-columns:1fr}h1{font-size:26px}.dg{grid-template-columns:1fr}nav a{padding:11px 10px;font-size:11px}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<div class="hero">
+  <div class="pro-badge">🏛 Professional Level · July 2026 · Exam Code: CCAR-P</div>
+  <h1>Claude Certified Architect<br><span>Professional (CCAR-P)</span></h1>
+  <p class="hero-sub">The complete plain-language study guide — everything you need to understand, even if English is not your first language or you are new to Claude.</p>
+  <div class="chips">
+    <div class="chip"><strong>63</strong> Questions</div>
+    <div class="chip"><strong>120</strong> Minutes</div>
+    <div class="chip">Pass Score <strong>720 / 1000</strong></div>
+    <div class="chip">Format: <strong>MCQ + Multiple-Response</strong></div>
+    <div class="chip">Fee: <strong>USD 175</strong></div>
+    <div class="chip">Valid: <strong>12 Months</strong></div>
+    <div class="chip">Delivery: <strong>Online Proctored · Pearson VUE</strong></div>
+  </div>
+
+  <div class="container">
+    <div class="explain-box">
+      <h3>🌐 What does all this mean? (Simple explanation)</h3>
+      <p><strong>What is this exam?</strong> This is a professional-level test from Anthropic (the company that made Claude AI). It checks whether you can design and build serious, large-scale AI systems using Claude — not just use Claude for simple tasks.</p>
+      <p><strong>Who is it for?</strong> Mid-to-senior level engineers, solution architects, and technical leads who build AI-powered products for real businesses.</p>
+      <p><strong>How hard is it?</strong> Harder than the Foundations exam. It tests your ability to make architectural decisions — meaning: which design to choose, why, and what trade-offs exist. You need to think like an architect, not just a developer.</p>
+      <p><strong>What do you get?</strong> A professional certification valid for 12 months, recognized across industries. Renew for free on time; pay the full fee if you let it lapse.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NAV
+══════════════════════════════════════════ -->
+<nav>
+  <a href="#overview">Overview</a>
+  <a href="#vs-foundations">vs Foundations</a>
+  <a href="#d1">D1 · Solution Design</a>
+  <a href="#d2">D2 · Models & Prompts</a>
+  <a href="#d3">D3 · Integration</a>
+  <a href="#d4">D4 · Evaluation</a>
+  <a href="#d5">D5 · Governance</a>
+  <a href="#d6">D6 · Stakeholders</a>
+  <a href="#d7">D7 · Dev Productivity</a>
+  <a href="#samples">Sample Qs</a>
+  <a href="#policies">Policies</a>
+  <a href="#quickref">Quick Ref</a>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     OVERVIEW
+══════════════════════════════════════════ -->
+<section id="overview">
+  <div class="container">
+    <div class="eyebrow">Certification Overview</div>
+    <h2>What Is the CCAR-P?</h2>
+    <p class="sec-intro">The Claude Certified Architect – Professional (CCAR-P) is Anthropic's highest available certification. It validates that you can own the full lifecycle of a Claude-powered system — from understanding the business problem all the way to deployment, monitoring, security, and governance.</p>
+
+    <div class="callout plain">
+      <div class="cl">Plain Language Summary</div>
+      Think of it this way: the Foundations exam checks if you know how Claude works. The Professional exam checks if you can be trusted to design a complete AI system for a company — including making the right trade-offs, keeping it safe, communicating with non-technical stakeholders, and making sure it follows laws and regulations.
+    </div>
+
+    <h3>The 7 Exam Domains</h3>
+    <div class="dg">
+      <div class="dc d1"><div class="pct">17%</div><h3>Solution Design & Architecture</h3><p>Turning business problems into Claude-based solutions with the right architecture.</p></div>
+      <div class="dc d2"><div class="pct">13%</div><h3>Models, Prompting & Context</h3><p>Choosing the right model, writing effective prompts, and managing token usage.</p></div>
+      <div class="dc d3"><div class="pct">19%</div><h3>Integration</h3><p>Connecting Claude to real systems — RAG, MCP, APIs, authentication, observability.</p></div>
+      <div class="dc d4"><div class="pct">16%</div><h3>Evaluation, Testing & Optimization</h3><p>Measuring quality, diagnosing failures, improving performance and cost.</p></div>
+      <div class="dc d5"><div class="pct">14%</div><h3>Governance, Safety & Risk</h3><p>Guardrails, compliance (GDPR, HIPAA), ethics, human-in-the-loop design.</p></div>
+      <div class="dc d6"><div class="pct">14%</div><h3>Stakeholder Communication</h3><p>Discovery, requirement gathering, communicating architectural decisions.</p></div>
+      <div class="dc d7"><div class="pct">7%</div><h3>Developer Productivity</h3><p>Claude Code, team tooling, debugging, and operational workflows.</p></div>
+    </div>
+
+    <h3>Domain Weight — Visual</h3>
+    <div class="pbw">
+      <div class="pbl"><span>D3 · Integration</span><span style="color:var(--d3)">19%</span></div>
+      <div class="pb"><div class="pbf" style="width:19%;background:var(--d3)"></div></div>
+      <div class="pbl"><span>D1 · Solution Design</span><span style="color:var(--d1)">17%</span></div>
+      <div class="pb"><div class="pbf" style="width:17%;background:var(--d1)"></div></div>
+      <div class="pbl"><span>D4 · Evaluation & Optimization</span><span style="color:var(--d4)">16%</span></div>
+      <div class="pb"><div class="pbf" style="width:16%;background:var(--d4)"></div></div>
+      <div class="pbl"><span>D5 · Governance & Safety</span><span style="color:var(--d5)">14%</span></div>
+      <div class="pb"><div class="pbf" style="width:14%;background:var(--d5)"></div></div>
+      <div class="pbl"><span>D6 · Stakeholder Communication</span><span style="color:var(--d6)">14%</span></div>
+      <div class="pb"><div class="pbf" style="width:14%;background:var(--d6)"></div></div>
+      <div class="pbl"><span>D2 · Models, Prompting & Context</span><span style="color:var(--d2)">13%</span></div>
+      <div class="pb"><div class="pbf" style="width:13%;background:var(--d2)"></div></div>
+      <div class="pbl"><span>D7 · Developer Productivity</span><span style="color:var(--d7)">7%</span></div>
+      <div class="pb"><div class="pbf" style="width:7%;background:var(--d7)"></div></div>
+    </div>
+
+    <h3>Recommended Experience</h3>
+    <div class="simple">
+      <div class="simple-label">In simple terms</div>
+      <p>You should already know how to build software systems. This exam is for people who have been doing technical architecture work for a few years — not beginners.</p>
+    </div>
+    <table>
+      <tr><th>Area</th><th>Recommended Background</th></tr>
+      <tr><td>Software Engineering</td><td>Solid foundation in modular design, separation of concerns, and scalability</td></tr>
+      <tr><td>Systems Architecture</td><td>3+ years in architecture or platform engineering roles</td></tr>
+      <tr><td>LLM / Claude Experience</td><td>6+ months hands-on with Claude or comparable LLM systems in production</td></tr>
+      <tr><td>End-to-End Delivery</td><td>Experience taking systems from discovery through deployment and monitoring</td></tr>
+    </table>
+    <p style="color:var(--muted);font-size:12px;margin-top:8px">⚠️ These are recommendations only. There are no mandatory prerequisites. The credential is awarded based on exam performance alone.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     VS FOUNDATIONS
+══════════════════════════════════════════ -->
+<section id="vs-foundations">
+  <div class="container">
+    <div class="eyebrow">Know the Difference</div>
+    <h2>Professional vs. Foundations — What's Different?</h2>
+    <p class="sec-intro">If you have already studied for the CCAR-F (Foundations), this section tells you exactly what is new and different in the Professional exam.</p>
+
+    <div class="vs">
+      <div class="vs-col f">
+        <h5>✅ CCAR-F Foundations (What you already know)</h5>
+        <ul>
+          <li>Agentic loop and stop_reason</li>
+          <li>Subagent isolation and context passing</li>
+          <li>CLAUDE.md config hierarchy</li>
+          <li>Hooks vs. prompt instructions</li>
+          <li>Tool descriptions and MCP basics</li>
+          <li>JSON schema and structured output</li>
+          <li>Lost-in-middle effect</li>
+        </ul>
+      </div>
+      <div class="vs-col p">
+        <h5>🆕 CCAR-P Professional (What's new)</h5>
+        <ul>
+          <li>RAG pipeline design and retrieval strategies</li>
+          <li>Evaluation frameworks and metrics</li>
+          <li>A/B testing and iterative improvement</li>
+          <li>Compliance: GDPR, HIPAA, FedRAMP</li>
+          <li>Ethical AI: bias, fairness, transparency</li>
+          <li>Stakeholder communication and SLAs</li>
+          <li>Integration protocol selection (MCP vs API vs agent-to-agent)</li>
+          <li>Cost-latency-accuracy trade-off decisions</li>
+          <li>Observability and monitoring at scale</li>
+          <li>Human-in-the-loop validation design</li>
+          <li>Prompt caching and prompt reuse strategies</li>
+          <li>Lifecycle management: discovery → handoff → iteration</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout exam">
+      <div class="cl">Exam Strategy Note</div>
+      The Foundations exam tested whether you KNOW how Claude works. The Professional exam tests whether you can DECIDE — choose the right architecture, justify the trade-off, and explain the risk. Every question at this level involves a decision with consequences.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DOMAIN 1 — SOLUTION DESIGN
+══════════════════════════════════════════ -->
+<section id="d1">
+  <div class="container">
+    <div class="db d1">
+      <div class="dn">01</div>
+      <div class="db-body">
+        <div class="pct-pill">17% of exam · ~11 questions</div>
+        <h2>Solution Design & Architecture</h2>
+        <p style="color:var(--muted);font-size:13px">Turning a business problem into the right Claude-based architecture — and justifying every decision.</p>
+      </div>
+    </div>
+
+    <div class="simple">
+      <div class="simple-label">What this domain is really about</div>
+      <p>Imagine a company comes to you and says: "We want to use AI to improve our customer service." Your job is to figure out: What kind of system should we build? Which parts should use Claude? How do we connect everything? What are the trade-offs? This domain tests that thinking.</p>
+    </div>
+
+    <h3>1.1 Translating Business Problems into AI Solutions</h3>
+    <p>Before writing any code, a professional architect must understand what the business actually needs. The exam tests whether you can identify the right solution — not just the most technically impressive one.</p>
+
+    <h4>The Business Value Pillars</h4>
+    <table>
+      <tr><th>Pillar</th><th>What It Means</th><th>Example</th></tr>
+      <tr><td><strong>Efficiency</strong></td><td>Do the same work faster or with fewer people</td><td>Auto-draft email replies for support team</td></tr>
+      <tr><td><strong>Transformation</strong></td><td>Do entirely new things that were not possible before</td><td>AI that analyses legal contracts in seconds</td></tr>
+      <tr><td><strong>Productivity</strong></td><td>Help people do their existing jobs better</td><td>Code review assistant for developers</td></tr>
+      <tr><td><strong>Cost Reduction</strong></td><td>Reduce spending through automation</td><td>Replace manual data entry with AI extraction</td></tr>
+      <tr><td><strong>Performance SLAs</strong></td><td>Meet speed and reliability targets</td><td>Response under 2 seconds for 99% of queries</td></tr>
+    </table>
+
+    <h3>1.2 Architectural Patterns — Which to Choose</h3>
+    <table>
+      <tr><th>Pattern</th><th>What It Is</th><th>Use When</th></tr>
+      <tr><td><strong>Workflow</strong></td><td>Fixed sequence of steps; Claude is one component</td><td>Steps are known in advance; predictable process</td></tr>
+      <tr><td><strong>Agentic</strong></td><td>Claude decides steps dynamically; uses tools in a loop</td><td>Steps depend on intermediate results; unpredictable task</td></tr>
+      <tr><td><strong>Augmented LLM</strong></td><td>Claude + retrieval + tools but without full autonomy</td><td>Need grounded answers from documents/databases</td></tr>
+    </table>
+
+    <div class="callout exam">
+      <div class="cl">Exam Decision Rule</div>
+      The exam often asks: "Which pattern is appropriate?" Rule of thumb: if the steps are known → workflow. If Claude needs to figure out the steps → agentic. If you need accurate, grounded answers from a knowledge base → augmented LLM (RAG).
+    </div>
+
+    <h3>1.3 Multi-Agent System Design</h3>
+    <p>Complex tasks are split across multiple specialised agents. The architect must design how they communicate, how errors propagate, and how results are combined.</p>
+
+    <h4>Key Design Decisions for Multi-Agent Systems</h4>
+    <ul class="tl">
+      <li>Topology: Hub-and-spoke vs. pipeline vs. peer-to-peer</li>
+      <li>Context isolation: what each agent knows vs. needs to know</li>
+      <li>Error propagation: does one failure stop the whole system?</li>
+      <li>Result aggregation: how does the final answer get assembled?</li>
+      <li>Human checkpoints: where should a human approve before continuing?</li>
+    </ul>
+
+    <h3>1.4 Decomposition Techniques</h3>
+    <p>Large, complex problems must be broken into smaller, manageable tasks. Poor decomposition is the #1 cause of missing or wrong output in multi-agent systems.</p>
+
+    <table>
+      <tr><th>Technique</th><th>How It Works</th></tr>
+      <tr><td><strong>Functional decomposition</strong></td><td>Split by what each part does (research, write, review)</td></tr>
+      <tr><td><strong>Data decomposition</strong></td><td>Split by the data being processed (one agent per document)</td></tr>
+      <tr><td><strong>Domain decomposition</strong></td><td>Split by business domain (legal agent, finance agent, HR agent)</td></tr>
+    </table>
+
+    <h3>1.5 End-to-End Architecture Design</h3>
+    <p>A complete architecture must specify all stages:</p>
+    <div class="callout key">
+      <div class="cl">The Full Loop</div>
+      <strong>Input</strong> (user query / data source) → <strong>Processing</strong> (Claude + tools + retrieval) → <strong>Output</strong> (response / action) → <strong>Feedback Loop</strong> (evaluation → improvement) → back to design refinement
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DOMAIN 2 — MODELS & PROMPTING
+══════════════════════════════════════════ -->
+<section id="d2">
+  <div class="container">
+    <div class="db d2">
+      <div class="dn">02</div>
+      <div class="db-body">
+        <div class="pct-pill">13% of exam · ~8 questions</div>
+        <h2>Claude Models, Prompting & Context Engineering</h2>
+        <p style="color:var(--muted);font-size:13px">Choosing the right model, engineering effective prompts, and managing tokens efficiently.</p>
+      </div>
+    </div>
+
+    <div class="simple">
+      <div class="simple-label">What this domain is really about</div>
+      <p>Not all Claude models are the same. Some are faster, some are smarter, some cost more. This domain tests whether you can pick the right model for the job, write prompts that work reliably, and use the context window efficiently so you don't waste money or slow things down.</p>
+    </div>
+
+    <h3>2.1 Model Selection Trade-offs</h3>
+    <table>
+      <tr><th>Factor</th><th>Smaller / Faster Model</th><th>Larger / Smarter Model</th></tr>
+      <tr><td>Latency</td><td>✅ Faster response</td><td>❌ Slower response</td></tr>
+      <tr><td>Cost per token</td><td>✅ Cheaper</td><td>❌ More expensive</td></tr>
+      <tr><td>Complex reasoning</td><td>❌ May struggle</td><td>✅ Handles better</td></tr>
+      <tr><td>Simple classification</td><td>✅ Usually sufficient</td><td>❌ Overkill</td></tr>
+      <tr><td>Long documents</td><td>❌ Smaller context</td><td>✅ Larger context window</td></tr>
+    </table>
+
+    <div class="callout exam">
+      <div class="cl">Exam Decision Rule</div>
+      The exam presents a scenario and asks which model tier is appropriate. Key signals: "latency-sensitive" → smaller model. "Complex multi-step reasoning" → larger model. "High volume, low complexity" → smallest model + caching.
+    </div>
+
+    <h3>2.2 Prompt Engineering Techniques</h3>
+    <table>
+      <tr><th>Technique</th><th>What It Is</th><th>Use When</th></tr>
+      <tr><td><strong>Zero-shot</strong></td><td>Give the task only, no examples</td><td>Simple, well-defined tasks</td></tr>
+      <tr><td><strong>Few-shot</strong></td><td>Give the task + 2–5 examples of good answers</td><td>Edge cases, specific output format, ambiguous tasks</td></tr>
+      <tr><td><strong>Chain-of-thought</strong></td><td>Ask Claude to reason step-by-step before answering</td><td>Complex reasoning, maths, multi-step decisions</td></tr>
+    </table>
+
+    <h3>2.3 System Prompt Design</h3>
+    <p>The system prompt is the most authoritative instruction Claude receives. It sets the agent's identity, constraints, and behaviour. It cannot be overridden by user messages.</p>
+
+    <h4>What a Good System Prompt Contains</h4>
+    <ul class="tl">
+      <li>Role definition — who Claude is in this context</li>
+      <li>Task boundaries — what it should and should not do</li>
+      <li>Output format — how responses should be structured</li>
+      <li>Guardrails — safety and policy constraints</li>
+      <li>Tone — formal, friendly, technical, etc.</li>
+    </ul>
+
+    <h3>2.4 Prompt Caching — Cost and Latency Optimisation</h3>
+    <div class="simple">
+      <div class="simple-label">Simple Explanation</div>
+      <p>If you send the same 8,000-token system prompt on every API call, you are paying to process those same 8,000 tokens every single time. Prompt caching lets Claude reuse the processing from the first call — saving both time and money on every subsequent call.</p>
+    </div>
+
+    <div class="callout key">
+      <div class="cl">The Rule</div>
+      Always put STATIC content (system prompt, policy documents, reference material) FIRST in the request. Put DYNAMIC content (user's question, variable data) LAST. This maximises the cacheable prefix and gives the biggest savings.
+    </div>
+
+    <h3>2.5 Context Window Management</h3>
+    <table>
+      <tr><th>Strategy</th><th>How It Works</th><th>Trade-off</th></tr>
+      <tr><td>Progressive summarisation</td><td>Summarise older turns to free space</td><td>Loses exact wording</td></tr>
+      <tr><td>External memory</td><td>Store details in DB, retrieve on demand</td><td>Adds retrieval latency</td></tr>
+      <tr><td>Modular prompts / Skills</td><td>Only load relevant prompt sections</td><td>Requires upfront organisation</td></tr>
+      <tr><td>Prompt caching</td><td>Cache static prefix across calls</td><td>Content must be truly static</td></tr>
+    </table>
+
+    <h3>2.6 Token Usage Optimisation</h3>
+    <ul class="tl">
+      <li>Remove filler words and repetition from prompts</li>
+      <li>Use structured formats (JSON, XML) instead of prose for data</li>
+      <li>Set appropriate max_tokens to avoid over-generation</li>
+      <li>Use stop sequences to end generation early when possible</li>
+      <li>Cache static system prompts — biggest single saving</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DOMAIN 3 — INTEGRATION
+══════════════════════════════════════════ -->
+<section id="d3">
+  <div class="container">
+    <div class="db d3">
+      <div class="dn">03</div>
+      <div class="db-body">
+        <div class="pct-pill">19% of exam · ~12 questions — BIGGEST DOMAIN</div>
+        <h2>Integration</h2>
+        <p style="color:var(--muted);font-size:13px">Connecting Claude to real-world systems — the largest and most diverse domain in this exam.</p>
+      </div>
+    </div>
+
+    <div class="simple">
+      <div class="simple-label">What this domain is really about</div>
+      <p>Claude does not exist alone. It connects to databases, APIs, tools, and other systems. This domain tests whether you can design those connections securely and correctly — choosing the right integration method, avoiding security gaps, and making sure the system is observable and debuggable in production.</p>
+    </div>
+
+    <h3>3.1 Integration Protocol Selection</h3>
+    <p>Three main ways to integrate Claude with external systems. The exam tests which one to choose.</p>
+    <table>
+      <tr><th>Protocol</th><th>What It Is</th><th>Choose When</th></tr>
+      <tr><td><strong>MCP (Model Context Protocol)</strong></td><td>Standardised protocol for exposing tools and resources to Claude</td><td>You want a reusable, standardised tool layer; team-shared tooling</td></tr>
+      <tr><td><strong>API / CLI</strong></td><td>Direct API calls from your code to Claude or to external services</td><td>Custom integrations; tight control over request/response; simple pipelines</td></tr>
+      <tr><td><strong>Agent-to-Agent</strong></td><td>One Claude agent communicates with another Claude agent</td><td>Multi-agent systems; task delegation; specialised subagents</td></tr>
+    </table>
+
+    <h3>3.2 RAG — Retrieval-Augmented Generation</h3>
+    <div class="simple">
+      <div class="simple-label">What is RAG? (Very simple)</div>
+      <p>Imagine Claude is very smart but doesn't know your company's internal documents. RAG solves this: before answering a question, Claude first searches your documents to find relevant information, then uses that information to give an accurate answer. It's like giving Claude a reference book to look up before speaking.</p>
+    </div>
+
+    <h4>RAG Pipeline — Full Design</h4>
+    <table>
+      <tr><th>Stage</th><th>What Happens</th><th>Key Decisions</th></tr>
+      <tr><td>1. Ingestion</td><td>Documents are loaded into the system</td><td>Which documents? How often to update?</td></tr>
+      <tr><td>2. Chunking</td><td>Documents split into smaller pieces</td><td>Chunk size, overlap, boundary strategy</td></tr>
+      <tr><td>3. Embedding</td><td>Each chunk converted to a vector (number array)</td><td>Which embedding model? Dimensions?</td></tr>
+      <tr><td>4. Indexing</td><td>Vectors stored in a searchable database</td><td>Vector DB choice, metadata, indexing method</td></tr>
+      <tr><td>5. Retrieval</td><td>User query → find most relevant chunks</td><td>Semantic search, keyword, hybrid?</td></tr>
+      <tr><td>6. Generation</td><td>Retrieved chunks + query sent to Claude</td><td>How many chunks? Where in context?</td></tr>
+    </table>
+
+    <h4>Chunking Strategies</h4>
+    <table>
+      <tr><th>Strategy</th><th>How</th><th>Best For</th></tr>
+      <tr><td>Fixed-size</td><td>Split every N tokens regardless of content</td><td>Simple, fast — works for uniform content</td></tr>
+      <tr><td>Semantic / paragraph</td><td>Split at natural boundaries (paragraphs, sections)</td><td>Narrative documents, articles</td></tr>
+      <tr><td>Hierarchical</td><td>Large chunks + small chunks; retrieve at both levels</td><td>Long documents needing both context and precision</td></tr>
+      <tr><td>Sliding window</td><td>Overlapping chunks to avoid cutting mid-idea</td><td>Prevents information loss at boundaries</td></tr>
+    </table>
+
+    <h4>Retrieval Strategies</h4>
+    <table>
+      <tr><th>Strategy</th><th>How It Works</th><th>Best For</th></tr>
+      <tr><td>Semantic (vector) search</td><td>Find chunks with similar meaning to query</td><td>Conceptual questions; "explain X" queries</td></tr>
+      <tr><td>Keyword (BM25) search</td><td>Find chunks containing exact query words</td><td>Specific names, codes, product IDs</td></tr>
+      <tr><td>Hybrid search</td><td>Combine semantic + keyword results</td><td>Best of both — most production systems use this</td></tr>
+      <tr><td>Re-ranking</td><td>Use a second model to re-score retrieved results</td><td>Higher accuracy, adds latency</td></tr>
+    </table>
+
+    <h3>3.3 Least Privilege — Tool / Agent Configuration</h3>
+    <div class="simple">
+      <div class="simple-label">What is least privilege?</div>
+      <p>Only give Claude (or any agent) the minimum tools and permissions it actually needs to do its job. If an agent only needs to read data, do not give it permission to delete data. This limits damage if something goes wrong.</p>
+    </div>
+
+    <div class="callout warn">
+      <div class="cl">Exam Pattern — Capability Bloat</div>
+      The exam frequently presents agents with too many tools. The correct answer is almost always: remove the unnecessary tools entirely — not add logging, not add confirmation prompts. Removal is the only true least-privilege fix.
+    </div>
+
+    <h3>3.4 Authentication & Authorization</h3>
+    <table>
+      <tr><th>Concept</th><th>What It Means</th><th>Exam Application</th></tr>
+      <tr><td><strong>Authentication</strong></td><td>Verifying WHO you are (login, API key)</td><td>Ensure every tool call is authenticated</td></tr>
+      <tr><td><strong>Authorization</strong></td><td>Verifying WHAT you are allowed to do</td><td>Check permissions before every action</td></tr>
+      <tr><td><strong>Least privilege</strong></td><td>Only the minimum access needed</td><td>Remove tools agents don't need</td></tr>
+      <tr><td><strong>Audit logging</strong></td><td>Record who did what and when</td><td>Required for compliance; not a substitute for least privilege</td></tr>
+    </table>
+
+    <h3>3.5 Accuracy-Latency Trade-offs</h3>
+    <table>
+      <tr><th>Optimise For</th><th>What to Do</th><th>What You Sacrifice</th></tr>
+      <tr><td>Speed (low latency)</td><td>Smaller model, fewer retrieved chunks, no re-ranking, caching</td><td>Some accuracy</td></tr>
+      <tr><td>Accuracy</td><td>Larger model, more chunks, re-ranking, chain-of-thought</td><td>Higher cost, slower response</td></tr>
+      <tr><td>Cost</td><td>Smallest suitable model, caching, batch processing</td><td>May reduce quality or speed</td></tr>
+    </table>
+
+    <h3>3.6 Observability & Monitoring</h3>
+    <div class="simple">
+      <div class="simple-label">Simple Explanation</div>
+      <p>Observability means being able to see what your system is doing — so when something goes wrong, you can figure out why. Without good observability, debugging an AI system in production is almost impossible.</p>
+    </div>
+
+    <h4>Key Observability Components</h4>
+    <ul class="tl">
+      <li>Request/response logging with timestamps</li>
+      <li>Token usage tracking per request</li>
+      <li>Latency measurement end-to-end and per stage</li>
+      <li>Error rate monitoring and alerting</li>
+      <li>Retrieval quality metrics (for RAG systems)</li>
+      <li>Prompt version tracking (which prompt was used?)</li>
+    </ul>
+
+    <h3>3.7 Progressive Discovery vs. Monolithic Context</h3>
+    <table>
+      <tr><th>Strategy</th><th>What It Does</th><th>Use When</th></tr>
+      <tr><td><strong>Progressive discovery</strong></td><td>Load only what's needed, retrieve more as required</td><td>Large knowledge bases; unknown query patterns</td></tr>
+      <tr><td><strong>Monolithic context</strong></td><td>Load everything upfront into context window</td><td>Small, well-defined document sets; speed matters</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DOMAIN 4 — EVALUATION
+══════════════════════════════════════════ -->
+<section id="d4">
+  <div class="container">
+    <div class="db d4">
+      <div class="dn">04</div>
+      <div class="db-body">
+        <div class="pct-pill">16% of exam · ~10 questions</div>
+        <h2>Evaluation, Testing & Optimization</h2>
+        <p style="color:var(--muted);font-size:13px">Measuring quality, catching failures, and systematically improving Claude-based systems.</p>
+      </div>
+    </div>
+
+    <div class="simple">
+      <div class="simple-label">What this domain is really about</div>
+      <p>How do you know if your AI system is actually working well? This domain covers how to measure, test, and improve Claude-based systems. It's not enough to try it and think "it seems okay" — in production you need metrics, test datasets, and a systematic process for finding and fixing problems.</p>
+    </div>
+
+    <h3>4.1 Evaluation Metrics</h3>
+    <table>
+      <tr><th>Metric</th><th>What It Measures</th><th>How to Measure</th></tr>
+      <tr><td><strong>Accuracy</strong></td><td>Are the answers correct?</td><td>Compare against ground truth; human evaluation</td></tr>
+      <tr><td><strong>Latency</strong></td><td>How fast does the system respond?</td><td>Time from request to response; p50, p95, p99</td></tr>
+      <tr><td><strong>Cost</strong></td><td>How much does each response cost?</td><td>Token count × model pricing</td></tr>
+      <tr><td><strong>Safety</strong></td><td>Does it produce harmful outputs?</td><td>Red-teaming, adversarial testing</td></tr>
+      <tr><td><strong>Security</strong></td><td>Can it be manipulated or exploited?</td><td>Prompt injection tests, jailbreak attempts</td></tr>
+      <tr><td><strong>Hallucination rate</strong></td><td>How often does it invent false facts?</td><td>Fact-checking against source documents</td></tr>
+    </table>
+
+    <h3>4.2 Evaluation Dataset Design</h3>
+    <p>A good test dataset is essential. Without it, you cannot know if your system is improving or getting worse.</p>
+
+    <h4>What Makes a Good Evaluation Dataset?</h4>
+    <ul class="tl">
+      <li>Covers all common use cases (not just easy ones)</li>
+      <li>Includes edge cases and difficult inputs</li>
+      <li>Has a mix of question types</li>
+      <li>Includes known good answers (ground truth)</li>
+      <li>Large enough to detect small improvements statistically</li>
+    </ul>
+
+    <h4>Mixed Evaluation Methodology</h4>
+    <table>
+      <tr><th>Method</th><th>What It Is</th><th>Use For</th></tr>
+      <tr><td>Automated metrics</td><td>Code that scores outputs automatically</td><td>Fast, scalable — catches regression</td></tr>
+      <tr><td>Human evaluation</td><td>People rate outputs quality</td><td>Nuanced quality; catch subtle errors</td></tr>
+      <tr><td>LLM-as-judge</td><td>Another Claude instance rates outputs</td><td>Scalable; needs calibration against human</td></tr>
+      <tr><td>Red-teaming</td><td>Deliberately try to break the system</td><td>Safety and security testing</td></tr>
+    </table>
+
+    <h3>4.3 A/B Testing and Iterative Improvement</h3>
+    <div class="simple">
+      <div class="simple-label">What is A/B testing?</div>
+      <p>You have two versions of something (Version A: your current system; Version B: your improved version). You run both on the same test cases and compare which one scores better. This is how you know if a change actually improved things — instead of guessing.</p>
+    </div>
+
+    <h4>A/B Testing Process</h4>
+    <table>
+      <tr><th>Step</th><th>What to Do</th></tr>
+      <tr><td>1. Define what you are testing</td><td>One change at a time (model, prompt, chunking strategy, etc.)</td></tr>
+      <tr><td>2. Define your metric</td><td>What counts as "better"? Accuracy? Latency? Cost?</td></tr>
+      <tr><td>3. Run both versions</td><td>On the same evaluation dataset</td></tr>
+      <tr><td>4. Compare results</td><td>Is the difference statistically significant?</td></tr>
+      <tr><td>5. Ship or discard</td><td>Ship Version B if it's better; discard if not</td></tr>
+    </table>
+
+    <h3>4.4 Diagnosing System Issues</h3>
+    <table>
+      <tr><th>Symptom</th><th>Most Likely Root Cause</th><th>Where to Look First</th></tr>
+      <tr><td>Confident but wrong answers</td><td>Retrieval returning irrelevant chunks</td><td>Check indexing, embedding quality, chunking</td></tr>
+      <tr><td>Answers after document refresh</td><td>Re-indexing failed or mismatched embeddings</td><td>Verify re-index completed successfully</td></tr>
+      <tr><td>Prompt failure / wrong format</td><td>Prompt changed or model version changed</td><td>Check prompt version; test with previous version</td></tr>
+      <tr><td>Hallucinations on specific topics</td><td>No relevant documents in knowledge base</td><td>Check if topic is covered in your documents</td></tr>
+      <tr><td>Sudden latency increase</td><td>More tokens being processed; network; model version</td><td>Check token counts; check retrieval stage timing</td></tr>
+    </table>
+
+    <h3>4.5 Cost-Performance Optimization</h3>
+    <table>
+      <tr><th>Lever</th><th>How to Use It</th><th>Impact</th></tr>
+      <tr><td>Prompt caching</td><td>Cache static system prompts</td><td>50%+ cost saving on repeated calls</td></tr>
+      <tr><td>Model downsizing</td><td>Use smaller model for simple tasks</td><td>Significant cost and latency reduction</td></tr>
+      <tr><td>Batch API</td><td>Non-urgent jobs in batch mode</td><td>~50% cost saving; 24hr delay</td></tr>
+      <tr><td>Fewer retrieved chunks</td><td>Retrieve 3 instead of 10</td><td>Smaller context = lower cost, lower latency</td></tr>
+      <tr><td>max_tokens tuning</td><td>Set appropriate output length limit</td><td>Prevents over-generation waste</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DOMAIN 5 — GOVERNANCE
+══════════════════════════════════════════ -->
+<section id="d5">
+  <div class="container">
+    <div class="db d5">
+      <div class="dn">05</div>
+      <div class="db-body">
+        <div class="pct-pill">14% of exam · ~9 questions</div>
+        <h2>Governance, Safety & Risk Management</h2>
+        <p style="color:var(--muted);font-size:13px">Keeping AI systems safe, legal, ethical, and trustworthy.</p>
+      </div>
+    </div>
+
+    <div class="simple">
+      <div class="simple-label">What this domain is really about</div>
+      <p>When AI systems make mistakes, real people can be harmed. This domain covers how to prevent those mistakes: by building safety controls into the system, following laws like GDPR and HIPAA, thinking about fairness and bias, and knowing when to require a human to approve an AI decision.</p>
+    </div>
+
+    <h3>5.1 Guardrails and Safety Controls</h3>
+    <table>
+      <tr><th>Guardrail Type</th><th>What It Does</th><th>Example</th></tr>
+      <tr><td><strong>Input validation</strong></td><td>Check user input before sending to Claude</td><td>Block prompt injection attempts</td></tr>
+      <tr><td><strong>Output filtering</strong></td><td>Check Claude's response before showing to user</td><td>Block personally identifiable information in output</td></tr>
+      <tr><td><strong>PreToolUse hooks</strong></td><td>Block dangerous tool calls before they execute</td><td>Prevent deletion of files above a certain size</td></tr>
+      <tr><td><strong>Rate limiting</strong></td><td>Limit how many actions can happen per time period</td><td>Maximum 10 refunds per hour per agent</td></tr>
+      <tr><td><strong>Human checkpoints</strong></td><td>Require human approval before high-risk actions</td><td>Approve before publishing to production</td></tr>
+    </table>
+
+    <h3>5.2 Compliance Regulations</h3>
+    <div class="simple">
+      <div class="simple-label">If you are not familiar with these laws</div>
+      <p>These are legal frameworks that protect people's data and rights. If your AI system handles personal data or operates in regulated industries, you must know and follow these rules. The exam tests whether you know which rules apply and how to build systems that comply.</p>
+    </div>
+
+    <table>
+      <tr><th>Regulation</th><th>What It Covers</th><th>Key Requirements for AI Systems</th></tr>
+      <tr><td><strong>GDPR</strong></td><td>Personal data of people in the EU</td><td>Data minimisation, right to deletion, consent, data residency</td></tr>
+      <tr><td><strong>HIPAA</strong></td><td>Medical / health information in the USA</td><td>Encrypt health data, audit logs, access control, breach notification</td></tr>
+      <tr><td><strong>FedRAMP</strong></td><td>Cloud services used by US federal government</td><td>Security controls, continuous monitoring, authorisation process</td></tr>
+    </table>
+
+    <h4>GDPR Key Principles for AI Systems</h4>
+    <ul class="tl">
+      <li>Data minimisation — only collect what you need</li>
+      <li>Purpose limitation — use data only for stated purpose</li>
+      <li>Right to erasure — users can request their data be deleted</li>
+      <li>Transparency — explain how AI makes decisions</li>
+      <li>Data residency — some data must stay within EU borders</li>
+    </ul>
+
+    <h3>5.3 Human-in-the-Loop (HITL) Validation</h3>
+    <table>
+      <tr><th>HITL Pattern</th><th>How It Works</th><th>Use When</th></tr>
+      <tr><td><strong>Approval gate</strong></td><td>AI drafts; human approves before action executes</td><td>High-risk actions (publish, delete, send email)</td></tr>
+      <tr><td><strong>Review queue</strong></td><td>AI processes; human reviews output before delivery</td><td>Legal documents, medical summaries</td></tr>
+      <tr><td><strong>Escalation trigger</strong></td><td>AI handles routine cases; human gets edge cases</td><td>Customer service, complaint handling</td></tr>
+      <tr><td><strong>Audit trail</strong></td><td>AI acts; human reviews logs periodically</td><td>Low-risk but regulated activities</td></tr>
+    </table>
+
+    <h3>5.4 Ethical AI — Bias, Fairness, Transparency</h3>
+    <table>
+      <tr><th>Concept</th><th>What It Means</th><th>How to Address It</th></tr>
+      <tr><td><strong>Bias</strong></td><td>System produces unfair results for certain groups</td><td>Evaluate outputs across demographic groups; diverse test data</td></tr>
+      <tr><td><strong>Fairness</strong></td><td>System treats all users equitably</td><td>Define fairness metrics; test for disparate impact</td></tr>
+      <tr><td><strong>Transparency</strong></td><td>Users understand how the AI made a decision</td><td>Explainability features; disclose AI involvement</td></tr>
+      <tr><td><strong>Accountability</strong></td><td>Clear ownership when AI causes harm</td><td>Audit logs; defined escalation paths; human oversight</td></tr>
+    </table>
+
+    <h3>5.5 Risk Identification and Failure Modes</h3>
+    <ul class="tl">
+      <li>Hallucination — confident but false answers</li>
+      <li>Prompt injection — malicious input overrides instructions</li>
+      <li>Data leakage — private data appears in output</li>
+      <li>Model drift — behaviour changes after model updates</li>
+      <li>Cascading failures — one agent failure breaks entire system</li>
+      <li>Over-reliance — users trust AI output without verification</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DOMAIN 6 — STAKEHOLDERS
+══════════════════════════════════════════ -->
+<section id="d6">
+  <div class="container">
+    <div class="db d6">
+      <div class="dn">06</div>
+      <div class="db-body">
+        <div class="pct-pill">14% of exam · ~9 questions</div>
+        <h2>Stakeholder Communication & Lifecycle Management</h2>
+        <p style="color:var(--muted);font-size:13px">Discovery, requirements, architectural communication, and managing the full project lifecycle.</p>
+      </div>
+    </div>
+
+    <div class="simple">
+      <div class="simple-label">What this domain is really about</div>
+      <p>Building the right system is useless if you cannot understand what the business actually needs, communicate your design clearly, and manage the project through its whole life. This domain is about the human side of architecture — working with non-technical stakeholders, managing expectations, and delivering successfully.</p>
+    </div>
+
+    <h3>6.1 Structured Discovery and Requirement Gathering</h3>
+    <table>
+      <tr><th>Activity</th><th>What You Do</th><th>Output</th></tr>
+      <tr><td><strong>Business problem definition</strong></td><td>Understand what pain point the AI will solve</td><td>Problem statement</td></tr>
+      <tr><td><strong>Success criteria</strong></td><td>Define what "success" looks like in measurable terms</td><td>Metrics and KPIs</td></tr>
+      <tr><td><strong>Constraint identification</strong></td><td>Find budget, timeline, compliance, and technical limits</td><td>Constraint list</td></tr>
+      <tr><td><strong>Stakeholder mapping</strong></td><td>Identify who is affected and who has decision authority</td><td>RACI or stakeholder map</td></tr>
+    </table>
+
+    <h3>6.2 Communicating Architectural Decisions</h3>
+    <p>Architects must explain complex technical decisions to non-technical audiences — executives, legal teams, product managers. The exam tests whether you can communicate trade-offs clearly.</p>
+
+    <h4>How to Present a Trade-off Decision</h4>
+    <div class="callout key">
+      <div class="cl">Template</div>
+      "We chose [Option A] over [Option B] because [reason tied to business priority]. The trade-off is [what we give up]. We mitigate this risk by [mitigation]. The alternative would have resulted in [cost/delay/risk]."
+    </div>
+
+    <h3>6.3 Managing Stakeholder Expectations — SLAs</h3>
+    <div class="simple">
+      <div class="simple-label">What is an SLA?</div>
+      <p>SLA = Service Level Agreement. It is a formal commitment about how well the system will perform. For example: "The AI will respond within 3 seconds for 99% of requests." If the system doesn't meet this, there are consequences. The architect must design the system to meet the SLA.</p>
+    </div>
+
+    <table>
+      <tr><th>SLA Dimension</th><th>Example Target</th><th>Design Implication</th></tr>
+      <tr><td>Latency (p95)</td><td>Under 3 seconds for 95% of requests</td><td>Choose faster model; use caching; limit retrieval</td></tr>
+      <tr><td>Availability</td><td>99.9% uptime</td><td>Redundancy; fallback models; circuit breakers</td></tr>
+      <tr><td>Accuracy</td><td>At least 90% correct on benchmark</td><td>Larger model; RAG; evaluation framework</td></tr>
+      <tr><td>Cost per query</td><td>Under $0.01</td><td>Smaller model; caching; batch processing</td></tr>
+    </table>
+
+    <h3>6.4 Lifecycle Management</h3>
+    <table>
+      <tr><th>Phase</th><th>What Happens</th><th>Architect's Role</th></tr>
+      <tr><td><strong>Discovery</strong></td><td>Understand the problem; gather requirements</td><td>Lead workshops; define success criteria</td></tr>
+      <tr><td><strong>Design</strong></td><td>Create the architecture; choose components</td><td>Design system; document decisions; present to stakeholders</td></tr>
+      <tr><td><strong>Implementation</strong></td><td>Build the system</td><td>Guide developers; review technical choices</td></tr>
+      <tr><td><strong>Handoff</strong></td><td>Transfer to operations team</td><td>Document architecture; train operators; write runbooks</td></tr>
+      <tr><td><strong>Monitoring</strong></td><td>Watch system in production</td><td>Define dashboards; set alerts; track metrics</td></tr>
+      <tr><td><strong>Iteration</strong></td><td>Improve based on data</td><td>Analyse evaluation results; propose improvements</td></tr>
+    </table>
+
+    <h3>6.5 Feedback Loops</h3>
+    <p>Production AI systems must continuously improve. This requires structured feedback loops:</p>
+    <ul class="tl">
+      <li>Collect user feedback (thumbs up/down, explicit ratings)</li>
+      <li>Monitor quality metrics over time</li>
+      <li>Regular evaluation against test dataset</li>
+      <li>Stakeholder review meetings at defined intervals</li>
+      <li>Prompt and architecture iteration based on data</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     DOMAIN 7 — DEV PRODUCTIVITY
+══════════════════════════════════════════ -->
+<section id="d7">
+  <div class="container">
+    <div class="db d7">
+      <div class="dn">07</div>
+      <div class="db-body">
+        <div class="pct-pill">7% of exam · ~4 questions — SMALLEST DOMAIN</div>
+        <h2>Developer Productivity & Operational Enablement</h2>
+        <p style="color:var(--muted);font-size:13px">Configuring Claude tools for teams, improving developer workflows, and supporting operations.</p>
+      </div>
+    </div>
+
+    <div class="simple">
+      <div class="simple-label">What this domain is really about</div>
+      <p>This is the smallest domain (7%) and overlaps with what you already know from the Foundations exam — Claude Code, team configuration, and operational workflows. Focus here is on the team and operational level rather than individual developer setup.</p>
+    </div>
+
+    <h3>7.1 Claude Code for Teams</h3>
+    <p>This builds on what you know from the Foundations exam's Claude Code module. At the Professional level, focus is on team configuration and operational use.</p>
+
+    <table>
+      <tr><th>Config Level</th><th>File</th><th>Scope</th></tr>
+      <tr><td>Enterprise</td><td><code>managed_settings.json</code></td><td>Entire organisation — highest authority</td></tr>
+      <tr><td>Project</td><td><code>./CLAUDE.md</code> + <code>.claude/rules/</code></td><td>All team members on this project</td></tr>
+      <tr><td>User</td><td><code>~/.claude/CLAUDE.md</code></td><td>Individual developer only</td></tr>
+    </table>
+
+    <h3>7.2 AI-Assisted Developer Workflows</h3>
+    <ul class="tl">
+      <li>Automated code review via slash commands</li>
+      <li>CI/CD pipeline integration for quality gates</li>
+      <li>PR review workflows triggered by Claude</li>
+      <li>Test generation for new code</li>
+      <li>Documentation generation from code</li>
+    </ul>
+
+    <h3>7.3 Debugging and Operational Issue Resolution</h3>
+    <table>
+      <tr><th>Issue</th><th>First Place to Look</th></tr>
+      <tr><td>Agent produces unexpected output</td><td>Check prompt version and model version — have either changed?</td></tr>
+      <tr><td>Tool call failures increasing</td><td>Check tool logs — is the external service returning errors?</td></tr>
+      <tr><td>Latency spike</td><td>Check token counts — are prompts getting longer? Check retrieval timing.</td></tr>
+      <tr><td>Costs suddenly higher</td><td>Check if cached prompts are still hitting cache; check token counts</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SAMPLE QUESTIONS (from official PDF)
+══════════════════════════════════════════ -->
+<section id="samples">
+  <div class="container">
+    <div class="eyebrow">Official Sample Questions</div>
+    <h2>Sample Questions from the Exam Guide</h2>
+    <p class="sec-intro">These are the three official sample questions from the CCAR-P exam guide (PDF). Study the reasoning carefully — the exam tests decision-making, not just recall.</p>
+
+    <div class="sq">
+      <div class="q-num">Sample 1 · Domain 3 — Integration</div>
+      <div class="q-text">A team exposes a customer-support agent that can read tickets, draft replies, issue refunds, and delete user accounts. Support staff only ever need to read tickets and draft replies. Applying least-privilege principles, which change best reduces risk?</div>
+      <ul class="opts">
+        <li>A. Add logging to the refund and delete tools so misuse can be audited later.</li>
+        <li>B. Remove the refund and delete tools from the agent's configuration entirely.</li>
+        <li>C. Keep all tools but add a confirmation prompt before refunds and deletions.</li>
+        <li>D. Replace the agent with a larger model that follows instructions more reliably.</li>
+        <li class="correct">✅ Correct Answer: B — Remove the tools entirely.</li>
+      </ul>
+      <div class="rationale"><strong>Why B?</strong> Least privilege means removing capabilities that the role does not require — eliminating the attack surface rather than monitoring or guarding it. Logging (A) and confirmation prompts (C) are "detective" controls — they help after the fact, but the tools still exist and can still be misused. Model size (D) has nothing to do with authorisation scope.</div>
+    </div>
+
+    <div class="sq">
+      <div class="q-num">Sample 2 · Domain 2 — Models, Prompting & Context</div>
+      <div class="q-text">An application sends the same 8,000-token system prompt and policy document on every request, followed by a short, varying user message. Latency and cost are both concerns. Which optimisation most directly addresses both?</div>
+      <ul class="opts">
+        <li>A. Truncate the policy document to the first 1,000 tokens.</li>
+        <li>B. Switch to the smallest available model regardless of task fit.</li>
+        <li class="correct">✅ Correct Answer: C — Place static content first and enable prompt caching.</li>
+        <li>D. Move the policy document into a few-shot example block.</li>
+      </ul>
+      <div class="rationale"><strong>Why C?</strong> Ordering stable content first and enabling prompt caching lets the repeated prefix be reused — reducing both time-to-first-token AND per-request cost on every subsequent call. Truncation (A) loses needed policy content. Downsizing blindly (B) risks quality degradation. Moving to few-shot (D) does not create a cacheable, reusable prefix and doesn't address the core problem.</div>
+    </div>
+
+    <div class="sq">
+      <div class="q-num">Sample 3 · Domain 4 — Evaluation & Optimisation</div>
+      <div class="q-text">A RAG system suddenly returns confident but incorrect answers after a document refresh, while latency and model version are unchanged. What is the most likely first place to investigate?</div>
+      <ul class="opts">
+        <li>A. The model weights have silently changed.</li>
+        <li class="correct">✅ Correct Answer: B — The retrieval / indexing step is returning irrelevant or stale chunks.</li>
+        <li>C. The temperature setting is too low.</li>
+        <li>D. The context window has shrunk.</li>
+      </ul>
+      <div class="rationale"><strong>Why B?</strong> Confident-but-wrong answers following a document refresh — with model version and latency unchanged — points directly to retrieval feeding the model poor context. A broken re-index or mismatched embeddings would cause exactly this symptom. Options A, C, and D would not be specifically triggered by a document refresh event.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     POLICIES
+══════════════════════════════════════════ -->
+<section id="policies">
+  <div class="container">
+    <div class="eyebrow">Exam Policies</div>
+    <h2>Registration, Policies & Exam Day</h2>
+    <p class="sec-intro">Everything you need to know about the logistics of taking the exam — in simple, clear language.</p>
+
+    <h3>How to Register</h3>
+    <table>
+      <tr><th>Step</th><th>What to Do</th></tr>
+      <tr><td>1</td><td>Go to the Anthropic Partner Academy certification page</td></tr>
+      <tr><td>2</td><td>Download and read the Exam Guide and Certification Terms</td></tr>
+      <tr><td>3</td><td>Register and pay $175 USD (partner discount may apply based on your tier)</td></tr>
+      <tr><td>4</td><td>Create a Pearson VUE account and schedule your exam date</td></tr>
+      <tr><td>5</td><td>Choose: online proctored (from home) OR Pearson VUE test centre</td></tr>
+    </table>
+
+    <div class="callout warn">
+      <div class="cl">Cancellation Rule</div>
+      You can cancel or reschedule up to 24 hours before your appointment — for free. Changes made within 24 hours forfeit the full exam fee. Plan ahead.
+    </div>
+
+    <h3>Retake Policy</h3>
+    <table>
+      <tr><th>Attempt</th><th>Waiting Period Before Retake</th></tr>
+      <tr><td>After 1st fail</td><td>14 days</td></tr>
+      <tr><td>After 2nd fail</td><td>30 days</td></tr>
+      <tr><td>After 3rd fail</td><td>90 days</td></tr>
+      <tr><td>Maximum attempts</td><td>4 times within any rolling 12-month period</td></tr>
+    </table>
+
+    <h3>On Exam Day</h3>
+    <ul class="tl">
+      <li>Bring valid, unexpired government photo ID</li>
+      <li>Name on ID must exactly match registration name</li>
+      <li>No notes, books, phones, or secondary monitors</li>
+      <li>Stay within webcam view the entire time (online)</li>
+      <li>No communicating with anyone during the exam</li>
+      <li>No capturing, photographing, or reproducing any exam content</li>
+    </ul>
+
+    <h3>Credential Validity and Renewal</h3>
+    <div class="callout key">
+      <div class="cl">12-Month Validity</div>
+      Your CCAR-P certification is valid for 12 months from the date you pass. To renew on time: complete a free non-proctored assessment on the Anthropic Partner Academy — no fee. If your credential lapses (expires before renewal), you must retake the full $175 exam. Don't let it lapse.
+    </div>
+
+    <h3>Support Contacts</h3>
+    <table>
+      <tr><th>Issue</th><th>Contact</th></tr>
+      <tr><td>Name correction on registration</td><td>certifications-support@anthropic.com</td></tr>
+      <tr><td>Registration, scheduling, results</td><td>Pearson VUE support: pearsonvue.com/us/en/anthropic.html</td></tr>
+      <tr><td>Accommodations (disability)</td><td>Pearson VUE: pearsonvue.com/us/en/test-takers/accommodations</td></tr>
+      <tr><td>Appeals (within 14 days of exam)</td><td>Pearson VUE support</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     QUICK REFERENCE
+══════════════════════════════════════════ -->
+<section id="quickref">
+  <div class="container">
+    <div class="eyebrow">Exam Prep</div>
+    <h2>Quick Reference & Revision Checklist</h2>
+
+    <h3>Fast Facts</h3>
+    <div class="qr">
+      <div class="qr-i"><div class="qk">Exam Code</div><div class="qv">CCAR-P</div></div>
+      <div class="qr-i"><div class="qk">Questions</div><div class="qv">63</div></div>
+      <div class="qr-i"><div class="qk">Duration</div><div class="qv">120 mins</div></div>
+      <div class="qr-i"><div class="qk">Pass Score</div><div class="qv">720 / 1000</div></div>
+      <div class="qr-i"><div class="qk">Exam Fee</div><div class="qv">USD 175</div></div>
+      <div class="qr-i"><div class="qk">Valid For</div><div class="qv">12 Months</div></div>
+      <div class="qr-i"><div class="qk">Delivery</div><div class="qv">Pearson VUE</div></div>
+      <div class="qr-i"><div class="qk">Level</div><div class="qv">Professional</div></div>
+      <div class="qr-i"><div class="qk">Version</div><div class="qv">1.0 · July 2026</div></div>
+    </div>
+
+    <h3>The 12 Core Rules for This Exam</h3>
+    <ul class="cl-list">
+      <li>Least privilege = REMOVE tools the role doesn't need. Logging and confirmation prompts are not enough.</li>
+      <li>Prompt caching = put STATIC content first, DYNAMIC content last. This saves both cost and latency.</li>
+      <li>RAG errors after document refresh = check the re-indexing step first, not the model.</li>
+      <li>A/B testing = change ONE variable at a time. Always compare on the same evaluation dataset.</li>
+      <li>GDPR key principles: data minimisation, purpose limitation, right to erasure, transparency.</li>
+      <li>HIPAA = health data; requires encryption, audit logs, access control, breach notification.</li>
+      <li>Human-in-the-loop = approval gate for high-risk irreversible actions; review queue for sensitive content.</li>
+      <li>SLA design drives model choice: latency SLA → smaller model + caching; accuracy SLA → larger model + RAG.</li>
+      <li>Observability: log every request/response + token count + latency + retrieval results.</li>
+      <li>Confident but wrong answers = retrieval problem (wrong chunks), not a model problem.</li>
+      <li>Hybrid retrieval (semantic + keyword) outperforms either alone in most production systems.</li>
+      <li>Stakeholder communication: always tie trade-off decisions to business value, not technical preference.</li>
+    </ul>
+
+    <h3>Domain Revision Checklist</h3>
+
+    <h4>D1 — Solution Design (17%)</h4>
+    <ul class="cl-list">
+      <li>I can identify the right architectural pattern for a given business problem</li>
+      <li>I know the 5 business value pillars and can map a use case to them</li>
+      <li>I can design a multi-agent system topology for a complex task</li>
+      <li>I understand decomposition strategies: functional, data, domain</li>
+      <li>I can design the full input→processing→output→feedback loop</li>
+    </ul>
+
+    <h4>D2 — Models, Prompting & Context (13%)</h4>
+    <ul class="cl-list">
+      <li>I know trade-offs between model sizes: speed vs. accuracy vs. cost</li>
+      <li>I know zero-shot, few-shot, and chain-of-thought and when to use each</li>
+      <li>I understand prompt caching: static first, dynamic last</li>
+      <li>I know context window management strategies and their trade-offs</li>
+      <li>I can design a system prompt with role, boundaries, format, and guardrails</li>
+    </ul>
+
+    <h4>D3 — Integration (19%)</h4>
+    <ul class="cl-list">
+      <li>I know when to use MCP vs. direct API vs. agent-to-agent integration</li>
+      <li>I can design a complete RAG pipeline (ingest → chunk → embed → index → retrieve → generate)</li>
+      <li>I know chunking strategies and when to use each</li>
+      <li>I know retrieval strategies: semantic, keyword, hybrid, re-ranking</li>
+      <li>I understand least privilege and can apply it to tool/agent configuration</li>
+      <li>I know what observability looks like in a production AI system</li>
+      <li>I understand accuracy-latency-cost trade-offs and how to justify decisions</li>
+    </ul>
+
+    <h4>D4 — Evaluation (16%)</h4>
+    <ul class="cl-list">
+      <li>I know the key evaluation metrics: accuracy, latency, cost, safety, hallucination rate</li>
+      <li>I can design an evaluation dataset with edge cases and ground truth</li>
+      <li>I understand A/B testing process and when results are statistically meaningful</li>
+      <li>I can diagnose system issues from symptoms (confident wrong answers → retrieval)</li>
+      <li>I know cost optimisation levers: caching, model sizing, batch API, max_tokens</li>
+    </ul>
+
+    <h4>D5 — Governance (14%)</h4>
+    <ul class="cl-list">
+      <li>I know GDPR, HIPAA, and FedRAMP key requirements</li>
+      <li>I can design guardrails: input validation, output filtering, PreToolUse hooks</li>
+      <li>I know HITL patterns: approval gate, review queue, escalation trigger</li>
+      <li>I understand bias, fairness, transparency, and how to test for them</li>
+      <li>I can identify AI failure modes: hallucination, injection, data leakage, model drift</li>
+    </ul>
+
+    <h4>D6 — Stakeholders (14%)</h4>
+    <ul class="cl-list">
+      <li>I can conduct structured discovery and define success criteria</li>
+      <li>I can communicate architectural trade-offs to non-technical stakeholders</li>
+      <li>I know how to design SLAs and what architectural choices they drive</li>
+      <li>I understand the full lifecycle: discovery → design → handoff → monitoring → iteration</li>
+    </ul>
+
+    <h4>D7 — Developer Productivity (7%)</h4>
+    <ul class="cl-list">
+      <li>I know Claude Code config hierarchy (review from Foundations)</li>
+      <li>I can describe team-level workflows: slash commands, CI/CD integration</li>
+      <li>I can diagnose common operational issues from symptoms</li>
+    </ul>
+
+    <h3>How to Prepare — Official Guidance</h3>
+    <table>
+      <tr><th>Activity</th><th>Why It Matters</th></tr>
+      <tr><td>Study the exam blueprint (Section 6 of the PDF)</td><td>Every question is written against these objectives — this is your syllabus</td></tr>
+      <tr><td>Build an end-to-end Claude solution with RAG and evaluation</td><td>Hands-on experience is the best way to understand the trade-offs the exam tests</td></tr>
+      <tr><td>Review official Anthropic documentation</td><td>Claude API, models, prompt engineering, MCP, and Skills docs</td></tr>
+      <tr><td>Practice making architectural decisions</td><td>Model selection, integration protocols, security trade-offs</td></tr>
+      <tr><td>Complete the sample questions in the exam guide</td><td>Understand the question style and cognitive level expected</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p><strong>CCAR-P Complete Study Guide</strong></p>
+  <p style="margin-top:6px">Claude Certified Architect – Professional · Version 1.0 · Effective July 2026</p>
+  <p style="margin-top:6px">Based on the official CCAR-P Exam Guide PDF published by Anthropic. Built for the Enapps–Anthropic partnership certification track.</p>
+  <p style="margin-top:14px;font-size:11px;color:#3a4a62">For official exam registration: anthropic-partners.skilljar.com · Support: certifications-support@anthropic.com · Exam delivery: Pearson VUE</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentMode {
+  in_depth
+  normal
+  concise
+
+  @@map("content_mode")
+}
+
+enum TopicStatus {
+  not_started
+  in_progress
+  completed
+
+  @@map("topic_status")
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+
+  @@map("difficulty")
+}
+
+enum ExamDifficulty {
+  easy
+  medium
+  hard
+  mixed
+
+  @@map("exam_difficulty")
+}
+
+enum QuestionSource {
+  manual
+  uploaded
+  ai_generated
+
+  @@map("question_source")
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+
+  @@map("review_status")
+}
+
+enum UploadStatus {
+  processing
+  ready
+  failed
+
+  @@map("upload_status")
+}
+
+enum FeedbackMode {
+  immediate
+  end_of_set
+
+  @@map("feedback_mode")
+}
+
+model User {
+  id                 String    @id @default(uuid()) @db.Uuid
+  email              String    @unique
+  name               String
+  passwordHash       String    @map("password_hash")
+  isAdmin            Boolean   @default(false) @map("is_admin")
+  emailVerifiedAt    DateTime? @map("email_verified_at") @db.Timestamptz
+  anthropicApiKeyEnc Bytes?    @map("anthropic_api_key_enc")
+  anthropicApiKeyIv  Bytes?    @map("anthropic_api_key_iv")
+  anthropicKeyLast4  String?   @map("anthropic_key_last4")
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  topicProgress   UserTopicProgress[]
+  documentUploads DocumentUpload[]
+  exams           Exam[]
+  createdQuestions Question[]         @relation("QuestionCreatedBy")
+
+  @@map("users")
+}
+
+model OtpCode {
+  id         String    @id @default(uuid()) @db.Uuid
+  email      String
+  codeHash   String    @map("code_hash")
+  purpose    String    @default("registration")
+  attempts   Int       @default(0)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@map("otp_codes")
+}
+
+// Persisted rate-limit tracking for login attempts. Required because the
+// Lambda is stateless across invocations (no in-memory limiter is possible) —
+// see spec Section 12's login rate-limit requirement.
+model LoginAttempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String
+  success   Boolean
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email, createdAt])
+  @@map("login_attempts")
+}
+
+model Certification {
+  id          String  @id @default(uuid()) @db.Uuid
+  code        String  @unique
+  name        String
+  description String?
+
+  topics   Topic[]
+  questions Question[]
+  exams    Exam[]
+
+  @@map("certifications")
+}
+
+model Topic {
+  id              String  @id @default(uuid()) @db.Uuid
+  certificationId String  @map("certification_id") @db.Uuid
+  parentTopicId   String? @map("parent_topic_id") @db.Uuid
+  title           String
+  orderIndex      Int     @map("order_index")
+  examDomain      String? @map("exam_domain")
+
+  certification Certification @relation(fields: [certificationId], references: [id])
+  parentTopic   Topic?  @relation("TopicToSubtopic", fields: [parentTopicId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subtopics     Topic[] @relation("TopicToSubtopic")
+
+  content        TopicContent[]
+  userProgress   UserTopicProgress[]
+  questions      Question[]
+  examScopedExams Exam[]
+
+  @@map("topics")
+}
+
+model TopicContent {
+  id         String      @id @default(uuid()) @db.Uuid
+  topicId    String      @map("topic_id") @db.Uuid
+  mode       ContentMode
+  contentMd  String      @map("content_md")
+  updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, mode])
+  @@map("topic_content")
+}
+
+model UserTopicProgress {
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String       @map("user_id") @db.Uuid
+  topicId      String       @map("topic_id") @db.Uuid
+  status       TopicStatus  @default(not_started)
+  lastMode     ContentMode? @map("last_mode")
+  lastViewedAt DateTime?    @map("last_viewed_at") @db.Timestamptz
+
+  user  User  @relation(fields: [userId], references: [id])
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@map("user_topic_progress")
+}
+
+model Question {
+  id              String         @id @default(uuid()) @db.Uuid
+  certificationId String         @map("certification_id") @db.Uuid
+  topicId         String         @map("topic_id") @db.Uuid
+  difficulty      Difficulty
+  questionText    String         @map("question_text")
+  source          QuestionSource
+  createdBy       String?        @map("created_by") @db.Uuid
+  isActive        Boolean        @default(true) @map("is_active")
+  reviewStatus    ReviewStatus   @default(approved) @map("review_status")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  certification Certification    @relation(fields: [certificationId], references: [id])
+  topic         Topic            @relation(fields: [topicId], references: [id])
+  creator       User?            @relation("QuestionCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  options       QuestionOption[]
+  examQuestions ExamQuestion[]
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id          String  @id @default(uuid()) @db.Uuid
+  questionId  String  @map("question_id") @db.Uuid
+  optionText  String  @map("option_text")
+  isCorrect   Boolean @map("is_correct")
+  explanation String
+  orderIndex  Int     @map("order_index")
+
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  examQuestions ExamQuestion[]
+
+  @@map("question_options")
+}
+
+model DocumentUpload {
+  id                  String       @id @default(uuid()) @db.Uuid
+  userId              String       @map("user_id") @db.Uuid
+  filename            String
+  storagePath         String       @map("storage_path")
+  status              UploadStatus @default(processing)
+  generatedQuestionCt Int          @default(0) @map("generated_question_ct")
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("document_uploads")
+}
+
+model Exam {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @map("user_id") @db.Uuid
+  certificationId String         @map("certification_id") @db.Uuid
+  feedbackMode    FeedbackMode   @map("feedback_mode")
+  difficulty      ExamDifficulty
+  topicScope      String?        @map("topic_scope") @db.Uuid
+  questionCount   Int            @map("question_count")
+  startedAt       DateTime       @default(now()) @map("started_at") @db.Timestamptz
+  completedAt     DateTime?      @map("completed_at") @db.Timestamptz
+  scorePct        Decimal?       @map("score_pct")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  certification Certification  @relation(fields: [certificationId], references: [id])
+  scopedTopic   Topic?         @relation(fields: [topicScope], references: [id])
+  examQuestions ExamQuestion[]
+
+  @@map("exams")
+}
+
+model ExamQuestion {
+  id                String    @id @default(uuid()) @db.Uuid
+  examId            String    @map("exam_id") @db.Uuid
+  questionId        String    @map("question_id") @db.Uuid
+  orderIndex        Int       @map("order_index")
+  selectedOptionId  String?   @map("selected_option_id") @db.Uuid
+  isCorrect         Boolean?  @map("is_correct")
+  answeredAt        DateTime? @map("answered_at") @db.Timestamptz
+
+  exam           Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question       Question        @relation(fields: [questionId], references: [id])
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id])
+
+  @@map("exam_questions")
+}

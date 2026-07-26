@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCAR-F Complete Study Guide — Claude Certified Architect Foundations</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap');
+
+:root {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2230; --border:#2a3441;
+  --text:#e6edf3; --muted:#8b949e;
+  --accent:#7c6af7; --accent2:#4facf7; --accent3:#f7c94f;
+  --green:#56d364; --red:#f85149; --orange:#f7954f;
+  --d1:#7c6af7; --d2:#4facf7; --d3:#f7c94f; --d4:#56d364; --d5:#f7954f;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px;}
+
+/* ── HEADER ── */
+header{background:linear-gradient(135deg,#0d1117 0%,#1a1040 60%,#0d1117 100%);border-bottom:1px solid var(--border);padding:64px 24px 52px;text-align:center;position:relative;overflow:hidden;}
+header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(124,106,247,.18) 0%,transparent 70%);pointer-events:none;}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.4);border-radius:20px;padding:6px 16px;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
+h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,50px);font-weight:700;line-height:1.15;margin-bottom:14px;}
+h1 span{color:var(--accent);}
+.sub{color:var(--muted);font-size:15px;max-width:600px;margin:0 auto 32px;}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px;}
+.chip{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 16px;font-size:13px;}
+.chip strong{color:var(--accent2);}
+
+/* ── NAV ── */
+nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+nav a{display:block;padding:13px 14px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;}
+nav a:hover{color:var(--text);border-bottom-color:var(--accent);}
+
+/* ── LAYOUT ── */
+.container{max-width:920px;margin:0 auto;padding:0 24px;}
+section{padding:56px 0;border-top:1px solid var(--border);}
+
+/* ── TYPOGRAPHY ── */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+h2{font-family:'Fraunces',serif;font-size:clamp(20px,3vw,30px);font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.2;}
+.intro{color:var(--muted);max-width:700px;margin-bottom:32px;font-size:15px;}
+h3{font-size:17px;font-weight:600;color:var(--text);margin:36px 0 12px;}
+h4{font-size:12px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.08em;margin:24px 0 10px;}
+p{margin-bottom:14px;color:var(--text);}
+p:last-child{margin-bottom:0;}
+
+/* ── PLAIN ENGLISH BOX ── */
+.plain{background:rgba(86,211,100,.07);border:1px solid rgba(86,211,100,.25);border-radius:10px;padding:16px 20px;margin:16px 0;font-size:14px;}
+.plain-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+
+/* ── CALLOUTS ── */
+.callout{border-radius:10px;padding:16px 20px;margin:16px 0;font-size:14px;line-height:1.65;}
+.callout .cl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+.callout.key{background:rgba(124,106,247,.08);border-left:3px solid var(--accent);}
+.callout.key .cl{color:var(--accent);}
+.callout.warn{background:rgba(248,81,73,.08);border-left:3px solid var(--red);}
+.callout.warn .cl{color:var(--red);}
+.callout.tip{background:rgba(86,211,100,.07);border-left:3px solid var(--green);}
+.callout.tip .cl{color:var(--green);}
+.callout.exam{background:rgba(247,201,79,.07);border-left:3px solid var(--accent3);}
+.callout.exam .cl{color:var(--accent3);}
+.callout.oos{background:rgba(139,148,158,.06);border-left:3px solid var(--muted);}
+.callout.oos .cl{color:var(--muted);}
+
+/* ── DOMAIN BANNER ── */
+.dbanner{border-radius:14px;padding:24px 28px;margin-bottom:32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.dbanner.d1{background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.25);}
+.dbanner.d2{background:rgba(79,172,247,.08);border:1px solid rgba(79,172,247,.25);}
+.dbanner.d3{background:rgba(247,201,79,.08);border:1px solid rgba(247,201,79,.25);}
+.dbanner.d4{background:rgba(86,211,100,.07);border:1px solid rgba(86,211,100,.25);}
+.dbanner.d5{background:rgba(247,149,79,.08);border:1px solid rgba(247,149,79,.25);}
+.dnum{font-family:'Fraunces',serif;font-size:48px;font-weight:700;opacity:.25;line-height:1;}
+.dpct{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-bottom:6px;}
+.d1 .dpct{background:rgba(124,106,247,.2);color:var(--d1);}
+.d2 .dpct{background:rgba(79,172,247,.2);color:var(--d2);}
+.d3 .dpct{background:rgba(247,201,79,.2);color:var(--d3);}
+.d4 .dpct{background:rgba(86,211,100,.2);color:var(--d4);}
+.d5 .dpct{background:rgba(247,149,79,.2);color:var(--d5);}
+
+/* ── DOMAIN OVERVIEW CARDS ── */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;padding:32px 0;}
+.dcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;transition:transform .2s;}
+.dcard:hover{transform:translateY(-2px);}
+.dcard.d1{border-top:3px solid var(--d1);}
+.dcard.d2{border-top:3px solid var(--d2);}
+.dcard.d3{border-top:3px solid var(--d3);}
+.dcard.d4{border-top:3px solid var(--d4);}
+.dcard.d5{border-top:3px solid var(--d5);}
+.dcard .pct{font-size:30px;font-weight:700;margin-bottom:4px;}
+.d1 .pct{color:var(--d1);} .d2 .pct{color:var(--d2);} .d3 .pct{color:var(--d3);} .d4 .pct{color:var(--d4);} .d5 .pct{color:var(--d5);}
+.dcard h3{font-size:14px;font-weight:600;margin:0 0 6px;color:var(--text);}
+.dcard p{font-size:12px;color:var(--muted);line-height:1.5;margin:0;}
+
+/* ── PROGRESS BARS ── */
+.pb-wrap{padding:24px 0 8px;}
+.pb-row{margin-bottom:12px;}
+.pb-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px;}
+.pb{height:7px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+.pb-fill{height:100%;border-radius:99px;}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;font-size:13px;margin:18px 0;}
+th{background:var(--bg3);color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid rgba(42,52,65,.5);vertical-align:top;line-height:1.5;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+/* ── CODE ── */
+code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--accent2);}
+pre{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:18px 20px;overflow-x:auto;margin:14px 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.75;color:var(--accent2);}
+
+/* ── LISTS ── */
+ul.pills{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px;margin:14px 0;}
+ul.pills li{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+ul.pills li::before{content:'›';color:var(--accent);font-weight:700;font-size:16px;flex-shrink:0;margin-top:1px;}
+ul.check{list-style:none;margin:10px 0;}
+ul.check li{padding:8px 0;border-bottom:1px solid rgba(42,52,65,.4);font-size:14px;display:flex;gap:10px;align-items:flex-start;}
+ul.check li:last-child{border-bottom:none;}
+ul.check li::before{content:'□';color:var(--accent);flex-shrink:0;margin-top:2px;}
+
+/* ── COMPARE ── */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
+.cmp-col{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.cmp-col h5{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
+.cmp-col.good h5{color:var(--green);}
+.cmp-col.bad h5{color:var(--red);}
+.cmp-col ul{list-style:none;}
+.cmp-col ul li{font-size:13px;padding:3px 0;color:var(--muted);line-height:1.5;}
+.cmp-col.good ul li::before{content:'✓ ';color:var(--green);}
+.cmp-col.bad ul li::before{content:'✗ ';color:var(--red);}
+
+/* ── FLOW ── */
+.flow{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;margin:14px 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2.1;color:var(--muted);}
+.flow .step{color:var(--accent2);font-weight:600;}
+.flow .arrow{color:var(--accent);}
+.flow .ok{color:var(--green);}
+.flow .stop{color:var(--accent3);}
+
+/* ── SCENARIO BOX ── */
+.scenario{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:20px 0;}
+.scenario-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent3);margin-bottom:10px;}
+.scenario p{font-size:13px;color:var(--muted);margin-bottom:8px;}
+.scenario p:last-child{margin:0;}
+
+/* ── SAMPLE Q ── */
+.sq{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:16px 0;}
+.sq-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent3);margin-bottom:10px;}
+.sq-q{font-size:14px;font-weight:500;color:var(--text);margin-bottom:14px;line-height:1.6;}
+.sq-opts{list-style:none;margin-bottom:14px;}
+.sq-opts li{font-size:13px;padding:7px 12px;border-radius:6px;margin-bottom:5px;background:var(--bg3);color:var(--muted);}
+.sq-opts li.correct{background:rgba(86,211,100,.1);border:1px solid rgba(86,211,100,.3);color:var(--green);}
+.sq-opts li.wrong{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);color:var(--red);}
+.sq-why{font-size:13px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:12px;margin-top:12px;}
+
+/* ── QR GRID ── */
+.qr{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:14px 0;}
+.qr-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.qr-k{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.qr-v{font-size:13px;font-weight:600;color:var(--accent3);}
+
+/* ── FOOTER ── */
+footer{background:var(--bg2);border-top:1px solid var(--border);text-align:center;padding:40px 24px;color:var(--muted);font-size:13px;}
+footer strong{color:var(--text);}
+
+@media(max-width:600px){
+  .cmp{grid-template-columns:1fr;}
+  .dgrid{grid-template-columns:1fr;}
+  nav a{padding:11px 10px;font-size:11px;}
+  .dbanner{gap:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="badge">📋 Official Exam · Version 1.0 · July 2026 · Code: CCAR-F</div>
+  <h1>Claude Certified Architect<br><span>Foundations (CCAR-F)</span></h1>
+  <p class="sub">The complete beginner-friendly study guide — built directly from the official Anthropic exam guide. Every domain, every task, every concept explained in plain English.</p>
+  <div class="chips">
+    <div class="chip"><strong>60</strong> Questions</div>
+    <div class="chip"><strong>120</strong> min</div>
+    <div class="chip">Pass: <strong>720 / 1000</strong></div>
+    <div class="chip">Fee: <strong>$125 USD</strong></div>
+    <div class="chip">4 random scenarios from <strong>6 possible</strong></div>
+    <div class="chip">Valid: <strong>12 months</strong></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <a href="#overview">Overview</a>
+  <a href="#scenarios">Scenarios</a>
+  <a href="#d1">D1 · Agentic Architecture</a>
+  <a href="#d2">D2 · Tool Design & MCP</a>
+  <a href="#d3">D3 · Claude Code</a>
+  <a href="#d4">D4 · Prompt Engineering</a>
+  <a href="#d5">D5 · Context & Reliability</a>
+  <a href="#sampleq">Sample Questions</a>
+  <a href="#scope">In / Out of Scope</a>
+  <a href="#quickref">Quick Reference</a>
+</nav>
+
+<!-- ═══ OVERVIEW ═══ -->
+<section id="overview">
+<div class="container">
+  <div class="eyebrow">What Is This Exam?</div>
+  <h2>Understanding the CCAR-F Certification</h2>
+  <p class="intro">This page is your complete guide to passing the Claude Certified Architect – Foundations exam. Everything here comes directly from Anthropic's official exam guide. We've rewritten it in plain, simple language so anyone can understand it — even without a deep technical background.</p>
+
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>The CCAR-F exam checks whether you can make <strong>smart decisions</strong> when building real applications with Claude. It does not just ask you to memorise facts — it gives you realistic work situations and asks "what would you do?" You need to show you understand how Claude works in production (real-world) systems.</p>
+  </div>
+
+  <h3>The 5 Exam Domains</h3>
+  <p style="color:var(--muted);font-size:14px;margin-bottom:0">These are the 5 topic areas. The percentage shows how many exam questions come from each area.</p>
+  <div class="dgrid">
+    <div class="dcard d1">
+      <div class="pct">27%</div>
+      <h3>D1 · Agentic Architecture & Orchestration</h3>
+      <p>How to build systems where Claude works autonomously, uses tools, and coordinates multiple AI "workers".</p>
+    </div>
+    <div class="dcard d3">
+      <div class="pct">20%</div>
+      <h3>D3 · Claude Code Configuration & Workflows</h3>
+      <p>How to set up and customise Claude Code for your development team.</p>
+    </div>
+    <div class="dcard d4">
+      <div class="pct">20%</div>
+      <h3>D4 · Prompt Engineering & Structured Output</h3>
+      <p>How to write clear instructions for Claude and get reliable, structured results back.</p>
+    </div>
+    <div class="dcard d2">
+      <div class="pct">18%</div>
+      <h3>D2 · Tool Design & MCP Integration</h3>
+      <p>How to design the tools Claude uses, and how to connect Claude to your backend systems.</p>
+    </div>
+    <div class="dcard d5">
+      <div class="pct">15%</div>
+      <h3>D5 · Context Management & Reliability</h3>
+      <p>How to handle long conversations, manage errors gracefully, and know when to involve a human.</p>
+    </div>
+  </div>
+
+  <div class="pb-wrap">
+    <div class="pb-row"><div class="pb-lbl"><span>D1 · Agentic Architecture</span><span style="color:var(--d1)">27% · ~16 questions</span></div><div class="pb"><div class="pb-fill" style="width:27%;background:var(--d1)"></div></div></div>
+    <div class="pb-row"><div class="pb-lbl"><span>D3 · Claude Code</span><span style="color:var(--d3)">20% · ~12 questions</span></div><div class="pb"><div class="pb-fill" style="width:20%;background:var(--d3)"></div></div></div>
+    <div class="pb-row"><div class="pb-lbl"><span>D4 · Prompt Engineering</span><span style="color:var(--d4)">20% · ~12 questions</span></div><div class="pb"><div class="pb-fill" style="width:20%;background:var(--d4)"></div></div></div>
+    <div class="pb-row"><div class="pb-lbl"><span>D2 · Tool Design & MCP</span><span style="color:var(--d2)">18% · ~11 questions</span></div><div class="pb"><div class="pb-fill" style="width:18%;background:var(--d2)"></div></div></div>
+    <div class="pb-row"><div class="pb-lbl"><span>D5 · Context Management</span><span style="color:var(--d5)">15% · ~9 questions</span></div><div class="pb"><div class="pb-fill" style="width:15%;background:var(--d5)"></div></div></div>
+  </div>
+
+  <h3>Key Technologies You Must Know</h3>
+  <table>
+    <tr><th>Technology</th><th>What It Is (Plain English)</th></tr>
+    <tr><td><strong>Claude Agent SDK</strong></td><td>The toolkit for building Claude-powered agents — systems that can think, use tools, and complete multi-step tasks on their own.</td></tr>
+    <tr><td><strong>Model Context Protocol (MCP)</strong></td><td>A standard way to connect Claude to external tools and data sources (like databases, APIs, or file systems). Think of it as a "plugin system" for Claude.</td></tr>
+    <tr><td><strong>Claude Code</strong></td><td>Anthropic's command-line tool that lets Claude work directly inside your coding environment — reading files, writing code, running commands.</td></tr>
+    <tr><td><strong>Claude API</strong></td><td>The programming interface that lets your software "talk to" Claude — send it prompts, receive responses, define tools.</td></tr>
+    <tr><td><strong>Message Batches API</strong></td><td>A way to send many requests to Claude at once at lower cost. Good for non-urgent bulk tasks. Not suitable for real-time needs.</td></tr>
+    <tr><td><strong>JSON Schema</strong></td><td>A way to define the exact structure of data you want Claude to return (e.g., always return a name, an email, and a number).</td></tr>
+    <tr><td><strong>Pydantic</strong></td><td>A Python library that checks whether data matches your expected structure — used to validate Claude's output.</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ═══ SCENARIOS ═══ -->
+<section id="scenarios">
+<div class="container">
+  <div class="eyebrow">How the Exam Works</div>
+  <h2>The 6 Exam Scenarios</h2>
+  <p class="intro">The exam is built around real-world situations. You'll be given 4 of the 6 scenarios below (chosen at random). Each scenario sets the stage, and several questions follow that scenario. Understanding these scenarios deeply is key to passing.</p>
+
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Think of each scenario like a job situation: "You're building X for a company. Here's the problem. What do you do?" All questions follow this real-world format — not theoretical definitions.</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Scenario 1 · Customer Support Resolution Agent</div>
+    <p><strong>The situation:</strong> You're building a customer support AI that handles returns, billing disputes, and account issues. It has tools to look up customers, find orders, issue refunds, and hand off to a human.</p>
+    <p><strong>The goal:</strong> Resolve 80%+ of issues automatically, but know when to escalate to a human.</p>
+    <p><strong>Domains tested:</strong> Agentic Architecture, Tool Design & MCP, Context Management</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Scenario 2 · Code Generation with Claude Code</div>
+    <p><strong>The situation:</strong> Your development team uses Claude Code to generate code, fix bugs, and write documentation. You need to set it up properly so it fits your team's workflow.</p>
+    <p><strong>The goal:</strong> Configure Claude Code with custom commands and rules so every developer gets consistent, high-quality results.</p>
+    <p><strong>Domains tested:</strong> Claude Code Configuration, Context Management</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Scenario 3 · Multi-Agent Research System</div>
+    <p><strong>The situation:</strong> You're building a system with 4 AI agents working together: one searches the web, one reads documents, one combines findings, and one writes reports.</p>
+    <p><strong>The goal:</strong> Produce complete, accurate research reports with proper source references.</p>
+    <p><strong>Domains tested:</strong> Agentic Architecture, Tool Design & MCP, Context Management</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Scenario 4 · Developer Productivity with Claude</div>
+    <p><strong>The situation:</strong> You're building tools that help developers understand unfamiliar code, generate boilerplate, and automate repetitive tasks.</p>
+    <p><strong>The goal:</strong> Help engineers work faster without introducing errors.</p>
+    <p><strong>Domains tested:</strong> Tool Design & MCP, Claude Code, Agentic Architecture</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Scenario 5 · Claude Code for Continuous Integration (CI/CD)</div>
+    <p><strong>The situation:</strong> You're connecting Claude Code to your automated pipeline — it reviews code, generates tests, and comments on pull requests automatically.</p>
+    <p><strong>The goal:</strong> Useful, actionable feedback with minimal false alarms.</p>
+    <p><strong>Domains tested:</strong> Claude Code, Prompt Engineering</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Scenario 6 · Structured Data Extraction</div>
+    <p><strong>The situation:</strong> You're building a system that reads unstructured documents (like invoices or reports) and pulls out specific data in a structured format.</p>
+    <p><strong>The goal:</strong> High accuracy, handle edge cases, integrate with other systems.</p>
+    <p><strong>Domains tested:</strong> Prompt Engineering, Context Management</p>
+  </div>
+</div>
+</section>
+
+<!-- ═══ DOMAIN 1 ═══ -->
+<section id="d1">
+<div class="container">
+  <div class="dbanner d1">
+    <div class="dnum">01</div>
+    <div>
+      <div class="dpct">27% of exam · ~16 questions · Hardest domain</div>
+      <h2>Agentic Architecture & Orchestration</h2>
+      <p style="color:var(--muted);font-size:14px;">How to build systems where Claude works autonomously, uses tools, and coordinates multiple AI agents.</p>
+    </div>
+  </div>
+
+  <!-- 1.1 -->
+  <h3>1.1 The Agentic Loop — The Core of Everything</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>An "agent" is like giving Claude a job and letting it figure out the steps. Claude doesn't just answer once — it can use tools, see the results, then decide what to do next. This back-and-forth cycle is called the <strong>agentic loop</strong>.</p>
+  </div>
+
+  <div class="flow">
+    <div><span class="step">1. You send a task to Claude</span></div>
+    <div><span class="arrow">   ↓</span></div>
+    <div><span class="step">2. Claude thinks and decides what to do next</span></div>
+    <div><span class="arrow">   ↓</span></div>
+    <div><span class="step">3. Claude returns a response with a "stop_reason"</span></div>
+    <div><span class="arrow">   ↓  (two possible paths)</span></div>
+    <div><span class="ok">   stop_reason = "tool_use"  →  Your code runs the tool → Send result back to Claude → LOOP AGAIN</span></div>
+    <div><span class="stop">   stop_reason = "end_turn"  →  Claude is done → STOP THE LOOP → Return final answer</span></div>
+  </div>
+
+  <h4>The stop_reason Values</h4>
+  <table>
+    <tr><th>Value</th><th>Plain English Meaning</th><th>What You Do</th></tr>
+    <tr><td><code>tool_use</code></td><td>Claude wants to use a tool</td><td>Run the tool, send result back, loop again</td></tr>
+    <tr><td><code>end_turn</code></td><td>Claude has finished the task</td><td>Stop the loop, return the answer</td></tr>
+    <tr><td><code>stop_sequence</code></td><td>A custom "stop word" was hit</td><td>Stop per your configuration</td></tr>
+    <tr><td><code>max_tokens</code></td><td>Response was cut off — too long</td><td>Handle as an error — increase token limit or summarise</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <div class="cl">❌ Anti-patterns — Wrong Ways to Stop the Loop</div>
+    <ul style="margin-left:16px;margin-top:6px;font-size:13px;line-height:2">
+      <li><strong>Stopping after N iterations</strong> (e.g., "stop after 10 tries") — breaks when tasks need more or fewer steps</li>
+      <li><strong>Parsing text for "done" or "finished"</strong> — breaks because Claude's wording varies unpredictably</li>
+      <li><strong>Checking for assistant text as a completion signal</strong> — unreliable, not the designed mechanism</li>
+    </ul>
+  </div>
+
+  <div class="callout key">
+    <div class="cl">✅ The Only Correct Stop Condition</div>
+    Always stop the loop when and only when <code>stop_reason == "end_turn"</code>. Nothing else.
+  </div>
+
+  <!-- 1.2 -->
+  <h3>1.2 Multi-Agent Systems — Many Claudes Working Together</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Sometimes one Claude isn't enough. You can have a <strong>coordinator Claude</strong> (the "manager") that gives tasks to <strong>subagent Claudes</strong> (the "workers"). Each worker does one specific job, then reports back to the manager.</p>
+  </div>
+
+  <pre>
+           ┌─────────────────────┐
+           │   COORDINATOR       │  ← The manager Claude
+           │   (Orchestrator)    │
+           └──────────┬──────────┘
+        ┌─────────────┼──────────────┐
+        ↓             ↓              ↓
+  ┌──────────┐  ┌──────────┐  ┌──────────┐
+  │ Subagent │  │ Subagent │  │ Subagent │
+  │ (Search) │  │(Analysis)│  │(Writing) │
+  └──────────┘  └──────────┘  └──────────┘
+  Worker Claude  Worker Claude  Worker Claude</pre>
+
+  <h4>What the Coordinator Does</h4>
+  <ul class="pills">
+    <li>Breaks a big task into smaller pieces</li>
+    <li>Assigns each piece to the right subagent</li>
+    <li>Handles errors when a subagent fails</li>
+    <li>Combines all the results into one final answer</li>
+    <li>Controls what information flows between agents</li>
+    <li>Decides which subagents to use based on the query</li>
+  </ul>
+
+  <div class="callout warn">
+    <div class="cl">⚠️ The Most Important Rule About Subagents</div>
+    <strong>Subagents have NO memory and NO automatic access to the coordinator's information.</strong> They only know what the coordinator explicitly sends them in their task prompt. If you forget to include something, the subagent simply won't know it. Ever.
+  </div>
+
+  <h4>The 3 Multi-Agent Patterns</h4>
+  <table>
+    <tr><th>Pattern</th><th>How It Works</th><th>When to Use It</th></tr>
+    <tr><td><strong>Hub-and-Spoke</strong></td><td>One coordinator manages multiple specialist subagents</td><td>Complex tasks needing different expertise</td></tr>
+    <tr><td><strong>Pipeline</strong></td><td>Output of one agent becomes input to the next</td><td>Sequential steps where each stage builds on the last</td></tr>
+    <tr><td><strong>Peer-to-Peer</strong></td><td>Agents collaborate directly with each other</td><td>Collaborative refinement between equal agents</td></tr>
+  </table>
+
+  <!-- 1.3 -->
+  <h3>1.3 Spawning Subagents — The Task Tool</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>To create a subagent, the coordinator uses the <strong>Task tool</strong>. This is like the manager sending an assignment to a worker. The coordinator's <code>allowedTools</code> list must include "Task" — otherwise it can't create any workers at all.</p>
+  </div>
+
+  <h4>Running Subagents in Parallel</h4>
+  <p>If tasks are independent (don't need each other's results), you can run multiple subagents at the same time. The coordinator does this by emitting <strong>multiple Task tool calls in a single response</strong> — not across separate turns. This saves a lot of time.</p>
+
+  <div class="callout tip">
+    <div class="cl">💡 What to Always Include in a Subagent's Prompt</div>
+    <ul style="margin-left:16px;margin-top:6px;font-size:13px;line-height:2">
+      <li>The complete findings from any previous agents the subagent needs</li>
+      <li>Source information (URLs, document names, page numbers) to preserve where data came from</li>
+      <li>Research goals and quality criteria — not step-by-step instructions (let the subagent decide how)</li>
+    </ul>
+  </div>
+
+  <!-- 1.4 -->
+  <h3>1.4 Programmatic Enforcement vs. Prompt Instructions</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>You can tell Claude what to do in two ways: (1) write it in the instructions (prompt), or (2) write code that forces it. For important business rules, <strong>code always wins</strong>. Instructions work most of the time, but not 100% — which is unacceptable for things like financial transactions.</p>
+  </div>
+
+  <div class="cmp">
+    <div class="cmp-col bad">
+      <h5>Prompt Instruction (Risky)</h5>
+      <ul>
+        <li>Tells Claude what to do in words</li>
+        <li>Works most of the time</li>
+        <li>Can be ignored or misread</li>
+        <li>Non-zero chance of failure</li>
+        <li>Good for: style, tone, non-critical rules</li>
+      </ul>
+    </div>
+    <div class="cmp-col good">
+      <h5>Programmatic Hook (Safe)</h5>
+      <ul>
+        <li>Code that intercepts tool calls</li>
+        <li>Works 100% of the time</li>
+        <li>Cannot be overridden</li>
+        <li>Zero chance of failure</li>
+        <li>Good for: money, compliance, safety-critical rules</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 1.5 -->
+  <h3>1.5 Hooks — Intercepting Tool Calls</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Hooks are pieces of code that <strong>automatically run</strong> before or after Claude uses a tool. You don't have to ask Claude to do anything — hooks run every single time, without fail.</p>
+  </div>
+
+  <table>
+    <tr><th>Hook Type</th><th>When It Fires</th><th>Common Use Case</th></tr>
+    <tr><td><code>PreToolUse</code></td><td>BEFORE the tool runs</td><td>Block a refund if it's over $500. Check permissions. Enforce ordering (verify identity BEFORE processing refund).</td></tr>
+    <tr><td><code>PostToolUse</code></td><td>AFTER the tool runs</td><td>Normalise the result format. Log to a compliance database. Transform Unix timestamps to readable dates.</td></tr>
+  </table>
+
+  <div class="callout exam">
+    <div class="cl">📝 Exam Pattern to Remember</div>
+    When the question says "no exceptions", "must always", "compliance requirement", "financial rule", or "guaranteed to happen" — the answer involves a <strong>Hook</strong>, not a prompt instruction.
+  </div>
+
+  <!-- 1.6 -->
+  <h3>1.6 Task Decomposition — Breaking Big Work Into Small Work</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>How you split a big task into subtasks determines everything. The coordinator must be careful to assign ALL parts of a topic — not just some. If the coordinator only assigns "visual art" subtasks, music and writing will be missing from the final report, even if every subagent did its job perfectly.</p>
+  </div>
+
+  <table>
+    <tr><th>Pattern</th><th>When to Use It</th><th>Example</th></tr>
+    <tr><td><strong>Fixed Sequential (Prompt Chaining)</strong></td><td>Steps are predictable and always the same</td><td>Review each file → then do a cross-file check</td></tr>
+    <tr><td><strong>Dynamic Adaptive</strong></td><td>Steps change based on what you find along the way</td><td>Explore a legacy codebase — next steps depend on what you discover</td></tr>
+  </table>
+
+  <!-- 1.7 -->
+  <h3>1.7 Session State, Resumption, and Forking</h3>
+  <table>
+    <tr><th>Feature</th><th>What It Does</th><th>When to Use It</th></tr>
+    <tr><td><code>--resume &lt;name&gt;</code></td><td>Continue a named previous session</td><td>Long investigations across multiple work sessions</td></tr>
+    <tr><td><code>fork_session</code></td><td>Create an independent copy of the current session</td><td>Explore two different approaches without affecting the main session</td></tr>
+    <tr><td>Fresh session + summary</td><td>Start new with a structured summary injected</td><td>When old tool results are stale after code changes</td></tr>
+  </table>
+
+  <div class="callout tip">
+    <div class="cl">💡 When to Resume vs. When to Start Fresh</div>
+    Resume when the old context is still valid. Start fresh when code has changed — old tool results would be stale and misleading. When starting fresh, inject a structured summary of what was found before.
+  </div>
+</div>
+</section>
+
+<!-- ═══ DOMAIN 2 ═══ -->
+<section id="d2">
+<div class="container">
+  <div class="dbanner d2">
+    <div class="dnum">02</div>
+    <div>
+      <div class="dpct">18% of exam · ~11 questions</div>
+      <h2>Tool Design & MCP Integration</h2>
+      <p style="color:var(--muted);font-size:14px;">How to design the tools Claude uses, and how to connect Claude to your backend systems via MCP.</p>
+    </div>
+  </div>
+
+  <!-- 2.1 -->
+  <h3>2.1 What is MCP?</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>MCP (Model Context Protocol) is like a <strong>plug-in system</strong> for Claude. It lets you connect Claude to external tools and data sources in a standardised way. Instead of building a custom integration for each tool, MCP gives them all the same "shape" so Claude can use them consistently.</p>
+  </div>
+
+  <table>
+    <tr><th>MCP Concept</th><th>Plain English</th><th>Example</th></tr>
+    <tr><td><strong>MCP Server</strong></td><td>A service that exposes tools to Claude</td><td>A server that wraps your company's database</td></tr>
+    <tr><td><strong>Tool</strong></td><td>An action Claude can perform</td><td><code>process_refund</code>, <code>lookup_order</code></td></tr>
+    <tr><td><strong>Resource</strong></td><td>Read-only data Claude can look at</td><td>Documentation, database schemas, issue summaries</td></tr>
+    <tr><td><strong>isError flag</strong></td><td>Signals that a tool call failed</td><td><code>isError: true</code> when a database times out</td></tr>
+  </table>
+
+  <!-- 2.2 -->
+  <h3>2.2 Writing Good Tool Descriptions — Most Important in This Domain</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Claude reads tool descriptions to decide <strong>which tool to use</strong>. If your descriptions are vague or too similar to each other, Claude will pick the wrong one. This is the #1 cause of tool selection errors.</p>
+  </div>
+
+  <div class="cmp">
+    <div class="cmp-col bad">
+      <h5>Bad Descriptions (Causes Wrong Tool Picks)</h5>
+      <ul>
+        <li>get_customer — "Retrieves customer information"</li>
+        <li>lookup_order — "Retrieves order details"</li>
+        <li>Result: Claude picks get_customer for order questions 45% of the time</li>
+      </ul>
+    </div>
+    <div class="cmp-col good">
+      <h5>Good Descriptions (Precise and Different)</h5>
+      <ul>
+        <li>get_customer — "Gets customer profile (name, tier, contact). Use when query is about WHO the customer IS. Input: customer email or ID."</li>
+        <li>lookup_order — "Gets order history, status, items. Use when query is about what they BOUGHT or ORDER STATUS. Input: order number."</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>What Makes a Good Tool Description</h4>
+  <ul class="pills">
+    <li>Clear purpose — what the tool does in one sentence</li>
+    <li>Input format — what parameters it expects</li>
+    <li>Example queries that should trigger this tool</li>
+    <li>Edge cases — when NOT to use it</li>
+    <li>How it differs from similar tools</li>
+  </ul>
+
+  <div class="callout exam">
+    <div class="cl">📝 Exam Rule — Fix Descriptions First</div>
+    If tool selection is wrong, the exam always expects you to <strong>fix the tool descriptions first</strong> before building complex routing logic or classifiers. Descriptions are the root cause. Fix the root cause.
+  </div>
+
+  <!-- 2.3 -->
+  <h3>2.3 Structured Error Responses</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>When a tool fails, don't just return an empty result or a generic "failed" message. Return a <strong>structured error</strong> that tells Claude exactly what went wrong, whether to retry, and what alternatives exist.</p>
+  </div>
+
+  <table>
+    <tr><th>Error Type</th><th>Plain English</th><th>isRetryable?</th><th>Claude's Action</th></tr>
+    <tr><td>Transient</td><td>Temporary (timeout, server down)</td><td>✅ Yes</td><td>Retry with backoff</td></tr>
+    <tr><td>Validation</td><td>Bad input (wrong format, missing field)</td><td>❌ No</td><td>Fix the input, don't retry same way</td></tr>
+    <tr><td>Business</td><td>Policy violation (refund too large)</td><td>❌ No</td><td>Explain to user, escalate</td></tr>
+    <tr><td>Permission</td><td>Not allowed to do this</td><td>❌ No</td><td>Escalate or report</td></tr>
+  </table>
+
+  <pre>
+// Good structured error response
+{
+  "isError": true,
+  "errorCategory": "transient",
+  "isRetryable": true,
+  "message": "Database timeout after 30s",
+  "retryAfterSeconds": 5
+}
+
+// Bad — Claude cannot decide what to do
+{ "status": "failed" }</pre>
+
+  <!-- 2.4 -->
+  <h3>2.4 Too Many Tools = Worse Performance</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Giving Claude 18 tools when it only needs 4 makes it confused. The more tools Claude has to choose from, the more likely it is to pick the wrong one. Each subagent should only have the tools it actually needs for its job.</p>
+  </div>
+
+  <table>
+    <tr><th>tool_choice Option</th><th>What It Means</th><th>When to Use</th></tr>
+    <tr><td><code>"auto"</code></td><td>Claude decides whether to use a tool or just respond</td><td>General conversations where tool use is optional</td></tr>
+    <tr><td><code>"any"</code></td><td>Claude MUST call at least one tool (but can choose which)</td><td>When you always need structured output — no prose allowed</td></tr>
+    <tr><td><code>{"type":"tool","name":"X"}</code></td><td>Claude MUST call this specific tool</td><td>When you need a specific tool to run first (e.g., metadata extraction before enrichment)</td></tr>
+  </table>
+
+  <!-- 2.5 -->
+  <h3>2.5 MCP Configuration — Project vs. Personal</h3>
+  <table>
+    <tr><th>Config Location</th><th>Who Sees It</th><th>Version Controlled?</th><th>Use For</th></tr>
+    <tr><td><code>.mcp.json</code> (in project folder)</td><td>Everyone on the team</td><td>✅ Yes — shared via git</td><td>Team tools everyone needs</td></tr>
+    <tr><td><code>~/.claude.json</code> (in home folder)</td><td>Only that developer</td><td>❌ No — local only</td><td>Personal or experimental tools</td></tr>
+  </table>
+
+  <div class="callout tip">
+    <div class="cl">💡 Environment Variables in .mcp.json</div>
+    Use <code>${VARIABLE_NAME}</code> syntax to keep secrets (like API tokens) out of the config file. The actual values live in environment variables, not in code. Example: <code>"token": "${GITHUB_TOKEN}"</code>
+  </div>
+
+  <!-- 2.6 -->
+  <h3>2.6 Built-in Tools — Read, Write, Edit, Bash, Grep, Glob</h3>
+  <table>
+    <tr><th>Tool</th><th>What It Does</th><th>When to Use It</th></tr>
+    <tr><td><code>Read</code></td><td>Reads full file contents</td><td>When you need to see the whole file</td></tr>
+    <tr><td><code>Write</code></td><td>Creates or replaces a file</td><td>When creating new files or doing full rewrites</td></tr>
+    <tr><td><code>Edit</code></td><td>Makes targeted changes to a specific part of a file</td><td>When you only need to change one section. If it fails (no unique match), fall back to Read + Write</td></tr>
+    <tr><td><code>Bash</code></td><td>Runs terminal/shell commands</td><td>Running scripts, tests, build commands</td></tr>
+    <tr><td><code>Grep</code></td><td>Searches file contents for text patterns</td><td>Finding all places a function is called, finding error messages</td></tr>
+    <tr><td><code>Glob</code></td><td>Finds files matching a name pattern</td><td>Finding all test files (<code>**/*.test.tsx</code>), all config files</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ═══ DOMAIN 3 ═══ -->
+<section id="d3">
+<div class="container">
+  <div class="dbanner d3">
+    <div class="dnum">03</div>
+    <div>
+      <div class="dpct">20% of exam · ~12 questions</div>
+      <h2>Claude Code Configuration & Workflows</h2>
+      <p style="color:var(--muted);font-size:14px;">How to set up Claude Code for your team using configuration files, custom commands, and rules.</p>
+    </div>
+  </div>
+
+  <!-- 3.1 -->
+  <h3>3.1 CLAUDE.md — The Main Configuration File</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>CLAUDE.md is a file you write that tells Claude about your project — your coding rules, what NOT to do, what tools to use, etc. Claude reads this file every time a session starts. Think of it as a permanent briefing document.</p>
+  </div>
+
+  <h4>The 3-Level Configuration Hierarchy</h4>
+  <pre>
+Level 1: User Level (Personal)       → ~/.claude/CLAUDE.md
+          Only applies to YOU. Not shared with teammates. Not in git.
+
+Level 2: Project Level (Team)        → ./CLAUDE.md  or  .claude/CLAUDE.md
+          Applies to EVERYONE on the team. Shared via git. ← Most important
+
+Level 3: Directory Level (Specific)  → any subfolder's CLAUDE.md
+          Applies only when working in that specific folder.</pre>
+
+  <div class="callout key">
+    <div class="cl">✅ The Golden Rule</div>
+    <strong>Team rules belong in the project-level CLAUDE.md.</strong> If a new developer joins and doesn't get the rules, it's because someone put them in the user-level file instead of the project-level file.
+  </div>
+
+  <h4>Keeping CLAUDE.md Organised — @import and .claude/rules/</h4>
+  <table>
+    <tr><th>Method</th><th>What It Does</th><th>Use When</th></tr>
+    <tr><td><code>@import filename.md</code></td><td>Pulls in another file's content</td><td>Splitting standards into separate files per topic</td></tr>
+    <tr><td><code>.claude/rules/</code> folder</td><td>Separate rule files per topic</td><td>When CLAUDE.md is too long (500+ lines)</td></tr>
+    <tr><td>Path scoping with glob patterns</td><td>Rules only load for matching files</td><td>e.g., test rules only load for *.test.tsx files</td></tr>
+  </table>
+
+  <!-- 3.2 -->
+  <h3>3.2 Path-Specific Rules — Conditional Loading</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>You can write rules that only activate when Claude is editing certain types of files. For example, testing rules only load when Claude is editing a test file. This keeps the context clean and avoids confusing Claude with irrelevant rules.</p>
+  </div>
+
+  <pre>
+# File: .claude/rules/testing.md
+---
+paths: ["**/*.test.tsx", "**/*.spec.ts"]   ← Only loads for test files
+---
+
+All tests must follow the AAA pattern (Arrange, Act, Assert).
+Every function must have at least one unit test.
+Use describe() for groups and it() for individual tests.</pre>
+
+  <div class="callout tip">
+    <div class="cl">💡 Use Glob Patterns for Files Spread Across the Codebase</div>
+    Use <code>.claude/rules/</code> with glob patterns (like <code>**/*.test.tsx</code>) when your conventions apply to files that are spread across many folders. Directory-level CLAUDE.md files can't handle this case well.
+  </div>
+
+  <!-- 3.3 -->
+  <h3>3.3 Custom Slash Commands & Skills</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p><strong>Slash commands</strong> are shortcuts your team can type to run a pre-defined workflow. For example, <code>/project:review-pr</code> could run your entire code review checklist automatically. <strong>Skills</strong> are similar but more powerful — they run in their own isolated context and have extra configuration options.</p>
+  </div>
+
+  <table>
+    <tr><th>Type</th><th>Location</th><th>Who Can Use It</th><th>Good For</th></tr>
+    <tr><td>Project Command</td><td><code>.claude/commands/</code></td><td>Everyone on team (in git)</td><td>Shared workflows like PR reviews, deployments</td></tr>
+    <tr><td>Personal Command</td><td><code>~/.claude/commands/</code></td><td>Only you</td><td>Personal shortcuts</td></tr>
+    <tr><td>Project Skill</td><td><code>.claude/skills/</code></td><td>Everyone on team</td><td>Complex workflows with isolation needed</td></tr>
+    <tr><td>Personal Skill</td><td><code>~/.claude/skills/</code></td><td>Only you</td><td>Personal variants that don't affect teammates</td></tr>
+  </table>
+
+  <h4>Skill Frontmatter Options (in SKILL.md)</h4>
+  <table>
+    <tr><th>Option</th><th>What It Does</th></tr>
+    <tr><td><code>context: fork</code></td><td>Runs the skill in its own isolated sub-session. Output doesn't pollute your main conversation. Use for verbose analysis skills.</td></tr>
+    <tr><td><code>allowed-tools: [Read, Write]</code></td><td>Limits which tools the skill can use. Prevents destructive actions.</td></tr>
+    <tr><td><code>argument-hint: "PR number"</code></td><td>Prompts the developer to provide required parameters when invoking the skill without arguments.</td></tr>
+  </table>
+
+  <!-- 3.4 -->
+  <h3>3.4 Plan Mode vs. Direct Execution</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p><strong>Plan mode</strong>: Claude first shows you a plan of what it's going to do, waits for your approval, then executes. Like a contractor showing blueprints before construction.<br><strong>Direct execution</strong>: Claude just does it immediately. Like a contractor fixing a dripping tap without blueprints.</p>
+  </div>
+
+  <table>
+    <tr><th>Use Plan Mode When…</th><th>Use Direct Execution When…</th></tr>
+    <tr><td>Large-scale changes (45+ files)</td><td>Simple, single-file bug fix</td></tr>
+    <tr><td>Architectural decisions</td><td>Adding a date validation check</td></tr>
+    <tr><td>Multiple valid approaches exist</td><td>The fix is obvious and well-understood</td></tr>
+    <tr><td>Library migration</td><td>Renaming a variable</td></tr>
+    <tr><td>Microservice restructuring</td><td>Fixing a typo in documentation</td></tr>
+  </table>
+
+  <!-- 3.5 -->
+  <h3>3.5 Iterative Refinement Techniques</h3>
+  <table>
+    <tr><th>Technique</th><th>What It Is</th><th>When to Use</th></tr>
+    <tr><td><strong>Input/Output Examples</strong></td><td>Show 2-3 concrete examples of what you want</td><td>When natural language descriptions produce inconsistent results</td></tr>
+    <tr><td><strong>Test-Driven Iteration</strong></td><td>Write tests first, then share failures to guide fixes</td><td>When building complex functions with edge cases</td></tr>
+    <tr><td><strong>Interview Pattern</strong></td><td>Ask Claude to ask YOU questions before it starts</td><td>When working in an unfamiliar domain — surfaces things you forgot to think about</td></tr>
+    <tr><td><strong>Single-message vs. Sequential</strong></td><td>Fix interacting issues all at once; independent issues one at a time</td><td>When multiple bugs are related, fix together; when independent, fix one by one</td></tr>
+  </table>
+
+  <!-- 3.6 -->
+  <h3>3.6 Claude Code in CI/CD Pipelines</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>CI/CD pipelines are automated systems that run when code is pushed (checking quality, running tests, etc.). Claude Code can be part of this — but it needs special flags to work in an automated environment where there's no human to answer prompts.</p>
+  </div>
+
+  <table>
+    <tr><th>Flag / Feature</th><th>What It Does</th><th>Why It Matters for CI/CD</th></tr>
+    <tr><td><code>-p</code> or <code>--print</code></td><td>Non-interactive mode — runs and exits without waiting for input</td><td>Without this, the pipeline hangs forever waiting for a human</td></tr>
+    <tr><td><code>--output-format json</code></td><td>Returns output as JSON instead of text</td><td>Machines can parse JSON; plain text is hard to process automatically</td></tr>
+    <tr><td><code>--json-schema</code></td><td>Enforces a specific JSON structure for output</td><td>Guarantees the output can be posted as PR comments automatically</td></tr>
+  </table>
+
+  <div class="callout tip">
+    <div class="cl">💡 Independent Review Instances</div>
+    The same Claude session that generated code is <strong>less effective</strong> at reviewing that same code. It remembers its own reasoning and is less likely to question its own decisions. Use a <strong>separate, independent Claude instance</strong> for reviews — it hasn't seen the generation context and will catch more issues.
+  </div>
+</div>
+</section>
+
+<!-- ═══ DOMAIN 4 ═══ -->
+<section id="d4">
+<div class="container">
+  <div class="dbanner d4">
+    <div class="dnum">04</div>
+    <div>
+      <div class="dpct">20% of exam · ~12 questions</div>
+      <h2>Prompt Engineering & Structured Output</h2>
+      <p style="color:var(--muted);font-size:14px;">How to write instructions that get reliable, well-structured results from Claude every time.</p>
+    </div>
+  </div>
+
+  <!-- 4.1 -->
+  <h3>4.1 Explicit Criteria vs. Vague Instructions</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Vague instructions like "be conservative" or "only report high-confidence issues" do NOT work. Claude doesn't know what "conservative" means in your context. You need to spell out <strong>exactly what to report and what to skip</strong>.</p>
+  </div>
+
+  <div class="cmp">
+    <div class="cmp-col bad">
+      <h5>Vague (Doesn't Work)</h5>
+      <ul>
+        <li>"Check that comments are accurate"</li>
+        <li>"Only report high-confidence findings"</li>
+        <li>"Be conservative in your review"</li>
+        <li>Result: too many false positives, developers stop trusting it</li>
+      </ul>
+    </div>
+    <div class="cmp-col good">
+      <h5>Specific (Works)</h5>
+      <ul>
+        <li>"Flag ONLY when claimed behavior contradicts actual code behavior"</li>
+        <li>"Skip minor style and local patterns"</li>
+        <li>"Report bugs and security issues. Ignore formatting."</li>
+        <li>Result: accurate, trusted findings</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 4.2 -->
+  <h3>4.2 Few-Shot Prompting — Teaching by Example</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Few-shot prompting means giving Claude 2–4 examples of exactly what you want <em>before</em> asking it to do the real task. It's the single most effective way to get consistent, correctly formatted output when descriptions alone aren't enough.</p>
+  </div>
+
+  <pre>
+Extract issue severity from the code comment below.
+
+EXAMPLE 1:
+Code: "TODO: fix null check here or app crashes"
+Output: {"severity": "high", "type": "bug", "location": "null_check"}
+
+EXAMPLE 2:
+Code: "// might want to refactor this later"
+Output: {"severity": "low", "type": "style", "location": "general"}
+
+NOW DO THIS:
+Code: "WARNING: race condition possible under concurrent load"
+Output: ???</pre>
+
+  <h4>When Few-Shot Examples Work Best</h4>
+  <ul class="pills">
+    <li>Ambiguous cases where the right answer isn't obvious</li>
+    <li>Specific output format that's hard to describe in words</li>
+    <li>Reducing false positives by showing what to SKIP</li>
+    <li>Documents with varied structures (inline citations vs bibliographies)</li>
+    <li>When you need Claude to generalise to patterns you haven't specified</li>
+  </ul>
+
+  <!-- 4.3 -->
+  <h3>4.3 Enforcing Structured Output — tool_use + JSON Schema</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>The most reliable way to get structured data from Claude (like JSON) is to use <strong>tool_use</strong> with a JSON schema. This is better than just asking Claude to "respond in JSON" — it guarantees the format is correct every time.</p>
+  </div>
+
+  <div class="callout key">
+    <div class="cl">✅ The Key Distinction — Structure vs. Meaning</div>
+    <p>JSON schema guarantees <strong>structure</strong> (correct field names, correct types, no missing braces). It does NOT guarantee <strong>meaning</strong> (that numbers add up, that dates are logical, that the content is accurate). A response can be syntactically valid JSON and still contain wrong data.</p>
+  </div>
+
+  <h4>Schema Design — Required, Optional, and Enums</h4>
+  <pre>
+{
+  "type": "object",
+  "properties": {
+    "invoice_number": { "type": "string" },          // Required field
+    "total_amount":   { "type": "number" },           // Required field
+    "discount_code":  { "type": ["string", "null"] }, // Optional — null if not found
+    "status": {
+      "type": "string",
+      "enum": ["pending", "paid", "overdue", "other"] // Must be one of these values
+    },
+    "status_detail": { "type": "string" }             // Used when status = "other"
+  },
+  "required": ["invoice_number", "total_amount", "status"]
+}</pre>
+
+  <div class="callout tip">
+    <div class="cl">💡 Use Nullable Fields to Prevent Hallucination</div>
+    If a field might not exist in the source document, make it nullable (<code>["string", "null"]</code>). This way Claude returns <code>null</code> when it's not found, instead of making up a plausible-sounding answer. Required fields + absent data = hallucination risk.
+  </div>
+
+  <!-- 4.4 -->
+  <h3>4.4 Validation, Retry, and Feedback Loops</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>When Claude's output fails validation, don't just try again with the same prompt. Send back the <strong>specific error</strong> so Claude knows what to fix. This retry-with-feedback approach is much more effective than blind retrying.</p>
+  </div>
+
+  <pre>
+# First attempt fails validation:
+# Error: "calculated_total (£485) does not match sum of line_items (£510)"
+
+# Second attempt — include the error in the prompt:
+prompt = f"""
+Original document: {document}
+Your previous extraction: {failed_extraction}
+Validation error: calculated_total (£485) does not match sum of line_items (£510)
+Please correct the extraction.
+"""</pre>
+
+  <div class="callout warn">
+    <div class="cl">⚠️ Retries Won't Help When Information Is Missing</div>
+    If the required information simply doesn't exist in the document (e.g., the document references a figure from an external table you didn't provide), no amount of retrying will fix it. Retries only help for format errors and structural mistakes.
+  </div>
+
+  <!-- 4.5 -->
+  <h3>4.5 Batch Processing — When to Use the Batches API</h3>
+  <table>
+    <tr><th>Feature</th><th>Detail</th></tr>
+    <tr><td>Cost saving</td><td>50% cheaper than regular API calls</td></tr>
+    <tr><td>Processing time</td><td>Up to 24 hours — not real-time</td></tr>
+    <tr><td>Tracking requests</td><td>Use <code>custom_id</code> field — include it in every request to match responses back</td></tr>
+    <tr><td>Limitation</td><td>Cannot do multi-turn tool calling within one batch request</td></tr>
+  </table>
+
+  <div class="cmp">
+    <div class="cmp-col good">
+      <h5>✅ Use Batch API For</h5>
+      <ul>
+        <li>Overnight technical debt reports</li>
+        <li>Weekly code audits</li>
+        <li>Nightly test generation</li>
+        <li>Non-urgent bulk document processing</li>
+      </ul>
+    </div>
+    <div class="cmp-col bad">
+      <h5>❌ Don't Use Batch API For</h5>
+      <ul>
+        <li>Pre-merge checks (developers are waiting)</li>
+        <li>Real-time customer interactions</li>
+        <li>Any workflow where someone needs the result NOW</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 4.6 -->
+  <h3>4.6 Multi-Pass Review Architecture</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>When reviewing 14 files all at once, Claude pays full attention to some files and barely notices others. The fix is to review <strong>one file at a time</strong> (for local issues), then do a <strong>separate pass</strong> looking at how all the files interact (for cross-file issues).</p>
+  </div>
+
+  <table>
+    <tr><th>Pass</th><th>What It Reviews</th><th>Output</th></tr>
+    <tr><td>Pass 1: Per-file</td><td>Each file individually — local bugs, style, logic errors</td><td>File-specific findings</td></tr>
+    <tr><td>Pass 2: Integration</td><td>How all files interact — data flow, shared state, API contracts</td><td>Cross-file findings</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ═══ DOMAIN 5 ═══ -->
+<section id="d5">
+<div class="container">
+  <div class="dbanner d5">
+    <div class="dnum">05</div>
+    <div>
+      <div class="dpct">15% of exam · ~9 questions</div>
+      <h2>Context Management & Reliability</h2>
+      <p style="color:var(--muted);font-size:14px;">How to handle long conversations, manage errors gracefully, and build reliable production systems.</p>
+    </div>
+  </div>
+
+  <!-- 5.1 -->
+  <h3>5.1 The Lost-in-the-Middle Effect</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Claude pays more attention to the <strong>beginning</strong> and <strong>end</strong> of long documents. Information in the <strong>middle</strong> of a very long input tends to get missed or forgotten. This is called the "lost-in-the-middle" effect.</p>
+  </div>
+
+  <table>
+    <tr><th>Fix</th><th>Does It Work?</th><th>Why</th></tr>
+    <tr><td>Move key findings to the TOP of the document</td><td style="color:var(--green)">✅ Yes — Best fix</td><td>Claude reliably reads the beginning</td></tr>
+    <tr><td>Add clear section headers throughout</td><td style="color:var(--green)">✅ Yes</td><td>Headers act as navigation anchors Claude can follow</td></tr>
+    <tr><td>Use a larger context window model</td><td style="color:var(--red)">❌ No</td><td>Bigger window doesn't fix where info is positioned inside it</td></tr>
+    <tr><td>Summarise the whole document first</td><td style="color:var(--red)">❌ Risky</td><td>Loses exact numbers, dates, and specific values</td></tr>
+    <tr><td>Run Claude multiple times, average results</td><td style="color:var(--red)">❌ No</td><td>Structural problem — doesn't fix where info sits</td></tr>
+  </table>
+
+  <h4>Trimming Verbose Tool Outputs</h4>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>If a tool returns 40 fields but you only need 5, all 40 fields take up space in Claude's context window. Trim the output to only the relevant fields before passing it to Claude. This saves tokens and keeps context clean.</p>
+  </div>
+
+  <!-- 5.2 -->
+  <h3>5.2 Escalation — When to Hand Off to a Human</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Not every issue should be handed to a human. Escalating too often wastes resources; not escalating enough leads to errors. You need clear, specific rules about when to escalate.</p>
+  </div>
+
+  <table>
+    <tr><th>Escalation Trigger</th><th>Reliable?</th><th>Why</th></tr>
+    <tr><td>Customer explicitly asks for a human</td><td style="color:var(--green)">✅ Yes</td><td>Unambiguous. Always honour it immediately.</td></tr>
+    <tr><td>Policy gap — situation not covered by policy</td><td style="color:var(--green)">✅ Yes</td><td>Agent cannot make a policy judgement it doesn't have authority for</td></tr>
+    <tr><td>Agent cannot make progress after retries</td><td style="color:var(--green)">✅ Yes</td><td>Objective evidence of failure — no guessing needed</td></tr>
+    <tr><td>Multiple customer matches — needs clarification</td><td style="color:var(--green)">✅ Yes</td><td>Should ask for more identifiers, not guess which customer</td></tr>
+    <tr><td>Sentiment analysis detects frustration</td><td style="color:var(--red)">❌ No</td><td>Inaccurate signal. Frustration ≠ case complexity.</td></tr>
+    <tr><td>Claude self-reports low confidence</td><td style="color:var(--red)">❌ No</td><td>Models are poorly calibrated at rating their own confidence</td></tr>
+    <tr><td>A classifier flags the message</td><td style="color:var(--red)">❌ No</td><td>Adds another failure point on top of the first</td></tr>
+  </table>
+
+  <div class="callout exam">
+    <div class="cl">📝 Exam Pattern — Escalation Scenarios</div>
+    The exam will offer sentiment analysis and confidence scores as attractive-sounding options. These are <strong>always wrong</strong>. Always choose explicit policy-based triggers.
+  </div>
+
+  <!-- 5.3 -->
+  <h3>5.3 Error Propagation in Multi-Agent Systems</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>When a subagent fails, it must report back to the coordinator with enough detail for the coordinator to make a smart decision. A generic "failed" message is useless. A structured error message with what was tried and what's available is valuable.</p>
+  </div>
+
+  <table>
+    <tr><th>Approach</th><th>Problem</th></tr>
+    <tr><td>Return empty result as success</td><td>❌ Coordinator thinks it succeeded — makes decisions on missing data</td></tr>
+    <tr><td>Stop the entire workflow on one failure</td><td>❌ Wastes all the work done by other agents</td></tr>
+    <tr><td>Return generic "search unavailable"</td><td>❌ Coordinator can't decide whether to retry, find alternative, or skip</td></tr>
+    <tr><td>Return structured error with failure type, what was tried, partial results, alternatives</td><td>✅ Coordinator can make an intelligent recovery decision</td></tr>
+  </table>
+
+  <!-- 5.4 -->
+  <h3>5.4 Managing Context in Long Codebase Exploration</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>In very long sessions, Claude starts to "forget" specific details it found earlier and begins referencing "typical patterns" instead of actual code it saw. This is called context degradation.</p>
+  </div>
+
+  <ul class="pills">
+    <li><strong>Scratchpad files</strong> — save key findings to a file; reference it in future questions</li>
+    <li><strong>Subagent delegation</strong> — spawn subagents for verbose exploration; main agent keeps high-level coordination</li>
+    <li><strong>/compact command</strong> — summarises and compresses the session context to free up space</li>
+    <li><strong>Structured state exports</strong> — each agent saves its state to a file; coordinator loads it on resume (crash recovery)</li>
+  </ul>
+
+  <!-- 5.5 -->
+  <h3>5.5 Human Review Workflows & Confidence Calibration</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>Don't trust a single "97% accuracy" number. That might mean it's 100% accurate on common documents but terrible on rare document types. Check accuracy by document type and by individual field before reducing human review.</p>
+  </div>
+
+  <ul class="pills">
+    <li><strong>Stratified sampling</strong> — regularly check a sample of "high confidence" extractions to catch new error patterns</li>
+    <li><strong>Field-level confidence scores</strong> — Claude rates confidence for each field separately, not just overall</li>
+    <li><strong>Calibrate with labeled data</strong> — compare Claude's confidence ratings to actual correct/incorrect answers to set the right routing thresholds</li>
+    <li><strong>Route ambiguous cases to humans</strong> — when source document has conflicting information, send to human instead of guessing</li>
+  </ul>
+
+  <!-- 5.6 -->
+  <h3>5.6 Information Provenance — Keeping Track of Where Data Came From</h3>
+  <div class="plain">
+    <div class="plain-label">🧠 In Plain English</div>
+    <p>When multiple agents summarise and combine information, it's easy to lose track of which claim came from which source. Good systems preserve this "provenance" — the trail from claim back to original source.</p>
+  </div>
+
+  <table>
+    <tr><th>Problem</th><th>Solution</th></tr>
+    <tr><td>Two sources give different statistics</td><td>Report BOTH values with source attribution — don't pick one</td></tr>
+    <tr><td>Sources have different dates (temporal conflict)</td><td>Include publication dates in structured outputs — not a real conflict if from different years</td></tr>
+    <tr><td>Source attribution lost during summarisation</td><td>Subagents must output structured claim-source mappings that downstream agents must preserve</td></tr>
+    <tr><td>Financial data and narrative mixed in one output</td><td>Financial data → tables; News → prose; Technical findings → structured lists. Don't convert everything to one format.</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ═══ SAMPLE QUESTIONS ═══ -->
+<section id="sampleq">
+<div class="container">
+  <div class="eyebrow">From the Official Exam Guide</div>
+  <h2>All 12 Official Sample Questions — With Explanations</h2>
+  <p class="intro">These questions come directly from Anthropic's official exam guide. They show the exact style and difficulty level of the real exam. Read every answer explanation — they reveal how the exam thinks.</p>
+
+  <h3>Scenario A: Customer Support Agent</h3>
+
+  <div class="sq">
+    <div class="sq-label">Q1 · Domain 1 — Agentic Architecture</div>
+    <div class="sq-q">Production data shows that in 12% of cases, your agent skips <code>get_customer</code> entirely and calls <code>lookup_order</code> using only the customer's stated name — occasionally leading to misidentified accounts and incorrect refunds. What change would most effectively address this reliability issue?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Add a programmatic prerequisite that blocks <code>lookup_order</code> and <code>process_refund</code> calls until <code>get_customer</code> has returned a verified customer ID.</li>
+      <li class="wrong">B. Enhance the system prompt to state that customer verification is mandatory before any order operations.</li>
+      <li class="wrong">C. Add few-shot examples showing the agent always calling <code>get_customer</code> first.</li>
+      <li class="wrong">D. Implement a routing classifier that enables only the right tools per request type.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> When a tool sequence is required for critical business logic (identity verification before refunds), you need programmatic enforcement — code that blocks the next tool until the first one completes. B and C rely on Claude following instructions probabilistically — which means sometimes it won't. Financial errors have real consequences, so "sometimes" is not acceptable. D addresses tool availability, not tool ordering, which is the actual problem.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q2 · Domain 2 — Tool Design & MCP</div>
+    <div class="sq-q">Production logs show the agent frequently calls <code>get_customer</code> when users ask about orders (e.g., "check my order #12345"), instead of calling <code>lookup_order</code>. Both tools have minimal descriptions. What's the most effective first step?</div>
+    <ul class="sq-opts">
+      <li class="wrong">A. Add 5-8 few-shot examples showing correct tool selection patterns.</li>
+      <li class="correct">B. Expand each tool's description to include input formats, example queries, edge cases, and boundaries explaining when to use it versus similar tools.</li>
+      <li class="wrong">C. Implement a routing layer that parses user input and pre-selects the tool based on keywords.</li>
+      <li class="wrong">D. Consolidate both tools into one <code>lookup_entity</code> tool.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why B:</strong> Tool descriptions are the primary mechanism Claude uses to pick a tool. Minimal descriptions are the root cause. Fix the root first — it's low effort and high impact. A adds token overhead without fixing the underlying issue. C builds routing infrastructure on top of a broken foundation. D is a valid architectural choice but too heavy for a "first step" fix.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q3 · Domain 5 — Context Management & Reliability</div>
+    <div class="sq-q">Your agent achieves 55% first-contact resolution (target: 80%). Logs show it escalates straightforward cases while attempting to handle complex ones autonomously. What's the most effective fix?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Add explicit escalation criteria to your system prompt with few-shot examples showing when to escalate vs. resolve autonomously.</li>
+      <li class="wrong">B. Have the agent self-report a confidence score (1-10) and escalate when below a threshold.</li>
+      <li class="wrong">C. Deploy a separate classifier trained on historical tickets to predict escalation before the agent starts.</li>
+      <li class="wrong">D. Implement sentiment analysis to detect frustration and escalate above a threshold.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> The root cause is unclear decision boundaries — the agent doesn't know which cases to escalate. Explicit criteria + few-shot examples directly fixes this. B fails because LLM self-reported confidence is poorly calibrated. C is over-engineered — try prompting first. D solves a completely different problem (frustration ≠ complexity).</div>
+  </div>
+
+  <h3>Scenario B: Code Generation with Claude Code</h3>
+
+  <div class="sq">
+    <div class="sq-label">Q4 · Domain 3 — Claude Code</div>
+    <div class="sq-q">You want to create a custom <code>/review</code> slash command that runs your team's standard code review checklist. It should be available to every developer when they clone the repository. Where should you create this command file?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. In the <code>.claude/commands/</code> directory in the project repository</li>
+      <li class="wrong">B. In <code>~/.claude/commands/</code> in each developer's home directory</li>
+      <li class="wrong">C. In the <code>CLAUDE.md</code> file at the project root</li>
+      <li class="wrong">D. In a <code>.claude/config.json</code> file with a commands array</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> Project-scoped commands in <code>.claude/commands/</code> are version-controlled and automatically available to all developers on clone or pull. B is personal — not shared. C is for instructions, not command definitions. D doesn't exist.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q5 · Domain 3 — Claude Code</div>
+    <div class="sq-q">You've been assigned to restructure a monolithic application into microservices — changes across dozens of files, decisions about service boundaries and dependencies. Which approach should you take?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Enter plan mode to explore the codebase, understand dependencies, and design an implementation approach before making changes.</li>
+      <li class="wrong">B. Start with direct execution and make changes incrementally, letting implementation reveal natural service boundaries.</li>
+      <li class="wrong">C. Use direct execution with comprehensive upfront instructions detailing exactly how each service should be structured.</li>
+      <li class="wrong">D. Begin in direct execution and only switch to plan mode if you encounter unexpected complexity.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> Plan mode is designed for large-scale changes with architectural decisions and multiple valid approaches — exactly this scenario. B risks costly rework when dependencies are discovered late. C assumes you already know the right structure. D ignores that the complexity is already stated in the task.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q6 · Domain 3 — Claude Code</div>
+    <div class="sq-q">Your codebase has React components (functional style), API handlers (async/await error handling), and database models (repository pattern). Test files are spread throughout (e.g., <code>Button.test.tsx</code> next to <code>Button.tsx</code>). What's the most maintainable way to ensure Claude applies the right conventions per file type automatically?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Create rule files in <code>.claude/rules/</code> with YAML frontmatter specifying glob patterns to conditionally apply conventions based on file paths</li>
+      <li class="wrong">B. Consolidate all conventions in root <code>CLAUDE.md</code> under headers for each area, relying on Claude to infer which section applies</li>
+      <li class="wrong">C. Create skills in <code>.claude/skills/</code> for each code type</li>
+      <li class="wrong">D. Place a separate <code>CLAUDE.md</code> in each subdirectory</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> Glob patterns like <code>**/*.test.tsx</code> work regardless of directory location — essential for test files spread across the codebase. B relies on inference — unreliable. C requires manual invocation — not "automatic." D can't handle files spread across many directories since CLAUDE.md files are directory-bound.</div>
+  </div>
+
+  <h3>Scenario C: Multi-Agent Research System</h3>
+
+  <div class="sq">
+    <div class="sq-label">Q7 · Domain 1 — Agentic Architecture</div>
+    <div class="sq-q">After running the system on "impact of AI on creative industries," each subagent completes successfully. However, the final reports cover only visual arts — missing music, writing, and film. Coordinator logs show it decomposed the topic into: "AI in digital art," "AI in graphic design," "AI in photography." What is the most likely root cause?</div>
+    <ul class="sq-opts">
+      <li class="wrong">A. The synthesis agent lacks instructions for identifying coverage gaps.</li>
+      <li class="correct">B. The coordinator agent's task decomposition is too narrow — subagent assignments don't cover all relevant domains.</li>
+      <li class="wrong">C. The web search agent's queries aren't comprehensive enough.</li>
+      <li class="wrong">D. The document analysis agent is filtering out non-visual sources.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why B:</strong> The coordinator's logs prove the root cause — it only assigned visual arts subtasks. Subagents did exactly what they were assigned. The problem is what they were assigned. A, C, D blame downstream agents that performed correctly within their scope.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q8 · Domain 5 — Context & Reliability</div>
+    <div class="sq-q">The web search subagent times out while researching a complex topic. How should this failure flow back to the coordinator to enable intelligent recovery?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Return structured error context to the coordinator including failure type, attempted query, any partial results, and potential alternative approaches.</li>
+      <li class="wrong">B. Automatic retry with exponential backoff within the subagent, then return generic "search unavailable" after all retries.</li>
+      <li class="wrong">C. Catch the timeout and return an empty result set marked as successful.</li>
+      <li class="wrong">D. Propagate the timeout exception to a top-level handler that terminates the entire research workflow.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> Structured error context gives the coordinator what it needs to decide: retry with different query? Try alternative? Proceed with partial results? B hides valuable context behind a generic message. C marks failure as success — coordinator will proceed with missing data. D kills the entire job over one subagent failure.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q9 · Domain 2 — Tool Design & MCP</div>
+    <div class="sq-q">The synthesis agent frequently returns control to the coordinator for simple fact verifications (dates, names, statistics), adding 2-3 round trips per task (40% extra latency). 85% are simple checks; 15% require deeper investigation. What's the most effective approach?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Give the synthesis agent a scoped <code>verify_fact</code> tool for simple lookups, while complex verifications continue delegating through the coordinator.</li>
+      <li class="wrong">B. Have the synthesis agent accumulate all verification needs and send them as a batch to the coordinator at the end.</li>
+      <li class="wrong">C. Give the synthesis agent access to all web search tools.</li>
+      <li class="wrong">D. Have the web search agent cache extra context proactively, anticipating what the synthesis agent might need.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> Least privilege — give synthesis only what it needs for the 85% common case. Coordinator handles the 15% complex cases. B creates blocking dependencies since synthesis steps may depend on earlier verified facts. C over-provisions synthesis, violating separation of concerns. D is speculative caching that can't reliably predict what will be needed.</div>
+  </div>
+
+  <h3>Scenario D: Claude Code for CI/CD</h3>
+
+  <div class="sq">
+    <div class="sq-label">Q10 · Domain 3 — Claude Code</div>
+    <div class="sq-q">Your pipeline script runs <code>claude "Analyse this pull request for security issues"</code> but the job hangs indefinitely. Logs show Claude Code is waiting for interactive input. What's the correct fix?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Add the <code>-p</code> flag: <code>claude -p "Analyse this pull request for security issues"</code></li>
+      <li class="wrong">B. Set the environment variable <code>CLAUDE_HEADLESS=true</code> before running</li>
+      <li class="wrong">C. Redirect stdin from /dev/null</li>
+      <li class="wrong">D. Add the <code>--batch</code> flag</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> The <code>-p</code> (or <code>--print</code>) flag is the documented way to run Claude Code in non-interactive mode. It processes the prompt and exits without waiting for user input. B, C, and D reference non-existent features or Unix workarounds that don't properly address this.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q11 · Domain 4 — Prompt Engineering</div>
+    <div class="sq-q">Your manager proposes switching both (1) a blocking pre-merge check and (2) an overnight technical debt report to the Message Batches API for 50% cost savings. How do you evaluate this?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Use batch processing for technical debt reports only; keep real-time calls for pre-merge checks.</li>
+      <li class="wrong">B. Switch both to batch with status polling.</li>
+      <li class="wrong">C. Keep real-time calls for both to avoid batch ordering issues.</li>
+      <li class="wrong">D. Switch both to batch with a timeout fallback to real-time.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> Batches take up to 24 hours — unacceptable for blocking pre-merge checks where developers wait. For overnight reports, 24-hour processing is fine. Match each workflow to the right API. B relies on "often faster" which isn't acceptable for blocking flows. C is wrong — batch results are correlated via custom_id. D adds unnecessary complexity.</div>
+  </div>
+
+  <div class="sq">
+    <div class="sq-label">Q12 · Domain 4 — Prompt Engineering</div>
+    <div class="sq-q">A PR modifies 14 files. Single-pass review gives inconsistent results: detailed for some files, superficial for others, missed obvious bugs, and contradictory feedback — flagging a pattern in one file while approving identical code elsewhere. How should you restructure?</div>
+    <ul class="sq-opts">
+      <li class="correct">A. Split into focused passes: analyse each file individually for local issues, then run a separate integration-focused pass examining cross-file data flow.</li>
+      <li class="wrong">B. Require developers to split large PRs into smaller submissions of 3-4 files.</li>
+      <li class="wrong">C. Switch to a higher-tier model with a larger context window.</li>
+      <li class="wrong">D. Run three independent passes on the full PR and only flag issues appearing in at least two of three runs.</li>
+    </ul>
+    <div class="sq-why">✅ <strong>Why A:</strong> File-by-file analysis ensures consistent depth. A separate integration pass catches cross-file issues. This directly fixes attention dilution. B shifts burden to developers without improving the system. C misunderstands that bigger context windows don't solve attention quality issues. D would suppress detection of real bugs by requiring consensus.</div>
+  </div>
+</div>
+</section>
+
+<!-- ═══ SCOPE ═══ -->
+<section id="scope">
+<div class="container">
+  <div class="eyebrow">Official Exam Guide — Appendix</div>
+  <h2>What Is and Is NOT on the Exam</h2>
+  <p class="intro">This list comes directly from the official exam guide appendix. Study everything in the "In Scope" section. You do not need to know anything in "Out of Scope."</p>
+
+  <h3>✅ In-Scope Topics (Will Appear on Exam)</h3>
+  <ul class="pills">
+    <li>Agentic loop control flow based on stop_reason</li>
+    <li>Tool result handling and loop termination conditions</li>
+    <li>Multi-agent orchestration: coordinator-subagent patterns</li>
+    <li>Task decomposition and parallel subagent execution</li>
+    <li>Iterative refinement loops in multi-agent systems</li>
+    <li>Explicit context passing between subagents</li>
+    <li>Structured state persistence and crash recovery (manifests)</li>
+    <li>Tool interface design: effective descriptions, splitting vs. consolidating</li>
+    <li>MCP tool and resource design and description quality</li>
+    <li>MCP server configuration: project vs. user scope, env var expansion</li>
+    <li>Error handling: structured responses, transient vs. business vs. permission</li>
+    <li>Escalation decision-making: explicit criteria, policy gap identification</li>
+    <li>CLAUDE.md hierarchy (user/project/directory), @import patterns</li>
+    <li>.claude/rules/ with glob patterns for path-scoped rules</li>
+    <li>Custom commands and skills: project vs. user scope, context:fork, allowed-tools, argument-hint</li>
+    <li>Plan mode vs. direct execution: complexity assessment</li>
+    <li>Iterative refinement: input/output examples, test-driven iteration, interview pattern</li>
+    <li>Structured output via tool_use: schema design, tool_choice, nullable fields</li>
+    <li>Few-shot prompting: ambiguous scenarios, format consistency, false positive reduction</li>
+    <li>Batch processing: Message Batches API, latency tolerance, failure handling by custom_id</li>
+    <li>Context window optimisation: trimming verbose outputs, structured fact extraction</li>
+    <li>Human review workflows: confidence calibration, stratified sampling</li>
+    <li>Information provenance: claim-source mappings, temporal data, conflict annotation</li>
+  </ul>
+
+  <h3 style="margin-top:32px">❌ Out-of-Scope Topics (Will NOT Appear)</h3>
+  <div class="callout oos">
+    <div class="cl">Do Not Study These For This Exam</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px 20px;margin-top:10px;font-size:13px;color:var(--muted)">
+      <span>Fine-tuning or training custom models</span>
+      <span>API authentication, billing, or account management</span>
+      <span>Deploying or hosting MCP servers (infrastructure)</span>
+      <span>Claude's internal architecture or model weights</span>
+      <span>Constitutional AI, RLHF, safety training methods</span>
+      <span>Embedding models or vector database implementation</span>
+      <span>Computer use (browser automation, desktop interaction)</span>
+      <span>Vision / image analysis capabilities</span>
+      <span>Streaming API implementation or server-sent events</span>
+      <span>Rate limiting, quotas, or API pricing calculations</span>
+      <span>OAuth, API key rotation, authentication protocols</span>
+      <span>Specific cloud provider configurations (AWS, GCP, Azure)</span>
+      <span>Performance benchmarking or model comparison metrics</span>
+      <span>Prompt caching implementation details</span>
+      <span>Token counting algorithms or tokenisation specifics</span>
+      <span>Specific programming languages (beyond tool/schema config)</span>
+    </div>
+  </div>
+
+  <h3>Technologies & Concepts Referenced in the Exam</h3>
+  <table>
+    <tr><th>Technology</th><th>What You Need to Know</th></tr>
+    <tr><td>Claude Agent SDK</td><td>agent definitions, agentic loops, stop_reason, hooks (PostToolUse, tool call interception), subagent spawning via Task tool, allowedTools</td></tr>
+    <tr><td>Model Context Protocol (MCP)</td><td>MCP servers, tools, resources, isError flag, tool descriptions, tool distribution, .mcp.json, environment variable expansion</td></tr>
+    <tr><td>Claude Code</td><td>CLAUDE.md hierarchy (user/project/directory), .claude/rules/ with YAML path-scoping, .claude/commands/, .claude/skills/ with frontmatter (context:fork, allowed-tools, argument-hint), plan mode, /memory, /compact, --resume, fork_session, Explore subagent</td></tr>
+    <tr><td>Claude Code CLI</td><td>-p / --print flag, --output-format json, --json-schema</td></tr>
+    <tr><td>Claude API</td><td>tool_use with JSON schemas, tool_choice (auto/any/forced), stop_reason values, max_tokens, system prompts</td></tr>
+    <tr><td>Message Batches API</td><td>50% cost savings, up to 24-hour window, custom_id, polling for completion, no multi-turn tool calling</td></tr>
+    <tr><td>JSON Schema</td><td>required vs optional, enum types, nullable fields, "other" + detail string patterns, strict mode</td></tr>
+    <tr><td>Pydantic</td><td>schema validation, semantic validation errors, validation-retry loops</td></tr>
+    <tr><td>Built-in tools</td><td>Read, Write, Edit, Bash, Grep, Glob — their purposes and when to choose each</td></tr>
+  </table>
+</div>
+</section>
+
+<!-- ═══ QUICK REFERENCE ═══ -->
+<section id="quickref">
+<div class="container">
+  <div class="eyebrow">Last-Minute Revision</div>
+  <h2>Quick Reference & Master Checklist</h2>
+
+  <h3>Exam Fast Facts</h3>
+  <div class="qr">
+    <div class="qr-item"><div class="qr-k">Questions</div><div class="qr-v">60</div></div>
+    <div class="qr-item"><div class="qr-k">Duration</div><div class="qr-v">120 minutes</div></div>
+    <div class="qr-item"><div class="qr-k">Passing Score</div><div class="qr-v">720 / 1000</div></div>
+    <div class="qr-item"><div class="qr-k">Exam Fee</div><div class="qr-v">$125 USD</div></div>
+    <div class="qr-item"><div class="qr-k">Scenarios Given</div><div class="qr-v">4 of 6 (random)</div></div>
+    <div class="qr-item"><div class="qr-k">Credential Valid</div><div class="qr-v">12 months</div></div>
+    <div class="qr-item"><div class="qr-k">Retake Wait</div><div class="qr-v">14 / 30 / 90 days</div></div>
+    <div class="qr-item"><div class="qr-k">Max Attempts/Year</div><div class="qr-v">4 times</div></div>
+  </div>
+
+  <h3>The 12 Rules You Must Know Cold</h3>
+  <ul class="check">
+    <li>Stop the agentic loop ONLY on <code>stop_reason == "end_turn"</code>. Never on iteration count or text parsing.</li>
+    <li>Subagents know ONLY what the coordinator explicitly passes in their task prompt. No automatic inheritance. Ever.</li>
+    <li>Incomplete output from a multi-agent system → coordinator's task decomposition was too narrow.</li>
+    <li>High-stakes rules (financial, compliance, safety) → use hooks, not prompt instructions.</li>
+    <li>PreToolUse hooks = block before execution. PostToolUse hooks = log/transform after execution.</li>
+    <li>CLAUDE.md at project root = team-shared (in git). ~/.claude/CLAUDE.md = personal only (not in git).</li>
+    <li>Project commands (<code>.claude/commands/</code>) = shared. Personal commands (<code>~/.claude/commands/</code>) = local.</li>
+    <li>JSON schema guarantees structure, not truth. Numbers can be syntactically valid and logically wrong.</li>
+    <li>Put critical content at the TOP of long documents. Lost-in-middle effect = middle content gets missed.</li>
+    <li>Fix tool descriptions before building routing infrastructure. Descriptions are always the root cause.</li>
+    <li>Message Batches API (50% cheaper, up to 24hr) = for non-blocking jobs only. Never for pre-merge checks.</li>
+    <li>Use <code>-p</code> flag for Claude Code in CI/CD pipelines. Without it, the pipeline hangs waiting for human input.</li>
+  </ul>
+
+  <h3>The 6 Exam Traps — Wrong Answers That Look Right</h3>
+  <ul class="check">
+    <li>"Add a system prompt instruction" — wrong when the rule requires guaranteed compliance. Use a hook instead.</li>
+    <li>"Sentiment analysis for escalation" — wrong. Frustration ≠ complexity. Never a reliable escalation trigger.</li>
+    <li>"Model self-reported confidence score" — wrong. LLMs are poorly calibrated at rating their own confidence.</li>
+    <li>"Larger context window" — wrong for lost-in-middle. Bigger window doesn't fix where content is placed.</li>
+    <li>"Run multiple times and average" — wrong. Doesn't fix structural problems; just adds cost and latency.</li>
+    <li>"Stop after N iterations" — wrong loop termination. Always stop on stop_reason == "end_turn".</li>
+  </ul>
+
+  <h3>Domain-by-Domain Revision Checklist</h3>
+
+  <h4 style="color:var(--d1)">Domain 1 — Agentic Architecture (27%)</h4>
+  <ul class="check">
+    <li>I can explain the agentic loop and all four stop_reason values</li>
+    <li>I know why subagent isolation means context must be passed explicitly</li>
+    <li>I understand why incomplete output = coordinator decomposition problem</li>
+    <li>I know when to use sequential vs. parallel subagent execution</li>
+    <li>I can identify reliable vs. unreliable escalation triggers</li>
+    <li>I understand hooks (PreToolUse / PostToolUse) and when to use them over prompt instructions</li>
+    <li>I know how to use --resume and fork_session for session management</li>
+    <li>I understand programmatic enforcement vs. prompt-based guidance</li>
+  </ul>
+
+  <h4 style="color:var(--d2)">Domain 2 — Tool Design & MCP (18%)</h4>
+  <ul class="check">
+    <li>I know what MCP is and the difference between tools and resources</li>
+    <li>I can write a good tool description that clearly differentiates similar tools</li>
+    <li>I know what makes a bad tool description (and why it causes selection errors)</li>
+    <li>I understand the isError flag and the 4 error categories</li>
+    <li>I know the difference between .mcp.json (project) and ~/.claude.json (personal)</li>
+    <li>I know when to use Read vs. Edit vs. Grep vs. Glob</li>
+    <li>I understand tool_choice: auto / any / forced selection</li>
+    <li>I know that too many tools degrades performance</li>
+  </ul>
+
+  <h4 style="color:var(--d3)">Domain 3 — Claude Code (20%)</h4>
+  <ul class="check">
+    <li>I know the 3-level CLAUDE.md hierarchy and what each level is for</li>
+    <li>I understand @import and .claude/rules/ for modular configuration</li>
+    <li>I know how path-scoping with glob patterns works in .claude/rules/</li>
+    <li>I know project commands vs. personal commands and where they live</li>
+    <li>I understand skill frontmatter: context:fork, allowed-tools, argument-hint</li>
+    <li>I know when to use plan mode vs. direct execution</li>
+    <li>I know the -p flag and --output-format json for CI/CD integration</li>
+    <li>I understand why independent review instances catch more issues than self-review</li>
+  </ul>
+
+  <h4 style="color:var(--d4)">Domain 4 — Prompt Engineering (20%)</h4>
+  <ul class="check">
+    <li>I know the difference between syntactic correctness (structure) and semantic correctness (meaning)</li>
+    <li>I know how to use tool_use with JSON schema to enforce structured output</li>
+    <li>I understand nullable fields and why they prevent hallucination</li>
+    <li>I know how to use few-shot prompting and when it's most effective</li>
+    <li>I understand retry-with-feedback loops and when retries won't help</li>
+    <li>I know when to use the Message Batches API vs. real-time API</li>
+    <li>I understand multi-pass review: per-file passes + integration pass</li>
+    <li>I know that explicit criteria outperform vague instructions like "be conservative"</li>
+  </ul>
+
+  <h4 style="color:var(--d5)">Domain 5 — Context & Reliability (15%)</h4>
+  <ul class="check">
+    <li>I can explain the lost-in-middle effect and the correct fixes</li>
+    <li>I know why summarisation can lose important precise values</li>
+    <li>I know how to use scratchpad files and /compact for long sessions</li>
+    <li>I understand structured error propagation and why generic errors fail</li>
+    <li>I know which escalation triggers are reliable and which aren't</li>
+    <li>I understand field-level confidence calibration and stratified sampling</li>
+    <li>I know how to preserve information provenance across multi-agent synthesis</li>
+    <li>I understand how to handle conflicting data from multiple credible sources</li>
+  </ul>
+
+  <h3>Official Preparation Resources</h3>
+  <table>
+    <tr><th>Resource</th><th>Where to Find It</th></tr>
+    <tr><td>Official Exam Guide (PDF)</td><td>Linked on the certification page at anthropic-partners.skilljar.com</td></tr>
+    <tr><td>Claude with the Anthropic API course</td><td>anthropic.skilljar.com/claude-with-the-anthropic-api</td></tr>
+    <tr><td>Introduction to Model Context Protocol</td><td>anthropic.skilljar.com/introduction-to-model-context-protocol</td></tr>
+    <tr><td>Claude Code in Action</td><td>anthropic.skilljar.com/claude-code-in-action</td></tr>
+    <tr><td>Claude 101</td><td>anthropic.skilljar.com/claude-101</td></tr>
+    <tr><td>Register for the Exam</td><td>anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification</td></tr>
+  </table>
+</div>
+</section>
+
+<footer>
+  <p><strong>CCAR-F Complete Study Guide</strong></p>
+  <p style="margin-top:8px">Built directly from the official Anthropic CCAR-F Exam Guide (Version 1.0, July 2026). All domain objectives, task statements, sample questions, and scope lists are sourced from the official PDF.</p>
+  <p style="margin-top:16px;font-size:12px;color:#444">Independent study resource for the Enapps × Anthropic partnership certification track. Not affiliated with or endorsed by Anthropic. For official exam registration, visit the Anthropic Partner Academy.</p>
+</footer>
+
+</body>
+</html>
