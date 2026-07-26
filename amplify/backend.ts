@@ -2,7 +2,7 @@ import { defineBackend } from "@aws-amplify/backend";
 import { FunctionUrlAuthType, HttpMethod, type Function as LambdaFunction } from "aws-cdk-lib/aws-lambda";
 import { Bucket, BlockPublicAccess } from "aws-cdk-lib/aws-s3";
 import { RemovalPolicy, Stack } from "aws-cdk-lib";
-import { apiFunction } from "./functions/api/resource";
+import { apiFunction } from "./functions/api/resource.js";
 
 const backend = defineBackend({
   apiFunction,

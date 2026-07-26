@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { prisma } from "@claude-cert/db";
-import { requireAuth, requireAdmin, requireSuperAdmin, type AuthedVars } from "../lib/authMiddleware";
-import { decryptOtp } from "../lib/otp";
+import { requireAuth, requireAdmin, requireSuperAdmin, type AuthedVars } from "../lib/authMiddleware.js";
+import { decryptOtp } from "../lib/otp.js";
 
 export const adminRoutes = new Hono<{ Variables: AuthedVars }>();
 adminRoutes.use("*", requireAuth, requireAdmin);

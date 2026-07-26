@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { prisma, type Topic } from "@claude-cert/db";
-import { requireAuth, type AuthedVars } from "../lib/authMiddleware";
+import { requireAuth, type AuthedVars } from "../lib/authMiddleware.js";
 
 export const courseRoutes = new Hono<{ Variables: AuthedVars }>();
 courseRoutes.use("*", requireAuth);

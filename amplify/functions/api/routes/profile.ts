@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { prisma, type Role } from "@claude-cert/db";
 import { updateNameSchema, changePasswordSchema, saveApiKeySchema } from "@claude-cert/shared";
-import { hashPassword, verifyPassword } from "../lib/password";
-import { encrypt } from "../lib/crypto";
-import { validateAnthropicKey } from "../lib/anthropicKeyValidate";
-import { requireAuth, type AuthedVars } from "../lib/authMiddleware";
+import { hashPassword, verifyPassword } from "../lib/password.js";
+import { encrypt } from "../lib/crypto.js";
+import { validateAnthropicKey } from "../lib/anthropicKeyValidate.js";
+import { requireAuth, type AuthedVars } from "../lib/authMiddleware.js";
 
 export const profileRoutes = new Hono<{ Variables: AuthedVars }>();
 profileRoutes.use("*", requireAuth);

@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { verifyAccessToken, type UserRole } from "./jwt";
+import { verifyAccessToken, type UserRole } from "./jwt.js";
 
 export interface AuthedVars {
   userId: string;
