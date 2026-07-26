@@ -5,6 +5,8 @@ import { authRoutes } from "./routes/auth";
 import { profileRoutes } from "./routes/profile";
 import { courseRoutes } from "./routes/courses";
 import { adminRoutes } from "./routes/admin";
+import { examRoutes } from "./routes/exams";
+import { questionRoutes } from "./routes/questions";
 
 const app = new Hono();
 
@@ -26,6 +28,8 @@ app.route("/auth", authRoutes);
 app.route("/profile", profileRoutes);
 app.route("/courses", courseRoutes);
 app.route("/admin", adminRoutes);
+app.route("/exams", examRoutes);
+app.route("/questions", questionRoutes);
 
 export const handler = handle(app);
 export default app;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { apiFetch } from "../lib/api";
 
@@ -35,7 +35,12 @@ export function LearnTopic() {
 
   return (
     <div className="max-w-2xl mx-auto mt-12 space-y-4">
-      <h1 className="text-xl font-semibold">{title}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">{title}</h1>
+        <Link to={`/exam/new?cert=${cert}&topic=${topicId}`} className="text-sm underline">
+          Practice this topic →
+        </Link>
+      </div>
 
       <div className="flex gap-2">
         {(Object.keys(MODE_LABELS) as Mode[]).map((m) => (

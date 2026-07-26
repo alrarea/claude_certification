@@ -7,6 +7,11 @@ import { Profile } from "./routes/Profile";
 import { Learn } from "./routes/Learn";
 import { LearnTopic } from "./routes/LearnTopic";
 import { AdminUsers } from "./routes/AdminUsers";
+import { ExamNew } from "./routes/ExamNew";
+import { ExamInProgress } from "./routes/ExamInProgress";
+import { ExamResults } from "./routes/ExamResults";
+import { QuestionsManage } from "./routes/QuestionsManage";
+import { QuestionsReview } from "./routes/QuestionsReview";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -51,6 +56,46 @@ export default function App() {
             element={
               <RequireAuth>
                 <AdminUsers />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/exam/new"
+            element={
+              <RequireAuth>
+                <ExamNew />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/exam/:id"
+            element={
+              <RequireAuth>
+                <ExamInProgress />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/exam/:id/results"
+            element={
+              <RequireAuth>
+                <ExamResults />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/questions/manage"
+            element={
+              <RequireAuth>
+                <QuestionsManage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/questions/manage/review"
+            element={
+              <RequireAuth>
+                <QuestionsReview />
               </RequireAuth>
             }
           />

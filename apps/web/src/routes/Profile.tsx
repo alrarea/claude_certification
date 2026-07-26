@@ -77,11 +77,21 @@ export function Profile() {
   return (
     <div className="max-w-md mx-auto mt-16 space-y-8">
       <h1 className="text-xl font-semibold">Profile</h1>
-      {profile.role !== "user" && (
-        <Link to="/admin/users" className="text-sm underline">
-          Manage users →
+      <div className="flex flex-col gap-1">
+        <Link to="/questions/manage" className="text-sm underline">
+          Manage question bank →
         </Link>
-      )}
+        {profile.role !== "user" && (
+          <>
+            <Link to="/admin/users" className="text-sm underline">
+              Manage users →
+            </Link>
+            <Link to="/questions/manage/review" className="text-sm underline">
+              Review pending questions →
+            </Link>
+          </>
+        )}
+      </div>
 
       <form onSubmit={onSaveName} className="space-y-2">
         <label className="block text-sm text-gray-600">Name</label>

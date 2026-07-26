@@ -23,15 +23,16 @@ sender address changes.
 ## Repo layout
 
 ```
-amplify/                  Amplify Gen 2 backend: one Lambda (Hono), Function URL
+amplify/                  Amplify Gen 2 backend: one Lambda (Hono), Function URL, S3 bucket
   backend.ts
   functions/api/
     handler.ts             Hono app entry, mounts route modules
     resource.ts             defineFunction()
-    routes/                 auth, profile, courses (exams/questions land in a later phase)
-    lib/                     jwt, otp, password, email, crypto, rate limiting, auth middleware
+    routes/                 auth, profile, courses, admin, exams, questions
+    lib/                     jwt, otp, password, email, crypto, rate limiting, auth middleware,
+                             s3, extractDocumentText, anthropicGenerate, optionBalance
 apps/web/                  React + Vite SPA
-packages/db/               Prisma schema, client, seed script, guide-migration script
+packages/db/               Prisma schema, client, seed scripts, guide-migration script
 packages/shared/           zod schemas + constants shared by web and the function
 ```
 
@@ -149,15 +150,52 @@ crashes at runtime instead of erroring at build time.
 Both fixes were verified with a real `ampx sandbox` deploy + live HTTP
 requests against the deployed Function URL, not just locally.
 
+## Exam engine + question bank (spec Sections 10/11)
+
+All built: exam setup/take/results (`/exam/new`, `/exam/:id`, `/exam/:id/results`),
+manual question authoring, document upload (PDF/DOCX/HTML → S3 → text extraction
+→ AI-generated candidate questions if the uploader has a saved key), on-demand
+AI generation, and the admin review queue (`/questions/manage`,
+`/questions/manage/review`).
+
+- **Question visibility**: a user's own `pending` (AI-generated/uploaded)
+  questions are usable in their own exams immediately; everyone else only
+  sees `approved` ones — per spec Section 11's explicit scoping.
+- **Option-length balance** (spec Section 10, "options within ~40% of each
+  other"): checked on manual entry (returned in the response, not enforced -
+  spec says "warn," not block) and enforced with a one-shot AI rewrite pass
+  for generated questions (`lib/optionBalance.ts`, `lib/anthropicGenerate.ts`).
+- **Upload size capped at 4MB** (`MAX_UPLOAD_SIZE_BYTES`) - uploads go through
+  the Function URL as base64 JSON, not multipart/presigned-S3, and Lambda
+  Function URLs cap synchronous request bodies at 6MB; base64 inflates size
+  ~33%, so 4MB raw leaves headroom for the JSON wrapper.
+- **PDF/DOCX/HTML text extraction** uses `pdf-parse` (wraps `pdfjs-dist`,
+  pure JS) and `mammoth` (pure JS) - deliberately avoided anything with a
+  native binary, given the argon2/Prisma bundling bugs above.
+- Verified live end-to-end against the deployed Lambda: created an exam,
+  answered questions under both `immediate` (feedback revealed per-question)
+  and `end_of_set` (correctness withheld until `/complete`) modes, viewed the
+  score/topic/difficulty breakdown, manually authored a question (auto-approved),
+  confirmed `/questions/generate` fails cleanly without a saved API key.
+  **Not** live-tested: an actual AI generation/upload call with a real
+  Anthropic key (same caveat as the profile API-key path).
+- A handful of manual sample questions are seeded
+  (`packages/db/scripts/seed-sample-questions.ts`) against one CCAF topic, so
+  the exam engine has something to serve out of the box - real content growth
+  is expected via the manual/upload/generate routes from here.
+
 ## Known limitations (this phase)
 
 - No server-side refresh-token revocation list — logout is client-side-only token
   discard. A leaked refresh token remains valid until natural expiry (14 days).
 - Only `mode='normal'` course content is populated (migrated from the existing
   HTML guides). In-depth/concise variants are a later, one-time authoring step.
-- Exam engine, question upload/AI-generation, and the admin review queue
-  (spec Sections 10/11) are not built in this phase — schema supports them,
-  routes/UI don't exist yet.
+- Admin question review is approve/reject only - no inline edit before
+  approving (spec mentions "approve/reject/edit inline" as a nice-to-have on
+  the review screen; edit isn't built).
+- Document uploads without a saved Anthropic key are stored in S3 but nothing
+  surfaces their extracted text to an admin yet for manual course-content
+  pull-in (spec allows this as a manual step; no UI for it in this phase).
 
 ## Environment variables (Lambda)
 
@@ -170,6 +208,9 @@ tier — never Secrets Manager, never Advanced parameters, per spec Section 4b):
 - `APP_ENC_SECRET` — 32 bytes, base64-encoded (AES-256-GCM: Anthropic API keys and OTP codes)
 - `SES_FROM_ADDRESS` — verified sender address (see SES status above)
 - `FRONTEND_ORIGIN` — the deployed Amplify Hosting URL, for CORS
+
+`UPLOADS_BUCKET_NAME` is set automatically by CDK (`backend.ts`), not a secret -
+no manual action needed for it.
 
 ## Local development
 

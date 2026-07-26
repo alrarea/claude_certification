@@ -51,7 +51,12 @@ export function Learn() {
 
   return (
     <div className="max-w-2xl mx-auto mt-12 space-y-4">
-      <h1 className="text-xl font-semibold">{certName}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">{certName}</h1>
+        <Link to={`/exam/new?cert=${cert}`} className="text-sm underline">
+          Take an exam →
+        </Link>
+      </div>
       <p className="text-sm text-gray-600">{percentComplete}% complete</p>
       <TopicTree cert={cert} nodes={topics} />
     </div>
