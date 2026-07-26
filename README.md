@@ -216,6 +216,69 @@ pulling the pre-signed S3 log URL for the failing step's actual output
 (`BUILD`/`DEPLOY`/`VERIFY`), fixing exactly what that log said, redeploying,
 repeating - not guessing.
 
+## Bugs only a real browser caught (four more, none visible to tsc/vite build)
+
+A green pipeline deploy is not the same as a working app. These four only
+surfaced by actually loading the deployed site in a browser (Playwright -
+the Claude-in-Chrome extension wasn't connecting in this environment) and
+driving the real login/register forms - `curl`, `tsc`, and `vite build`
+all stayed green through every one of them:
+
+1. **Blank white page on every route.** Two different copies of React ended
+   up in the same bundle - `apps/web`'s own `react-router-dom`/`react-markdown`
+   resolved to a stray `react@18.3.1` (pulled in transitively by
+   `@aws-amplify/backend-cli`'s unrelated internal codegen tooling, hoisted to
+   the workspace root) instead of the app's own `react@19.2.8`. Calling a hook
+   from one React instance while the other's internal dispatcher is active
+   throws `Cannot read properties of null (reading 'useRef')`, crashing the
+   entire render with nothing on screen and no error surfaced anywhere but the
+   browser console. Fixed with an npm `"overrides"` in the root `package.json`
+   pinning `react`/`react-dom` to one version workspace-wide. Confirm with
+   `npm ls react --all` - every entry should say `deduped`, none should show a
+   different resolved version.
+2. **Every cross-origin request failed as a CORS error**, silently (no thrown
+   exception, so page 1's fix alone made the app *look* fine - it rendered,
+   just every login/register attempt did nothing). Both Hono's own `cors()`
+   middleware (`handler.ts`) and the Lambda Function URL's native CORS config
+   (`backend.ts`) were setting `Access-Control-Allow-Origin` on the same
+   response - two values on one header is invalid per the Fetch spec, and
+   browsers reject the response outright rather than picking one. Fixed by
+   removing the Hono middleware entirely and relying only on the Function
+   URL's native config (per spec Section 4b's own guidance to configure CORS
+   there, not both places).
+3. **Double-slash request URLs.** The Function URL that CDK gives back always
+   ends in `/`; that value becomes `VITE_API_URL` at build time
+   (`amplify.yml`), and every request path in `api.ts` also starts with `/`,
+   producing `.../auth//login`. `api.ts` now strips trailing slashes from
+   `API_URL` defensively rather than relying on the source always being clean.
+4. **Direct navigation to any route but `/` returned 404** (e.g.
+   `/register`, `/login`) - client-side `<Link>`/`navigate()` clicks worked
+   fine since the JS was already loaded, which is exactly why this stayed
+   hidden through every prior test that started from `/`. Amplify Hosting (S3
+   + CloudFront under the hood) has no built-in SPA fallback; without an
+   explicit rewrite rule it 404s any path that isn't a literal object in the
+   bucket. Fixed with `aws amplify update-app --custom-rules`, Amplify's
+   documented single-page-app rule (rewrite any extensionless path to
+   `/index.html` with a 200, so `BrowserRouter` gets to handle it
+   client-side). This is an **app-level setting, not something in git** -
+   re-apply it if the app is ever recreated (see the exact rule in the AWS
+   Amplify console under this app's "Rewrites and redirects", or re-run the
+   command in git history).
+
+Verified end-to-end with Playwright after each fix, culminating in a full
+register → admin-views-live-OTP (SES still unverified, so this is the only
+way to get a code without real email) → verify → login → course page load,
+with a real second user account (`abdul@alignminds.com`) created this way -
+not disposable test data, a real account for real use of the platform.
+
+**Operational note, not a bug**: rapid concurrent test runs (many Playwright
+scripts hitting the same Lambda within seconds of each other) occasionally
+produced very slow (30s+) responses, most likely Lambda cold-starts stacking
+up against the `pg` pool's small `max: 2` connections per warm container
+competing for the shared RDS instance's connection slots. Spaced-out, realistic
+usage (one user logging in at a time) did not reproduce this - flagging it as
+something to watch if usage patterns change, not something fixed here.
+
 ## Exam engine + question bank (spec Sections 10/11)
 
 All built: exam setup/take/results (`/exam/new`, `/exam/:id`, `/exam/:id/results`),
