@@ -1,10 +1,10 @@
 import type { MiddlewareHandler } from "hono";
-import { verifyAccessToken } from "./jwt";
+import { verifyAccessToken, type UserRole } from "./jwt";
 
 export interface AuthedVars {
   userId: string;
   userEmail: string;
-  isAdmin: boolean;
+  userRole: UserRole;
 }
 
 export const requireAuth: MiddlewareHandler<{ Variables: AuthedVars }> = async (c, next) => {
@@ -16,7 +16,7 @@ export const requireAuth: MiddlewareHandler<{ Variables: AuthedVars }> = async (
     const claims = await verifyAccessToken(token);
     c.set("userId", claims.sub);
     c.set("userEmail", claims.email);
-    c.set("isAdmin", claims.isAdmin);
+    c.set("userRole", claims.role);
   } catch {
     return c.json({ error: "Unauthorized" }, 401);
   }
@@ -24,7 +24,15 @@ export const requireAuth: MiddlewareHandler<{ Variables: AuthedVars }> = async (
   await next();
 };
 
+// admin and super_admin both qualify — admin capabilities are a subset of
+// what super_admin can do.
 export const requireAdmin: MiddlewareHandler<{ Variables: AuthedVars }> = async (c, next) => {
-  if (!c.get("isAdmin")) return c.json({ error: "Forbidden" }, 403);
+  const role = c.get("userRole");
+  if (role !== "admin" && role !== "super_admin") return c.json({ error: "Forbidden" }, 403);
+  await next();
+};
+
+export const requireSuperAdmin: MiddlewareHandler<{ Variables: AuthedVars }> = async (c, next) => {
+  if (c.get("userRole") !== "super_admin") return c.json({ error: "Forbidden" }, 403);
   await next();
 };

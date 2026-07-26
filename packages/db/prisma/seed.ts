@@ -1,3 +1,4 @@
+import { hash } from "@node-rs/argon2";
 import { prisma } from "../src/client";
 
 async function main() {
@@ -20,6 +21,30 @@ async function main() {
   });
 
   console.log("Seeded certifications: CCAF, CCAP");
+
+  // Super admin: set directly here, never via a self-service or
+  // admin-grantable endpoint (same principle the spec applies to admin).
+  // Password comes from env, not hardcoded, so it never lands in git history -
+  // set SUPER_ADMIN_INITIAL_PASSWORD before running this seed.
+  const superAdminEmail = "tech@alignminds.com";
+  const initialPassword = process.env.SUPER_ADMIN_INITIAL_PASSWORD;
+  if (!initialPassword) {
+    throw new Error("SUPER_ADMIN_INITIAL_PASSWORD is not set - required to seed the super_admin account");
+  }
+  const passwordHash = await hash(initialPassword);
+  await prisma.user.upsert({
+    where: { email: superAdminEmail },
+    update: { role: "super_admin", emailVerifiedAt: new Date() },
+    create: {
+      email: superAdminEmail,
+      name: "Tech Admin",
+      passwordHash,
+      role: "super_admin",
+      emailVerifiedAt: new Date(),
+    },
+  });
+
+  console.log(`Seeded super_admin: ${superAdminEmail}`);
 }
 
 main()

@@ -1,10 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
 import { ACCESS_TOKEN_TTL_MINUTES, REFRESH_TOKEN_TTL_DAYS } from "@claude-cert/shared";
 
+export type UserRole = "user" | "admin" | "super_admin";
+
 export interface AccessTokenClaims {
   sub: string; // user id
   email: string;
-  isAdmin: boolean;
+  role: UserRole;
 }
 
 export interface RefreshTokenClaims {
@@ -18,7 +20,7 @@ function secret(name: string): Uint8Array {
 }
 
 export async function signAccessToken(claims: AccessTokenClaims): Promise<string> {
-  return new SignJWT({ email: claims.email, isAdmin: claims.isAdmin })
+  return new SignJWT({ email: claims.email, role: claims.role })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(claims.sub)
     .setIssuedAt()
@@ -40,7 +42,7 @@ export async function verifyAccessToken(token: string): Promise<AccessTokenClaim
   return {
     sub: payload.sub as string,
     email: payload.email as string,
-    isAdmin: Boolean(payload.isAdmin),
+    role: (payload.role as UserRole) ?? "user",
   };
 }
 

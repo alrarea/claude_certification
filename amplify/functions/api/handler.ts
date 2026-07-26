@@ -4,6 +4,7 @@ import { handle } from "hono/aws-lambda";
 import { authRoutes } from "./routes/auth";
 import { profileRoutes } from "./routes/profile";
 import { courseRoutes } from "./routes/courses";
+import { adminRoutes } from "./routes/admin";
 
 const app = new Hono();
 
@@ -24,6 +25,7 @@ app.get("/health", (c) => c.json({ ok: true }));
 app.route("/auth", authRoutes);
 app.route("/profile", profileRoutes);
 app.route("/courses", courseRoutes);
+app.route("/admin", adminRoutes);
 
 export const handler = handle(app);
 export default app;

@@ -6,6 +6,7 @@ import { Login } from "./routes/Login";
 import { Profile } from "./routes/Profile";
 import { Learn } from "./routes/Learn";
 import { LearnTopic } from "./routes/LearnTopic";
+import { AdminUsers } from "./routes/AdminUsers";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -42,6 +43,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <LearnTopic />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <RequireAuth>
+                <AdminUsers />
               </RequireAuth>
             }
           />

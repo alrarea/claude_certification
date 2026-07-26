@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { prisma } from "@claude-cert/db";
+import { prisma, type Role } from "@claude-cert/db";
 import { updateNameSchema, changePasswordSchema, saveApiKeySchema } from "@claude-cert/shared";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { encrypt } from "../lib/crypto";
@@ -13,14 +13,14 @@ function toProfileView(user: {
   id: string;
   name: string;
   email: string;
-  isAdmin: boolean;
+  role: Role;
   anthropicKeyLast4: string | null;
 }) {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
-    isAdmin: user.isAdmin,
+    role: user.role,
     hasAnthropicKey: user.anthropicKeyLast4 !== null,
     anthropicKeyLast4: user.anthropicKeyLast4,
   };

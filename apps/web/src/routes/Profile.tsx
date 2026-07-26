@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
 interface ProfileData {
   id: string;
   name: string;
   email: string;
-  isAdmin: boolean;
+  role: "user" | "admin" | "super_admin";
   hasAnthropicKey: boolean;
   anthropicKeyLast4: string | null;
 }
@@ -76,6 +77,11 @@ export function Profile() {
   return (
     <div className="max-w-md mx-auto mt-16 space-y-8">
       <h1 className="text-xl font-semibold">Profile</h1>
+      {profile.role !== "user" && (
+        <Link to="/admin/users" className="text-sm underline">
+          Manage users →
+        </Link>
+      )}
 
       <form onSubmit={onSaveName} className="space-y-2">
         <label className="block text-sm text-gray-600">Name</label>

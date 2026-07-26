@@ -71,12 +71,26 @@ enum FeedbackMode {
   @@map("feedback_mode")
 }
 
+// Three tiers: `user` (default), `admin` (curates content, views user
+// progress; granted by a super_admin, never self-service), `super_admin`
+// (everything admin can do, plus can grant/revoke admin and view OTP codes —
+// set directly in the DB/seed, never via a self-service or admin-grantable
+// endpoint, same "no self-service admin signup" principle the spec applies
+// to the original two-role model).
+enum Role {
+  user
+  admin
+  super_admin
+
+  @@map("role")
+}
+
 model User {
   id                 String    @id @default(uuid()) @db.Uuid
   email              String    @unique
   name               String
   passwordHash       String    @map("password_hash")
-  isAdmin            Boolean   @default(false) @map("is_admin")
+  role               Role      @default(user)
   emailVerifiedAt    DateTime? @map("email_verified_at") @db.Timestamptz
   anthropicApiKeyEnc Bytes?    @map("anthropic_api_key_enc")
   anthropicApiKeyIv  Bytes?    @map("anthropic_api_key_iv")
@@ -93,10 +107,18 @@ model User {
   @@map("users")
 }
 
+// Encrypted (AES-256-GCM), not hashed, by explicit project-owner request: a
+// super_admin needs to be able to view a user's current OTP (e.g. to read it
+// out to someone who didn't receive the email). This is a deliberate
+// deviation from the spec's "stored as a hash, never plaintext" (Section 12)
+// - see README "Deviations". For a 6-digit code this trades little real
+// security versus a hash (the keyspace is small enough that a hash provides
+// no meaningful protection beyond the encryption key itself either way).
 model OtpCode {
   id         String    @id @default(uuid()) @db.Uuid
   email      String
-  codeHash   String    @map("code_hash")
+  codeEnc    Bytes     @map("code_enc")
+  codeIv     Bytes     @map("code_iv")
   purpose    String    @default("registration")
   attempts   Int       @default(0)
   expiresAt  DateTime  @map("expires_at") @db.Timestamptz

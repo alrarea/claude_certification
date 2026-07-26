@@ -10,9 +10,9 @@ import {
   OTP_MAX_ATTEMPTS,
 } from "@claude-cert/shared";
 import { hashPassword, verifyPassword } from "../lib/password";
-import { generateOtp, hashOtp, verifyOtp } from "../lib/otp";
+import { generateOtp, encryptOtp, verifyOtp } from "../lib/otp";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt";
-import { sendOtpEmail } from "../lib/email";
+import { sendOtpEmail, EmailSendError } from "../lib/email";
 import { assertOtpSendAllowed, assertLoginAllowed, recordLoginAttempt, RateLimitError } from "../lib/rateLimit";
 
 export const authRoutes = new Hono();
@@ -21,11 +21,17 @@ async function issueOtp(email: string) {
   await assertOtpSendAllowed(email);
 
   const code = generateOtp();
-  const codeHash = hashOtp(code, email);
+  const { ciphertext, iv } = encryptOtp(code);
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
   await prisma.otpCode.create({
-    data: { email, codeHash, purpose: "registration", expiresAt },
+    data: {
+      email,
+      codeEnc: new Uint8Array(ciphertext),
+      codeIv: new Uint8Array(iv),
+      purpose: "registration",
+      expiresAt,
+    },
   });
 
   await sendOtpEmail(email, code, OTP_EXPIRY_MINUTES);
@@ -41,13 +47,6 @@ authRoutes.post("/register", async (c) => {
     return c.json({ error: "account exists, log in instead" }, 409);
   }
 
-  try {
-    await assertOtpSendAllowed(email);
-  } catch (err) {
-    if (err instanceof RateLimitError) return c.json({ error: err.message }, 429);
-    throw err;
-  }
-
   const passwordHash = await hashPassword(password);
 
   await prisma.user.upsert({
@@ -56,11 +55,13 @@ authRoutes.post("/register", async (c) => {
     create: { name, email, passwordHash },
   });
 
-  const code = generateOtp();
-  const codeHash = hashOtp(code, email);
-  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
-  await prisma.otpCode.create({ data: { email, codeHash, purpose: "registration", expiresAt } });
-  await sendOtpEmail(email, code, OTP_EXPIRY_MINUTES);
+  try {
+    await issueOtp(email);
+  } catch (err) {
+    if (err instanceof RateLimitError) return c.json({ error: err.message }, 429);
+    if (err instanceof EmailSendError) return c.json({ error: err.message }, 502);
+    throw err;
+  }
 
   return c.json({ ok: true });
 });
@@ -73,6 +74,7 @@ authRoutes.post("/register/resend", async (c) => {
     await issueOtp(body.data.email);
   } catch (err) {
     if (err instanceof RateLimitError) return c.json({ error: err.message }, 429);
+    if (err instanceof EmailSendError) return c.json({ error: err.message }, 502);
     throw err;
   }
 
@@ -94,7 +96,7 @@ authRoutes.post("/register/verify", async (c) => {
     return c.json({ error: "Too many incorrect attempts. Request a new code." }, 400);
   }
 
-  if (!verifyOtp(code, email, otp.codeHash)) {
+  if (!verifyOtp(code, { ciphertext: Buffer.from(otp.codeEnc), iv: Buffer.from(otp.codeIv) })) {
     await prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
     return c.json({ error: "Incorrect code" }, 400);
   }
@@ -104,7 +106,7 @@ authRoutes.post("/register/verify", async (c) => {
     return tx.user.update({ where: { email }, data: { emailVerifiedAt: new Date() } });
   });
 
-  const accessToken = await signAccessToken({ sub: user.id, email: user.email, isAdmin: user.isAdmin });
+  const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role });
   const refreshToken = await signRefreshToken({ sub: user.id });
 
   return c.json({ accessToken, refreshToken });
@@ -136,7 +138,7 @@ authRoutes.post("/login", async (c) => {
 
   await recordLoginAttempt(email, true);
 
-  const accessToken = await signAccessToken({ sub: user.id, email: user.email, isAdmin: user.isAdmin });
+  const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role });
   const refreshToken = await signRefreshToken({ sub: user.id });
 
   return c.json({ accessToken, refreshToken });
@@ -157,7 +159,7 @@ authRoutes.post("/refresh", async (c) => {
   if (!user) return c.json({ error: "Invalid refresh token" }, 401);
 
   // Rotate on every use.
-  const accessToken = await signAccessToken({ sub: user.id, email: user.email, isAdmin: user.isAdmin });
+  const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role });
   const refreshToken = await signRefreshToken({ sub: user.id });
 
   return c.json({ accessToken, refreshToken });

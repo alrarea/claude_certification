@@ -23,7 +23,8 @@
     "jose": "^6.2.4",
     "@node-rs/argon2": "^2.0.2",
     "@aws-sdk/client-sesv2": "^3.1095.0",
-    "@anthropic-ai/sdk": "^0.115.0"
+    "@anthropic-ai/sdk": "^0.115.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@hono/node-server": "^2.0.12",
