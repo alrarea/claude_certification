@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
-import app from "./handler.js";
+import app from "./handler.ts";
 
 const port = Number(process.env.PORT ?? 8787);
 

@@ -8,12 +8,12 @@ import {
   uploadDocumentSchema,
   MAX_AI_GENERATIONS_PER_DAY,
 } from "@claude-cert/shared";
-import { requireAuth, requireAdmin, type AuthedVars } from "../lib/authMiddleware.js";
-import { decrypt } from "../lib/crypto.js";
-import { generateQuestions, type GeneratedQuestion } from "../lib/anthropicGenerate.js";
-import { isOptionLengthBalanced } from "../lib/optionBalance.js";
-import { uploadDocument } from "../lib/s3.js";
-import { extractDocumentText } from "../lib/extractDocumentText.js";
+import { requireAuth, requireAdmin, type AuthedVars } from "../lib/authMiddleware.ts";
+import { decrypt } from "../lib/crypto.ts";
+import { generateQuestions, type GeneratedQuestion } from "../lib/anthropicGenerate.ts";
+import { isOptionLengthBalanced } from "../lib/optionBalance.ts";
+import { uploadDocument } from "../lib/s3.ts";
+import { extractDocumentText } from "../lib/extractDocumentText.ts";
 
 export const questionRoutes = new Hono<{ Variables: AuthedVars }>();
 questionRoutes.use("*", requireAuth);

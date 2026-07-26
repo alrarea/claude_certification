@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { handle } from "hono/aws-lambda";
-import { authRoutes } from "./routes/auth.js";
-import { profileRoutes } from "./routes/profile.js";
-import { courseRoutes } from "./routes/courses.js";
-import { adminRoutes } from "./routes/admin.js";
-import { examRoutes } from "./routes/exams.js";
-import { questionRoutes } from "./routes/questions.js";
+import { authRoutes } from "./routes/auth.ts";
+import { profileRoutes } from "./routes/profile.ts";
+import { courseRoutes } from "./routes/courses.ts";
+import { adminRoutes } from "./routes/admin.ts";
+import { examRoutes } from "./routes/exams.ts";
+import { questionRoutes } from "./routes/questions.ts";
 
 const app = new Hono();
 

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { prisma } from "@claude-cert/db";
 import { createExamSchema, submitAnswerSchema } from "@claude-cert/shared";
-import { requireAuth, type AuthedVars } from "../lib/authMiddleware.js";
+import { requireAuth, type AuthedVars } from "../lib/authMiddleware.ts";
 
 export const examRoutes = new Hono<{ Variables: AuthedVars }>();
 examRoutes.use("*", requireAuth);

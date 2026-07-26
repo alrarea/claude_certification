@@ -9,11 +9,11 @@ import {
   OTP_EXPIRY_MINUTES,
   OTP_MAX_ATTEMPTS,
 } from "@claude-cert/shared";
-import { hashPassword, verifyPassword } from "../lib/password.js";
-import { generateOtp, encryptOtp, verifyOtp } from "../lib/otp.js";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt.js";
-import { sendOtpEmail, EmailSendError } from "../lib/email.js";
-import { assertOtpSendAllowed, assertLoginAllowed, recordLoginAttempt, RateLimitError } from "../lib/rateLimit.js";
+import { hashPassword, verifyPassword } from "../lib/password.ts";
+import { generateOtp, encryptOtp, verifyOtp } from "../lib/otp.ts";
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt.ts";
+import { sendOtpEmail, EmailSendError } from "../lib/email.ts";
+import { assertOtpSendAllowed, assertLoginAllowed, recordLoginAttempt, RateLimitError } from "../lib/rateLimit.ts";
 
 export const authRoutes = new Hono();
 

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { isOptionLengthBalanced } from "./optionBalance.js";
+import { isOptionLengthBalanced } from "./optionBalance.ts";
 
 export interface GeneratedOption {
   optionText: string;

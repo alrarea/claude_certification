@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { OTP_LENGTH } from "@claude-cert/shared";
-import { encrypt, decrypt, type EncryptedValue } from "./crypto.js";
+import { encrypt, decrypt, type EncryptedValue } from "./crypto.ts";
 
 export function generateOtp(): string {
   const max = 10 ** OTP_LENGTH;
