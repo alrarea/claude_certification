@@ -27,7 +27,7 @@ export function RegisterVerify() {
         body: JSON.stringify({ email, code }),
       });
       login(data.accessToken, data.refreshToken);
-      navigate("/learn/ccaf");
+      navigate("/learn");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

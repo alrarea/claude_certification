@@ -2,17 +2,44 @@ import { Hono } from "hono";
 import { prisma } from "@claude-cert/db";
 import { createExamSchema, submitAnswerSchema } from "@claude-cert/shared";
 import { requireAuth, type AuthedVars } from "../lib/authMiddleware.ts";
+import { decrypt } from "../lib/crypto.ts";
+import { generateAssessmentSummary } from "../lib/anthropicSummary.ts";
+import { shuffle } from "../lib/shuffle.ts";
 
 export const examRoutes = new Hono<{ Variables: AuthedVars }>();
 examRoutes.use("*", requireAuth);
 
-function shuffle<T>(items: T[]): T[] {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+// For "mixed" exams, skew the draw toward the harder end instead of pulling
+// evenly across difficulties - hard should outnumber medium, medium should
+// outnumber easy.
+const MIXED_DIFFICULTY_WEIGHTS: Record<"hard" | "medium" | "easy", number> = {
+  hard: 0.5,
+  medium: 0.3,
+  easy: 0.2,
+};
+
+function selectMixed<T extends { difficulty: string }>(pool: T[], count: number): T[] {
+  const byDifficulty: Record<"hard" | "medium" | "easy", T[]> = {
+    hard: shuffle(pool.filter((q) => q.difficulty === "hard")),
+    medium: shuffle(pool.filter((q) => q.difficulty === "medium")),
+    easy: shuffle(pool.filter((q) => q.difficulty === "easy")),
+  };
+
+  const selected: T[] = [];
+  for (const diff of ["hard", "medium", "easy"] as const) {
+    const target = Math.round(count * MIXED_DIFFICULTY_WEIGHTS[diff]);
+    selected.push(...byDifficulty[diff].splice(0, target));
   }
-  return arr;
+
+  // A bucket may have come up short of its target (e.g. not enough easy
+  // questions yet) - top the exam back up to `count` from whatever's left,
+  // hardest-first, so the total is still as close to `count` as the pool allows.
+  const leftover = [...byDifficulty.hard, ...byDifficulty.medium, ...byDifficulty.easy];
+  while (selected.length < count && leftover.length > 0) {
+    selected.push(leftover.shift()!);
+  }
+
+  return shuffle(selected).slice(0, count);
 }
 
 examRoutes.post("/", async (c) => {
@@ -36,10 +63,10 @@ examRoutes.post("/", async (c) => {
       ...(difficulty !== "mixed" ? { difficulty } : {}),
       ...(topicScope ? { topicId: topicScope } : {}),
     },
-    select: { id: true },
+    select: { id: true, difficulty: true },
   });
 
-  const selected = shuffle(pool).slice(0, questionCount);
+  const selected = difficulty === "mixed" ? selectMixed(pool, questionCount) : shuffle(pool).slice(0, questionCount);
   if (selected.length === 0) {
     return c.json({ error: "No approved questions match this setup yet." }, 422);
   }
@@ -180,20 +207,23 @@ examRoutes.get("/:id/results", async (c) => {
     include: {
       examQuestions: {
         orderBy: { orderIndex: "asc" },
-        include: { question: { include: { options: true, topic: true } } },
+        include: { question: { include: { options: true, topic: true, certification: true } } },
       },
     },
   });
   if (!exam) return c.json({ error: "Exam not found" }, 404);
   if (!exam.completedAt) return c.json({ error: "Exam not completed yet" }, 400);
 
-  const byTopic = new Map<string, { title: string; correct: number; total: number }>();
+  const byTopic = new Map<string, { title: string; certCode: string; correct: number; total: number }>();
   const byDifficulty = new Map<string, { correct: number; total: number }>();
-  const missed: Array<{ questionId: string; questionText: string; topicId: string; topicTitle: string }> = [];
+  const byCertification = new Map<string, { name: string; correct: number; total: number }>();
+  const missed: Array<{ questionId: string; questionText: string; topicId: string; topicTitle: string; certCode: string }> = [];
 
   for (const eq of exam.examQuestions) {
+    const certCode = eq.question.certification.code.toLowerCase();
+
     const topicKey = eq.question.topicId;
-    const topicEntry = byTopic.get(topicKey) ?? { title: eq.question.topic.title, correct: 0, total: 0 };
+    const topicEntry = byTopic.get(topicKey) ?? { title: eq.question.topic.title, certCode, correct: 0, total: 0 };
     topicEntry.total++;
     if (eq.isCorrect) topicEntry.correct++;
     byTopic.set(topicKey, topicEntry);
@@ -203,12 +233,19 @@ examRoutes.get("/:id/results", async (c) => {
     if (eq.isCorrect) diffEntry.correct++;
     byDifficulty.set(eq.question.difficulty, diffEntry);
 
+    const certKey = eq.question.certification.code;
+    const certEntry = byCertification.get(certKey) ?? { name: eq.question.certification.name, correct: 0, total: 0 };
+    certEntry.total++;
+    if (eq.isCorrect) certEntry.correct++;
+    byCertification.set(certKey, certEntry);
+
     if (!eq.isCorrect) {
       missed.push({
         questionId: eq.question.id,
         questionText: eq.question.questionText,
         topicId: eq.question.topicId,
         topicTitle: eq.question.topic.title,
+        certCode,
       });
     }
   }
@@ -217,8 +254,69 @@ examRoutes.get("/:id/results", async (c) => {
     // Prisma's Decimal serializes to a string by default - cast to a plain
     // number so the frontend can call .toFixed() on it directly.
     scorePct: exam.scorePct ? Number(exam.scorePct) : 0,
+    isAssessment: exam.isAssessment,
     byTopic: Array.from(byTopic.entries()).map(([topicId, v]) => ({ topicId, ...v })),
     byDifficulty: Array.from(byDifficulty.entries()).map(([difficulty, v]) => ({ difficulty, ...v })),
+    byCertification: Array.from(byCertification.entries()).map(([code, v]) => ({ code, ...v })),
     missed,
   });
+});
+
+// On-demand, regenerable AI narrative summary of a completed exam - requires
+// the requesting user to have a saved Anthropic API key, same gate as
+// questions.ts's /generate.
+examRoutes.post("/:id/ai-summary", async (c) => {
+  const examId = c.req.param("id");
+  const userId = c.get("userId");
+
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  if (!user.anthropicApiKeyEnc || !user.anthropicApiKeyIv) {
+    return c.json({ error: "Save an Anthropic API key in your profile first." }, 400);
+  }
+
+  const exam = await prisma.exam.findFirst({
+    where: { id: examId, userId },
+    include: {
+      certification: true,
+      examQuestions: {
+        orderBy: { orderIndex: "asc" },
+        include: {
+          question: { include: { options: true, topic: true, certification: true } },
+          selectedOption: true,
+        },
+      },
+    },
+  });
+  if (!exam) return c.json({ error: "Exam not found" }, 404);
+  if (!exam.completedAt) return c.json({ error: "Exam not completed yet" }, 400);
+
+  const items = exam.examQuestions.map((eq) => ({
+    certification: eq.question.certification.name,
+    topic: eq.question.topic.title,
+    difficulty: eq.question.difficulty,
+    questionText: eq.question.questionText,
+    chosenText: eq.selectedOption?.optionText ?? "(not answered)",
+    correctText: eq.question.options.find((o) => o.isCorrect)?.optionText ?? "",
+    isCorrect: eq.isCorrect ?? false,
+  }));
+
+  const examLabel = exam.isAssessment
+    ? "a placement assessment spanning the Foundations (CCAR-F) and Professional (CCAR-P) tiers"
+    : `an exam for the "${exam.certification.name}" certification`;
+
+  const apiKey = decrypt({
+    ciphertext: Buffer.from(user.anthropicApiKeyEnc),
+    iv: Buffer.from(user.anthropicApiKeyIv),
+  });
+
+  try {
+    const result = await generateAssessmentSummary({
+      apiKey,
+      examLabel,
+      items,
+    });
+    return c.json(result);
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : "Summary generation failed" }, 502);
+  }
 });

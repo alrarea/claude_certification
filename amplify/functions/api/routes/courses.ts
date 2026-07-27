@@ -27,6 +27,9 @@ courseRoutes.get("/:cert/topics", async (c) => {
       orderBy: { orderIndex: "asc" },
     }),
     prisma.userTopicProgress.findMany({ where: { userId } }),
+    // Every "view a course" path goes through this endpoint, so it's the
+    // single natural write-point for "last viewed certification."
+    prisma.user.update({ where: { id: userId }, data: { lastCertificationCode: certification.code } }),
   ]);
 
   const progressByTopic = new Map<string, string>(progress.map((p) => [p.topicId, p.status]));

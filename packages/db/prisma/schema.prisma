@@ -104,6 +104,8 @@ model User {
   anthropicApiKeyEnc Bytes?    @map("anthropic_api_key_enc")
   anthropicApiKeyIv  Bytes?    @map("anthropic_api_key_iv")
   anthropicKeyLast4  String?   @map("anthropic_key_last4")
+  onboardingPromptSeenAt DateTime? @map("onboarding_prompt_seen_at") @db.Timestamptz
+  lastCertificationCode String? @map("last_certification_code")
   deletedAt          DateTime? @map("deleted_at") @db.Timestamptz
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
@@ -269,6 +271,7 @@ model Exam {
   difficulty      ExamDifficulty
   topicScope      String?        @map("topic_scope") @db.Uuid
   questionCount   Int            @map("question_count")
+  isAssessment    Boolean        @default(false) @map("is_assessment")
   startedAt       DateTime       @default(now()) @map("started_at") @db.Timestamptz
   completedAt     DateTime?      @map("completed_at") @db.Timestamptz
   scorePct        Decimal?       @map("score_pct")

@@ -5,6 +5,7 @@ import { RegisterVerify } from "./routes/RegisterVerify";
 import { Login } from "./routes/Login";
 import { Profile } from "./routes/Profile";
 import { Learn } from "./routes/Learn";
+import { LearnPicker } from "./routes/LearnPicker";
 import { LearnTopic } from "./routes/LearnTopic";
 import { AdminUsers } from "./routes/AdminUsers";
 import { ExamNew } from "./routes/ExamNew";
@@ -32,6 +33,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <Profile />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/learn"
+            element={
+              <RequireAuth>
+                <LearnPicker />
               </RequireAuth>
             }
           />

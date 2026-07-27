@@ -23,14 +23,14 @@ export function AppShell({ children, maxWidth = 720 }: { children: ReactNode; ma
           className="flex items-center justify-between"
           style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px", height: 64 }}
         >
-          <Link to="/learn/ccaf" className="flex items-center gap-2" style={{ textDecoration: "none" }}>
+          <Link to="/learn" className="flex items-center gap-2" style={{ textDecoration: "none" }}>
             <Spark size={18} spinning={false} />
             <span style={{ fontFamily: "var(--font-serif)", fontSize: 17, color: "var(--color-ink)" }}>
               Cert Prep
             </span>
           </Link>
           <nav className="flex items-center gap-1">
-            <NavLink to="/learn/ccaf">Learn</NavLink>
+            <NavLink to="/learn">Learn</NavLink>
             <NavLink to="/exam/new">Exam</NavLink>
             <NavLink to="/questions/manage">Questions</NavLink>
             <NavLink to="/profile">Profile</NavLink>

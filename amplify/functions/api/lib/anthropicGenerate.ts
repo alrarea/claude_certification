@@ -61,7 +61,7 @@ function buildPrompt(params: {
   const topicList = params.topics.map((t) => `- ${t.id}: ${t.title}`).join("\n");
   const difficultyInstruction =
     params.difficulty === "mixed"
-      ? "Mix of easy, medium, and hard questions."
+      ? "Mix of easy, medium, and hard questions, weighted toward the harder end of the exam - roughly 50% hard, 30% medium, 20% easy."
       : `All questions should be "${params.difficulty}" difficulty.`;
 
   const sourceInstruction = params.sourceContent
