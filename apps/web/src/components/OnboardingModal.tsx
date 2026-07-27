@@ -34,7 +34,7 @@ export function OnboardingModal({ submitting, error, onNew, onAssess }: Onboardi
         )}
         <div className="flex flex-col gap-3">
           <Button variant="clay" block loading={submitting === "assess"} disabled={!!submitting} onClick={onAssess}>
-            Assess me (10 quick questions)
+            Assess me (up to 15 quick questions)
           </Button>
           <Button variant="secondary" block loading={submitting === "new"} disabled={!!submitting} onClick={onNew}>
             I'm new — skip to Learn
