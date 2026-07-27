@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
 import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
 import { Button } from "../components/Button";
+import { MarkdownContent } from "../components/MarkdownContent";
 
 type Mode = "in_depth" | "normal" | "concise";
 
@@ -67,7 +67,7 @@ export function LearnTopic() {
       <div className="card" style={{ padding: 32, marginBottom: 24 }}>
         {available ? (
           <div className="prose">
-            <ReactMarkdown>{contentMd ?? ""}</ReactMarkdown>
+            <MarkdownContent>{contentMd ?? ""}</MarkdownContent>
           </div>
         ) : (
           <p className="italic" style={{ color: "var(--color-ink-500)" }}>
