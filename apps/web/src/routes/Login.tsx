@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiFetch, ApiError } from "../lib/api";
 import { useAuth } from "../lib/AuthContext";
+import { useOnboardingGate } from "../lib/useOnboardingGate";
 import { AuthLayout } from "../components/AuthLayout";
 import { TextField } from "../components/TextField";
 import { PasswordField } from "../components/PasswordField";
@@ -12,14 +13,12 @@ import { OnboardingModal } from "../components/OnboardingModal";
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showOnboarding, onboardingSubmitting, onboardingError, handleAuthResult, chooseNew, chooseAssess } =
+    useOnboardingGate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [onboardingSubmitting, setOnboardingSubmitting] = useState<"new" | "assess" | null>(null);
-  const [onboardingError, setOnboardingError] = useState<string | null>(null);
-  const [landingPath, setLandingPath] = useState("/learn");
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,13 +30,7 @@ export function Login() {
         body: JSON.stringify({ email, password }),
       });
       login(data.accessToken, data.refreshToken);
-      const target = data.lastCertificationCode ? `/learn/${data.lastCertificationCode.toLowerCase()}` : "/learn";
-      setLandingPath(target);
-      if (data.hasSeenOnboardingPrompt) {
-        navigate(target);
-      } else {
-        setShowOnboarding(true);
-      }
+      handleAuthResult(data);
     } catch (err) {
       if (err instanceof ApiError && err.data?.needsVerification) {
         const emailSent = err.data?.emailSent;
@@ -48,29 +41,6 @@ export function Login() {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function chooseNew() {
-    setOnboardingSubmitting("new");
-    try {
-      await apiFetch("/onboarding/choice", { method: "POST", body: JSON.stringify({ choice: "new" }) });
-    } catch {
-      // Best-effort - the popup is a one-time nicety, don't block on it.
-    } finally {
-      navigate(landingPath);
-    }
-  }
-
-  async function chooseAssess() {
-    setOnboardingSubmitting("assess");
-    setOnboardingError(null);
-    try {
-      const data = await apiFetch("/onboarding/choice", { method: "POST", body: JSON.stringify({ choice: "assess" }) });
-      navigate(`/exam/${data.examId}`);
-    } catch (err) {
-      setOnboardingError(err instanceof Error ? err.message : "Couldn't start the assessment");
-      setOnboardingSubmitting(null);
     }
   }
 

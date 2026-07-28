@@ -1,15 +1,18 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../lib/AuthContext";
+import { useOnboardingGate } from "../lib/useOnboardingGate";
 import { AuthLayout } from "../components/AuthLayout";
 import { TextField } from "../components/TextField";
 import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
+import { OnboardingModal } from "../components/OnboardingModal";
 
 export function RegisterVerify() {
-  const navigate = useNavigate();
   const { login } = useAuth();
+  const { showOnboarding, onboardingSubmitting, onboardingError, handleAuthResult, chooseNew, chooseAssess } =
+    useOnboardingGate();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [code, setCode] = useState("");
@@ -28,7 +31,7 @@ export function RegisterVerify() {
         body: JSON.stringify({ email, code }),
       });
       login(data.accessToken, data.refreshToken);
-      navigate("/learn");
+      handleAuthResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -81,6 +84,14 @@ export function RegisterVerify() {
           Resend code
         </Button>
       </form>
+      {showOnboarding && (
+        <OnboardingModal
+          submitting={onboardingSubmitting}
+          error={onboardingError}
+          onNew={chooseNew}
+          onAssess={chooseAssess}
+        />
+      )}
     </AuthLayout>
   );
 }

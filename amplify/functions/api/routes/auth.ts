@@ -116,7 +116,12 @@ authRoutes.post("/register/verify", async (c) => {
   const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role });
   const refreshToken = await signRefreshToken({ sub: user.id });
 
-  return c.json({ accessToken, refreshToken });
+  return c.json({
+    accessToken,
+    refreshToken,
+    hasSeenOnboardingPrompt: user.onboardingPromptSeenAt !== null,
+    lastCertificationCode: user.lastCertificationCode,
+  });
 });
 
 authRoutes.post("/login", async (c) => {
