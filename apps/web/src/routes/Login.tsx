@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { apiFetch } from "../lib/api";
+import { apiFetch, ApiError } from "../lib/api";
 import { useAuth } from "../lib/AuthContext";
 import { AuthLayout } from "../components/AuthLayout";
 import { TextField } from "../components/TextField";
@@ -39,6 +39,12 @@ export function Login() {
         setShowOnboarding(true);
       }
     } catch (err) {
+      if (err instanceof ApiError && err.data?.needsVerification) {
+        const emailSent = err.data?.emailSent;
+        const suffix = emailSent === false ? "&emailSent=0" : "";
+        navigate(`/register/verify?email=${encodeURIComponent(email)}${suffix}`);
+        return;
+      }
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSubmitting(false);

@@ -20,11 +20,12 @@ export function Register() {
     setError(null);
     setSubmitting(true);
     try {
-      await apiFetch("/auth/register", {
+      const data = await apiFetch("/auth/register", {
         method: "POST",
         body: JSON.stringify({ name, email, password }),
       });
-      navigate(`/register/verify?email=${encodeURIComponent(email)}`);
+      const suffix = data.emailSent === false ? "&emailSent=0" : "";
+      navigate(`/register/verify?email=${encodeURIComponent(email)}${suffix}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

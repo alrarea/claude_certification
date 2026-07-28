@@ -15,6 +15,7 @@ export function RegisterVerify() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [emailNotSent, setEmailNotSent] = useState(searchParams.get("emailSent") === "0");
   const [submitting, setSubmitting] = useState(false);
 
   async function onSubmit(e: FormEvent) {
@@ -39,8 +40,9 @@ export function RegisterVerify() {
     setError(null);
     setResent(false);
     try {
-      await apiFetch("/auth/register/resend", { method: "POST", body: JSON.stringify({ email }) });
+      const data = await apiFetch("/auth/register/resend", { method: "POST", body: JSON.stringify({ email }) });
       setResent(true);
+      setEmailNotSent(data.emailSent === false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     }
@@ -66,7 +68,12 @@ export function RegisterVerify() {
           required
         />
         {error && <Alert kind="error">{error}</Alert>}
-        {resent && <Alert kind="success">New code sent.</Alert>}
+        {resent && !emailNotSent && <Alert kind="success">New code sent.</Alert>}
+        {emailNotSent && (
+          <Alert kind="error">
+            We couldn't email you a code right now. Ask an admin for your verification code, then enter it above.
+          </Alert>
+        )}
         <Button type="submit" loading={submitting} block>
           Verify
         </Button>

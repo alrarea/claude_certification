@@ -17,7 +17,12 @@ import { assertOtpSendAllowed, assertLoginAllowed, recordLoginAttempt, RateLimit
 
 export const authRoutes = new Hono();
 
-async function issueOtp(email: string) {
+// Returns whether the email actually went out. The OTP row is always
+// created regardless - a delivery failure (e.g. SES sandbox mode /
+// unverified recipient, still pending here) shouldn't block the
+// registration flow, since an admin can always read the code back out via
+// GET /admin/users/:id/otp or the Users page's "Copy OTPs" button.
+async function issueOtp(email: string): Promise<{ emailSent: boolean }> {
   await assertOtpSendAllowed(email);
 
   const code = generateOtp();
@@ -34,7 +39,13 @@ async function issueOtp(email: string) {
     },
   });
 
-  await sendOtpEmail(email, code, OTP_EXPIRY_MINUTES);
+  try {
+    await sendOtpEmail(email, code, OTP_EXPIRY_MINUTES);
+    return { emailSent: true };
+  } catch (err) {
+    if (err instanceof EmailSendError) return { emailSent: false };
+    throw err;
+  }
 }
 
 authRoutes.post("/register", async (c) => {
@@ -56,14 +67,12 @@ authRoutes.post("/register", async (c) => {
   });
 
   try {
-    await issueOtp(email);
+    const { emailSent } = await issueOtp(email);
+    return c.json({ ok: true, emailSent });
   } catch (err) {
     if (err instanceof RateLimitError) return c.json({ error: err.message }, 429);
-    if (err instanceof EmailSendError) return c.json({ error: err.message }, 502);
     throw err;
   }
-
-  return c.json({ ok: true });
 });
 
 authRoutes.post("/register/resend", async (c) => {
@@ -71,14 +80,12 @@ authRoutes.post("/register/resend", async (c) => {
   if (!body.success) return c.json({ error: body.error.flatten() }, 400);
 
   try {
-    await issueOtp(body.data.email);
+    const { emailSent } = await issueOtp(body.data.email);
+    return c.json({ ok: true, emailSent });
   } catch (err) {
     if (err instanceof RateLimitError) return c.json({ error: err.message }, 429);
-    if (err instanceof EmailSendError) return c.json({ error: err.message }, 502);
     throw err;
   }
-
-  return c.json({ ok: true });
 });
 
 authRoutes.post("/register/verify", async (c) => {
@@ -133,7 +140,21 @@ authRoutes.post("/login", async (c) => {
 
   if (!user.emailVerifiedAt) {
     await recordLoginAttempt(email, false);
-    return c.json({ error: "Finish registration first — check your email for a verification code" }, 403);
+    // Send them straight back into OTP verification rather than a dead end -
+    // issue a fresh code (tolerating the resend cooldown: RateLimitError here
+    // just means a still-usable one was already sent recently, not a reason
+    // to fail this login attempt) so the frontend can route them to
+    // /register/verify instead of just showing an error.
+    let emailSent = false;
+    try {
+      ({ emailSent } = await issueOtp(email));
+    } catch (err) {
+      if (!(err instanceof RateLimitError)) throw err;
+    }
+    return c.json(
+      { error: "Finish verifying your email to continue.", needsVerification: true, emailSent },
+      403
+    );
   }
 
   await recordLoginAttempt(email, true);

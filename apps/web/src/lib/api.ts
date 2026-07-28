@@ -25,8 +25,8 @@ export function setRefreshToken(token: string | null) {
   else sessionStorage.removeItem("refreshToken");
 }
 
-class ApiError extends Error {
-  constructor(public status: number, message: string) {
+export class ApiError extends Error {
+  constructor(public status: number, message: string, public data: Record<string, unknown> = {}) {
     super(message);
   }
 }
@@ -61,6 +61,6 @@ export async function apiFetch(path: string, options: RequestInit = {}, retry = 
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error ?? "Request failed");
+  if (!res.ok) throw new ApiError(res.status, data.error ?? "Request failed", data);
   return data;
 }
