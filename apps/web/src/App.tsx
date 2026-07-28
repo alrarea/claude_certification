@@ -13,6 +13,8 @@ import { ExamInProgress } from "./routes/ExamInProgress";
 import { ExamResults } from "./routes/ExamResults";
 import { QuestionsManage } from "./routes/QuestionsManage";
 import { QuestionsReview } from "./routes/QuestionsReview";
+import { LiveExamCreate } from "./routes/LiveExamCreate";
+import { LiveExamRoom } from "./routes/LiveExamRoom";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -105,6 +107,22 @@ export default function App() {
             element={
               <RequireAuth>
                 <QuestionsReview />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/live-exams/new"
+            element={
+              <RequireAuth>
+                <LiveExamCreate />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/live-exam/:id"
+            element={
+              <RequireAuth>
+                <LiveExamRoom />
               </RequireAuth>
             }
           />

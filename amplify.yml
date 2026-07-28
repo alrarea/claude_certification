@@ -34,6 +34,7 @@ frontend:
         # (unlike Amplify's own predictable app/branch domain) - read it from
         # the backend's output file rather than hardcoding it.
         - export VITE_API_URL=$(node -e "console.log(require('./amplify_outputs.json').custom.apiUrl)")
+        - export VITE_WS_URL=$(node -e "console.log(require('./amplify_outputs.json').custom.webSocketUrl)")
     build:
       commands:
         - npm run build --workspace=apps/web

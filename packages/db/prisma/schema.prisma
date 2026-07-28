@@ -80,6 +80,16 @@ enum FeedbackMode {
   @@map("feedback_mode")
 }
 
+enum LiveExamPhase {
+  lobby
+  question
+  reveal
+  completed
+  cancelled
+
+  @@map("live_exam_phase")
+}
+
 // Three tiers: `user` (default), `admin` (curates content, views user
 // progress; granted by a super_admin, never self-service), `super_admin`
 // (everything admin can do, plus can grant/revoke admin and view OTP codes —
@@ -114,6 +124,8 @@ model User {
   documentUploads DocumentUpload[]
   exams           Exam[]
   createdQuestions Question[]         @relation("QuestionCreatedBy")
+  liveExamsHosted        LiveExam[]            @relation("LiveExamHost")
+  liveExamParticipations LiveExamParticipant[]
 
   @@map("users")
 }
@@ -162,6 +174,7 @@ model Certification {
   topics   Topic[]
   questions Question[]
   exams    Exam[]
+  liveExams LiveExam[]
 
   @@map("certifications")
 }
@@ -182,6 +195,7 @@ model Topic {
   userProgress   UserTopicProgress[]
   questions      Question[]
   examScopedExams Exam[]
+  liveExamScopedExams LiveExam[]
 
   @@map("topics")
 }
@@ -231,6 +245,7 @@ model Question {
   creator       User?            @relation("QuestionCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
   options       QuestionOption[]
   examQuestions ExamQuestion[]
+  liveExamQuestions LiveExamQuestion[]
 
   @@map("questions")
 }
@@ -245,6 +260,7 @@ model QuestionOption {
 
   question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
   examQuestions ExamQuestion[]
+  liveExamAnswers LiveExamAnswer[]
 
   @@map("question_options")
 }
@@ -298,4 +314,96 @@ model ExamQuestion {
   selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id])
 
   @@map("exam_questions")
+}
+
+// Host-controlled, synchronized multi-user session - everyone joined moves
+// through the same question set in lockstep, unlike the self-paced `Exam`
+// model above. `phase`/`currentIndex`/`phaseStartedAt` together are the
+// entire state machine: clients derive their countdown from `phaseStartedAt`
+// and independently call the advance endpoint when it elapses, but a
+// conditional update (`WHERE phase = <expected>`) means only the first
+// caller actually transitions - see `liveExams.ts`.
+model LiveExam {
+  id              String        @id @default(uuid()) @db.Uuid
+  certificationId String        @map("certification_id") @db.Uuid
+  topicScope      String?       @map("topic_scope") @db.Uuid
+  difficulty      ExamDifficulty
+  requestedCount  Int           @map("requested_count")
+  answerSeconds   Int           @map("answer_seconds")
+  revealSeconds   Int           @map("reveal_seconds")
+  phase           LiveExamPhase @default(lobby)
+  currentIndex    Int           @default(0) @map("current_index")
+  phaseStartedAt  DateTime?     @map("phase_started_at") @db.Timestamptz
+  hostId          String        @map("host_id") @db.Uuid
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  startedAt       DateTime?     @map("started_at") @db.Timestamptz
+  completedAt     DateTime?     @map("completed_at") @db.Timestamptz
+
+  host          User           @relation("LiveExamHost", fields: [hostId], references: [id], onDelete: Restrict)
+  certification Certification  @relation(fields: [certificationId], references: [id])
+  scopedTopic   Topic?         @relation(fields: [topicScope], references: [id])
+  questions     LiveExamQuestion[]
+  participants  LiveExamParticipant[]
+  connections   LiveExamConnection[]
+
+  @@map("live_exams")
+}
+
+model LiveExamQuestion {
+  id         String @id @default(uuid()) @db.Uuid
+  liveExamId String @map("live_exam_id") @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  orderIndex Int    @map("order_index")
+
+  liveExam LiveExam         @relation(fields: [liveExamId], references: [id], onDelete: Cascade)
+  question Question         @relation(fields: [questionId], references: [id])
+  answers  LiveExamAnswer[]
+
+  @@unique([liveExamId, orderIndex])
+  @@map("live_exam_questions")
+}
+
+model LiveExamParticipant {
+  id         String   @id @default(uuid()) @db.Uuid
+  liveExamId String   @map("live_exam_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  joinedAt   DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  liveExam LiveExam         @relation(fields: [liveExamId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  answers  LiveExamAnswer[]
+
+  @@unique([liveExamId, userId])
+  @@map("live_exam_participants")
+}
+
+model LiveExamAnswer {
+  id                 String   @id @default(uuid()) @db.Uuid
+  liveExamQuestionId String   @map("live_exam_question_id") @db.Uuid
+  participantId      String   @map("participant_id") @db.Uuid
+  selectedOptionId   String?  @map("selected_option_id") @db.Uuid
+  isCorrect          Boolean  @map("is_correct")
+  answeredAt         DateTime @default(now()) @map("answered_at") @db.Timestamptz
+
+  liveExamQuestion LiveExamQuestion    @relation(fields: [liveExamQuestionId], references: [id], onDelete: Cascade)
+  participant      LiveExamParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  selectedOption   QuestionOption?     @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([liveExamQuestionId, participantId])
+  @@map("live_exam_answers")
+}
+
+// One row per open WebSocket connection - the broadcast address book.
+// `$connect` inserts, `$disconnect` deletes; a stale row (client vanished
+// without a clean close) is pruned lazily when a broadcast to it 410s.
+model LiveExamConnection {
+  id           String   @id @default(uuid()) @db.Uuid
+  connectionId String   @unique @map("connection_id")
+  liveExamId   String   @map("live_exam_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  connectedAt  DateTime @default(now()) @map("connected_at") @db.Timestamptz
+
+  liveExam LiveExam @relation(fields: [liveExamId], references: [id], onDelete: Cascade)
+
+  @@map("live_exam_connections")
 }

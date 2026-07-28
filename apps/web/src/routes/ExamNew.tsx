@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { SelectField } from "../components/TextField";
@@ -7,6 +7,82 @@ import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
 
 const PRESETS = [10, 20, 40, 60];
+
+interface LiveExamSummary {
+  id: string;
+  certification: string;
+  certificationName: string;
+  difficulty: string;
+  phase: string;
+  questionCount: number;
+  participantCount: number;
+}
+
+function LiveExamsSection() {
+  const [liveExams, setLiveExams] = useState<LiveExamSummary[] | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      const data = await apiFetch("/live-exams");
+      setLiveExams(data.liveExams);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load live exams");
+    }
+  }
+
+  useEffect(() => {
+    load();
+    apiFetch("/profile")
+      .then((p) => setIsAdmin(p.role === "admin" || p.role === "super_admin"))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+        <h2 style={{ fontSize: 19 }}>Live exams</h2>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" onClick={load}>
+            Refresh
+          </Button>
+          {isAdmin && (
+            <Link to="/live-exams/new" className="btn btn-secondary btn-sm" style={{ textDecoration: "none" }}>
+              + Host a live exam
+            </Link>
+          )}
+        </div>
+      </div>
+      {error && <Alert kind="error">{error}</Alert>}
+      {liveExams && liveExams.length === 0 && (
+        <p className="text-sm" style={{ color: "var(--color-ink-500)" }}>
+          No live exams right now.
+        </p>
+      )}
+      {liveExams && liveExams.length > 0 && (
+        <div className="flex flex-col gap-3">
+          {liveExams.map((le) => (
+            <div key={le.id} className="card flex items-center justify-between" style={{ padding: "16px 20px" }}>
+              <div>
+                <div style={{ fontSize: 15 }}>
+                  {le.certificationName} &middot; <span style={{ textTransform: "capitalize" }}>{le.difficulty}</span>
+                </div>
+                <div className="text-xs" style={{ color: "var(--color-ink-500)" }}>
+                  {le.questionCount} questions &middot; {le.participantCount} joined &middot; {le.phase === "lobby" ? "waiting to start" : "in progress"}
+                </div>
+              </div>
+              <Link to={`/live-exam/${le.id}`} className="btn btn-clay btn-sm" style={{ textDecoration: "none" }}>
+                Join
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function ExamNew() {
   const navigate = useNavigate();
@@ -46,6 +122,7 @@ export function ExamNew() {
 
   return (
     <AppShell maxWidth={520}>
+      <LiveExamsSection />
       <h1 style={{ fontSize: 28, marginBottom: 24 }}>New exam</h1>
       <form onSubmit={onSubmit} className="card flex flex-col gap-4" style={{ padding: 28 }}>
         {!lockedCert && (

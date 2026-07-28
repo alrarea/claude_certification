@@ -4,11 +4,16 @@
 // double-slash URLs (e.g. ".../auth//login") that some servers/CDNs 404 or
 // otherwise mishandle.
 const API_URL = (import.meta.env.VITE_API_URL as string).replace(/\/+$/, "");
+export const WS_URL = ((import.meta.env.VITE_WS_URL as string) ?? "").replace(/\/+$/, "");
 
 let accessToken: string | null = null;
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
+}
+
+export function getAccessToken(): string | null {
+  return accessToken;
 }
 
 export function getRefreshToken(): string | null {
