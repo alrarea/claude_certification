@@ -21,6 +21,8 @@ export function AdminUsers() {
   const [myRole, setMyRole] = useState<string | null>(null);
   const [otpByUser, setOtpByUser] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [copying, setCopying] = useState(false);
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -53,6 +55,26 @@ export function AdminUsers() {
     }
   }
 
+  async function copyOtps() {
+    setCopying(true);
+    setCopyMessage(null);
+    try {
+      const data = await apiFetch("/admin/otps");
+      const otps: { name: string; code: string }[] = data.otps;
+      if (otps.length === 0) {
+        setCopyMessage("No active OTPs right now.");
+        return;
+      }
+      const text = otps.map((o) => `${o.name}-${o.code}`).join("\n");
+      await navigator.clipboard.writeText(text);
+      setCopyMessage(`Copied ${otps.length} OTP${otps.length === 1 ? "" : "s"} to clipboard.`);
+    } catch (err) {
+      setCopyMessage(err instanceof Error ? err.message : "Failed to copy OTPs");
+    } finally {
+      setCopying(false);
+    }
+  }
+
   const isSuperAdmin = myRole === "super_admin";
 
   if (loading) {
@@ -65,10 +87,22 @@ export function AdminUsers() {
 
   return (
     <AppShell maxWidth={960}>
-      <h1 style={{ fontSize: 28, marginBottom: 20 }}>Users</h1>
+      <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 28 }}>Users</h1>
+        {isSuperAdmin && (
+          <Button size="sm" variant="secondary" loading={copying} onClick={copyOtps}>
+            Copy OTPs
+          </Button>
+        )}
+      </div>
       {error && (
         <div style={{ marginBottom: 16 }}>
           <Alert kind="error">{error}</Alert>
+        </div>
+      )}
+      {copyMessage && (
+        <div style={{ marginBottom: 16 }}>
+          <Alert kind={copyMessage.startsWith("Copied") ? "success" : "error"}>{copyMessage}</Alert>
         </div>
       )}
       <div className="card" style={{ overflow: "hidden" }}>

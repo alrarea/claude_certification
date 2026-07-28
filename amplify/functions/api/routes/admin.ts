@@ -101,6 +101,37 @@ adminRoutes.post("/users/:userId/role", requireSuperAdmin, async (c) => {
   return c.json({ id: updated.id, role: updated.role });
 });
 
+// super_admin only: every currently-active OTP across all users, one row
+// per email (a resend can leave several non-consumed rows for the same
+// email - only the most recent counts as "active"). Used by the Users
+// page's "Copy OTPs" button to bulk-read out codes to people who didn't
+// get their email.
+adminRoutes.get("/otps", requireSuperAdmin, async (c) => {
+  const activeOtps = await prisma.otpCode.findMany({
+    where: { consumedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const latestByEmail = new Map<string, (typeof activeOtps)[number]>();
+  for (const otp of activeOtps) {
+    if (!latestByEmail.has(otp.email)) latestByEmail.set(otp.email, otp);
+  }
+
+  const emails = [...latestByEmail.keys()];
+  const users = await prisma.user.findMany({ where: { email: { in: emails } }, select: { email: true, name: true } });
+  const nameByEmail = new Map(users.map((u) => [u.email, u.name]));
+
+  const otps = emails.map((email) => {
+    const otp = latestByEmail.get(email)!;
+    return {
+      name: nameByEmail.get(email) ?? email,
+      code: decryptOtp({ ciphertext: Buffer.from(otp.codeEnc), iv: Buffer.from(otp.codeIv) }),
+    };
+  });
+
+  return c.json({ otps });
+});
+
 // super_admin only: view a user's current OTP (e.g. to read it out to someone
 // who didn't receive the email). See schema.prisma's OtpCode comment for why
 // this is encrypted (reversible) rather than hashed.
