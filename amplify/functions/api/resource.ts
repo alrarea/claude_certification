@@ -3,7 +3,11 @@ import { defineFunction, secret } from "@aws-amplify/backend";
 export const apiFunction = defineFunction({
   name: "api",
   entry: "./handler.ts",
-  timeoutSeconds: 30,
+  // 60s, not 30s: a real (if since-resolved) DB latency spike was observed
+  // taking ~28s against the old 30s timeout - too little headroom. Function
+  // URLs support up to Lambda's own ceiling, so there's no platform reason
+  // to keep this tight.
+  timeoutSeconds: 60,
   environment: {
     // secret() resolves to SSM Parameter Store (Standard tier) - set via
     // `ampx sandbox secret set <name>`, never committed. FRONTEND_ORIGIN is

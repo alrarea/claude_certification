@@ -351,7 +351,14 @@ liveExamRoutes.post("/:id/cancel", async (c) => {
 
   const liveExam = await prisma.liveExam.findUnique({ where: { id } });
   if (!liveExam) return c.json({ error: "Live exam not found" }, 404);
-  if (liveExam.hostId !== userId) return c.json({ error: "Only the host can cancel this session" }, 403);
+  // Host can always cancel their own session; super_admin can also step in
+  // to clear a stuck/abandoned one (e.g. a host who went offline) - regular
+  // admins can't, matching the "super_admin only" override pattern already
+  // used elsewhere (role grants, OTP viewing).
+  const isSuperAdmin = c.get("userRole") === "super_admin";
+  if (liveExam.hostId !== userId && !isSuperAdmin) {
+    return c.json({ error: "Only the host can cancel this session" }, 403);
+  }
 
   await prisma.liveExam.update({ where: { id }, data: { phase: "cancelled" } });
   await broadcastToLiveExam(id, { type: "cancelled" });

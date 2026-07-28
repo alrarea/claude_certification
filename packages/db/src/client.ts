@@ -34,10 +34,26 @@ function createClient(): PrismaClient {
 
   // Driver adapter (pg) + WASM query compiler, not the native Rust query
   // engine binary - see schema.prisma's generator comment for why.
+  //
+  // The extra pool options below are defensive hardening for Lambda: a
+  // pooled connection can go stale during the "frozen" gap between
+  // invocations (Lambda suspends the whole container, including any TCP
+  // keepalive timers, so staleness can't be caught *during* the freeze -
+  // but keepAlive still helps the OS notice a truly dead socket faster on
+  // the very next probe instead of hanging on write). connectionTimeoutMillis
+  // bounds how long establishing a *new* connection can take, so a network
+  // hiccup fails fast with a clear error rather than silently eating the
+  // Lambda's own timeout budget. idleTimeoutMillis is set explicitly
+  // (matching pg's own default) so a connection that's sat idle across a
+  // gap gets proactively recycled rather than reused unchecked.
   const adapter = new PrismaPg({
     connectionString: url.toString(),
     ssl: { rejectUnauthorized: false },
     max: DEFAULT_MAX_CONNECTIONS,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis: 10_000,
   });
   return new PrismaClient({ adapter });
 }

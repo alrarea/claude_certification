@@ -33,6 +33,11 @@ export async function broadcastToLiveExam(liveExamId: string, payload: unknown):
         // $disconnect (closed tab, lost network) - prune the stale row.
         if (err instanceof GoneException) {
           staleIds.push(conn.id);
+        } else {
+          // Anything else (throttling, a transient AWS error) is worth
+          // seeing in logs - silently swallowing it would hide a real
+          // delivery failure behind what looks like a normal stale-connection prune.
+          console.error(`broadcastToLiveExam: failed to post to connection ${conn.connectionId}`, err);
         }
       }
     })
