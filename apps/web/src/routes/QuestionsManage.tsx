@@ -1,9 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { apiFetch } from "../lib/api";
+import { apiFetch, ApiError } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { SelectField } from "../components/TextField";
 import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
+import { ApiKeyPromptModal } from "../components/ApiKeyPromptModal";
+
+type PendingAction =
+  | { kind: "upload"; body: { certification: string; filename: string; contentBase64: string } }
+  | { kind: "generate"; body: { certification: string; difficulty: string; count: number } };
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -28,6 +33,13 @@ export function QuestionsManage() {
   const [genStatus, setGenStatus] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
+  // If neither action has a saved key to fall back on, the backend replies
+  // with needsApiKey - that's when we remember what the user was trying to
+  // do and pop the key prompt, instead of just surfacing a dead-end error.
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [keyModalSubmitting, setKeyModalSubmitting] = useState(false);
+  const [keyModalError, setKeyModalError] = useState<string | null>(null);
+
   async function onUpload(e: FormEvent) {
     e.preventDefault();
     if (!file) return;
@@ -35,13 +47,17 @@ export function QuestionsManage() {
     setUploadStatus(null);
     try {
       const contentBase64 = await fileToBase64(file);
-      const data = await apiFetch("/questions/upload", {
-        method: "POST",
-        body: JSON.stringify({ certification, filename: file.name, contentBase64 }),
-      });
-      setUploadStatus(`Uploaded — ${data.generatedQuestionCt} question(s) generated (pending review)`);
-    } catch (err) {
-      setUploadStatus(err instanceof Error ? err.message : "Upload failed");
+      const body = { certification, filename: file.name, contentBase64 };
+      try {
+        const data = await apiFetch("/questions/upload", { method: "POST", body: JSON.stringify(body) });
+        setUploadStatus(`Uploaded — ${data.generatedQuestionCt} question(s) generated (pending review)`);
+      } catch (err) {
+        if (err instanceof ApiError && err.data?.needsApiKey) {
+          setPendingAction({ kind: "upload", body });
+        } else {
+          setUploadStatus(err instanceof Error ? err.message : "Upload failed");
+        }
+      }
     } finally {
       setUploading(false);
     }
@@ -52,15 +68,40 @@ export function QuestionsManage() {
     setGenerating(true);
     setGenStatus(null);
     try {
-      const data = await apiFetch("/questions/generate", {
-        method: "POST",
-        body: JSON.stringify({ certification, difficulty: genDifficulty, count: genCount }),
-      });
+      const body = { certification, difficulty: genDifficulty, count: genCount };
+      const data = await apiFetch("/questions/generate", { method: "POST", body: JSON.stringify(body) });
       setGenStatus(`${data.createdCount} question(s) generated (pending review, usable by you now)`);
     } catch (err) {
-      setGenStatus(err instanceof Error ? err.message : "Generation failed");
+      if (err instanceof ApiError && err.data?.needsApiKey) {
+        setPendingAction({ kind: "generate", body: { certification, difficulty: genDifficulty, count: genCount } });
+      } else {
+        setGenStatus(err instanceof Error ? err.message : "Generation failed");
+      }
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function onKeyModalSubmit(apiKey: string, saveKey: boolean) {
+    if (!pendingAction) return;
+    setKeyModalSubmitting(true);
+    setKeyModalError(null);
+    try {
+      const path = pendingAction.kind === "upload" ? "/questions/upload" : "/questions/generate";
+      const data = await apiFetch(path, {
+        method: "POST",
+        body: JSON.stringify({ ...pendingAction.body, apiKey, saveKey }),
+      });
+      if (pendingAction.kind === "upload") {
+        setUploadStatus(`Uploaded — ${data.generatedQuestionCt} question(s) generated (pending review)`);
+      } else {
+        setGenStatus(`${data.createdCount} question(s) generated (pending review, usable by you now)`);
+      }
+      setPendingAction(null);
+    } catch (err) {
+      setKeyModalError(err instanceof Error ? err.message : "That didn't work — try again");
+    } finally {
+      setKeyModalSubmitting(false);
     }
   }
 
@@ -76,7 +117,7 @@ export function QuestionsManage() {
       </div>
 
       <form onSubmit={onUpload} className="card flex flex-col gap-3" style={{ padding: 24, marginBottom: 20 }}>
-        <label className="field-label">Upload a document (PDF/DOCX/HTML)</label>
+        <label className="field-label">Upload a document (PDF/DOCX/HTML) — converted into questions by Claude</label>
         <input type="file" accept=".pdf,.docx,.html" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
         <Button size="sm" variant="secondary" loading={uploading}>
           Upload
@@ -85,7 +126,7 @@ export function QuestionsManage() {
       </form>
 
       <form onSubmit={onGenerate} className="card flex flex-col gap-3" style={{ padding: 24 }}>
-        <label className="field-label">Generate a fresh set (requires your saved API key)</label>
+        <label className="field-label">Generate a fresh set</label>
         <SelectField value={genDifficulty} onChange={(e) => setGenDifficulty(e.target.value as typeof genDifficulty)}>
           <option value="mixed">Mixed</option>
           <option value="easy">Easy</option>
@@ -105,6 +146,19 @@ export function QuestionsManage() {
         </Button>
         {genStatus && <Alert kind={/^\d+ question/.test(genStatus) ? "success" : "error"}>{genStatus}</Alert>}
       </form>
+
+      {pendingAction && (
+        <ApiKeyPromptModal
+          actionLabel={pendingAction.kind === "upload" ? "Uploading this document" : "Generating questions"}
+          submitting={keyModalSubmitting}
+          error={keyModalError}
+          onSubmit={onKeyModalSubmit}
+          onCancel={() => {
+            setPendingAction(null);
+            setKeyModalError(null);
+          }}
+        />
+      )}
     </AppShell>
   );
 }

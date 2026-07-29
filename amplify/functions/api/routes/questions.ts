@@ -9,7 +9,8 @@ import {
   MAX_AI_GENERATIONS_PER_DAY,
 } from "@claude-cert/shared";
 import { requireAuth, requireAdmin, type AuthedVars } from "../lib/authMiddleware.ts";
-import { decrypt } from "../lib/crypto.ts";
+import { decrypt, encrypt } from "../lib/crypto.ts";
+import { validateAnthropicKey } from "../lib/anthropicKeyValidate.ts";
 import { generateQuestions, type GeneratedQuestion } from "../lib/anthropicGenerate.ts";
 import { isOptionLengthBalanced } from "../lib/optionBalance.ts";
 import { uploadDocument } from "../lib/s3.ts";
@@ -17,6 +18,41 @@ import { extractDocumentText } from "../lib/extractDocumentText.ts";
 
 export const questionRoutes = new Hono<{ Variables: AuthedVars }>();
 questionRoutes.use("*", requireAuth);
+
+class NeedsApiKeyError extends Error {}
+class InvalidApiKeyError extends Error {}
+
+// Resolves which Anthropic key to use for an AI action, in priority order:
+// 1. A one-off key passed in this request (validated live, and persisted
+//    only if the caller also asked to save it).
+// 2. The user's already-saved key.
+// Throws NeedsApiKeyError if neither is available, so the route can turn
+// that into a { needsApiKey: true } response the frontend prompts on.
+async function resolveApiKey(userId: string, providedApiKey: string | undefined, saveKey: boolean | undefined): Promise<string> {
+  if (providedApiKey) {
+    const valid = await validateAnthropicKey(providedApiKey);
+    if (!valid) throw new InvalidApiKeyError("That key didn't work against the Anthropic API — check it and try again.");
+
+    if (saveKey) {
+      const { ciphertext, iv } = encrypt(providedApiKey);
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          anthropicApiKeyEnc: new Uint8Array(ciphertext),
+          anthropicApiKeyIv: new Uint8Array(iv),
+          anthropicKeyLast4: providedApiKey.slice(-4),
+        },
+      });
+    }
+    return providedApiKey;
+  }
+
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  if (!user.anthropicApiKeyEnc || !user.anthropicApiKeyIv) {
+    throw new NeedsApiKeyError("An Anthropic API key is needed for this action.");
+  }
+  return decrypt({ ciphertext: Buffer.from(user.anthropicApiKeyEnc), iv: Buffer.from(user.anthropicApiKeyIv) });
+}
 
 async function insertGeneratedQuestions(params: {
   certificationId: string;
@@ -138,17 +174,22 @@ questionRoutes.post("/:id/review", requireAdmin, async (c) => {
   return c.json({ id: updated.id, reviewStatus: updated.reviewStatus });
 });
 
-// Generate a fresh set on demand - requires the requesting user to have a
-// saved Anthropic API key (spec Section 11B).
+// Generate a fresh set on demand - uses the caller's saved Anthropic API key
+// if there is one, otherwise a one-off key passed in the request (spec
+// Section 11B).
 questionRoutes.post("/generate", async (c) => {
   const body = generateQuestionsSchema.safeParse(await c.req.json());
   if (!body.success) return c.json({ error: body.error.flatten() }, 400);
-  const { certification, topicId, difficulty, count } = body.data;
+  const { certification, topicId, difficulty, count, apiKey: providedApiKey, saveKey } = body.data;
   const userId = c.get("userId");
 
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-  if (!user.anthropicApiKeyEnc || !user.anthropicApiKeyIv) {
-    return c.json({ error: "Save an Anthropic API key in your profile first." }, 400);
+  let apiKey: string;
+  try {
+    apiKey = await resolveApiKey(userId, providedApiKey, saveKey);
+  } catch (err) {
+    if (err instanceof NeedsApiKeyError) return c.json({ error: err.message, needsApiKey: true }, 400);
+    if (err instanceof InvalidApiKeyError) return c.json({ error: err.message }, 400);
+    throw err;
   }
 
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -167,11 +208,6 @@ questionRoutes.post("/generate", async (c) => {
     select: { id: true, title: true },
   });
   if (topics.length === 0) return c.json({ error: "No topics found to generate against" }, 400);
-
-  const apiKey = decrypt({
-    ciphertext: Buffer.from(user.anthropicApiKeyEnc),
-    iv: Buffer.from(user.anthropicApiKeyIv),
-  });
 
   let generated;
   try {
@@ -197,16 +233,26 @@ questionRoutes.post("/generate", async (c) => {
   return c.json({ createdCount: created.length, questionIds: created });
 });
 
-// Upload a source document (PDF/DOCX/HTML) - stored in S3 regardless; if the
-// user has a saved Anthropic key, candidate questions are generated from its
-// extracted text (source='ai_generated', review_status='pending', same as
-// on-demand generation). Without a key, the document is stored for an admin
-// to pull content from manually - spec Section 11A.
+// Upload a source document (PDF/DOCX/HTML) - the document is arbitrary
+// format (not our question schema), so converting it into candidate MCQs
+// and filling in whatever details it's missing (correct answer, per-option
+// explanations) always goes through Claude, same as on-demand generation.
+// Uses the caller's saved Anthropic API key if there is one, otherwise a
+// one-off key passed in the request (spec Section 11A).
 questionRoutes.post("/upload", async (c) => {
   const body = uploadDocumentSchema.safeParse(await c.req.json());
   if (!body.success) return c.json({ error: body.error.flatten() }, 400);
-  const { certification, filename, contentBase64 } = body.data;
+  const { certification, filename, contentBase64, apiKey: providedApiKey, saveKey } = body.data;
   const userId = c.get("userId");
+
+  let apiKey: string;
+  try {
+    apiKey = await resolveApiKey(userId, providedApiKey, saveKey);
+  } catch (err) {
+    if (err instanceof NeedsApiKeyError) return c.json({ error: err.message, needsApiKey: true }, 400);
+    if (err instanceof InvalidApiKeyError) return c.json({ error: err.message }, 400);
+    throw err;
+  }
 
   const cert = await prisma.certification.findUnique({ where: { code: certification.toUpperCase() } });
   if (!cert) return c.json({ error: "Unknown certification" }, 404);
@@ -221,35 +267,26 @@ questionRoutes.post("/upload", async (c) => {
   try {
     await uploadDocument(storageKey, buffer, "application/octet-stream");
 
-    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    let generatedCount = 0;
-
-    if (user.anthropicApiKeyEnc && user.anthropicApiKeyIv) {
-      const sourceContent = await extractDocumentText(buffer, filename);
-      const topics = await prisma.topic.findMany({
-        where: { certificationId: cert.id },
-        select: { id: true, title: true },
-      });
-      const apiKey = decrypt({
-        ciphertext: Buffer.from(user.anthropicApiKeyEnc),
-        iv: Buffer.from(user.anthropicApiKeyIv),
-      });
-      const generated = await generateQuestions({
-        apiKey,
-        certificationName: cert.name,
-        topics,
-        difficulty: "mixed",
-        count: Math.min(10, topics.length * 2),
-        sourceContent,
-      });
-      const created = await insertGeneratedQuestions({
-        certificationId: cert.id,
-        userId,
-        questions: generated,
-        validTopicIds: new Set(topics.map((t) => t.id)),
-      });
-      generatedCount = created.length;
-    }
+    const sourceContent = await extractDocumentText(buffer, filename);
+    const topics = await prisma.topic.findMany({
+      where: { certificationId: cert.id },
+      select: { id: true, title: true },
+    });
+    const generated = await generateQuestions({
+      apiKey,
+      certificationName: cert.name,
+      topics,
+      difficulty: "mixed",
+      count: Math.min(10, topics.length * 2),
+      sourceContent,
+    });
+    const created = await insertGeneratedQuestions({
+      certificationId: cert.id,
+      userId,
+      questions: generated,
+      validTopicIds: new Set(topics.map((t) => t.id)),
+    });
+    const generatedCount = created.length;
 
     await prisma.documentUpload.update({
       where: { id: upload.id },

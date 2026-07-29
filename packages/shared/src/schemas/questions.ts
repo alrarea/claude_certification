@@ -21,6 +21,10 @@ export const generateQuestionsSchema = z.object({
   topicId: z.string().uuid().optional(),
   difficulty: z.enum(["easy", "medium", "hard", "mixed"]),
   count: z.number().int().min(1).max(20),
+  // One-off key for this call only, when the user has no saved key yet -
+  // never persisted unless saveKey is true.
+  apiKey: z.string().regex(/^sk-ant-/, "Doesn't look like an Anthropic API key").optional(),
+  saveKey: z.boolean().optional(),
 });
 export type GenerateQuestionsInput = z.infer<typeof generateQuestionsSchema>;
 
@@ -42,5 +46,9 @@ export const uploadDocumentSchema = z.object({
     // Rough decoded-size check without actually decoding (base64 is ~4/3 the size).
     return (b64.length * 3) / 4 <= MAX_UPLOAD_SIZE_BYTES;
   }, `File must be under ${MAX_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB`),
+  // One-off key for this call only, when the user has no saved key yet -
+  // never persisted unless saveKey is true.
+  apiKey: z.string().regex(/^sk-ant-/, "Doesn't look like an Anthropic API key").optional(),
+  saveKey: z.boolean().optional(),
 });
 export type UploadDocumentInput = z.infer<typeof uploadDocumentSchema>;
