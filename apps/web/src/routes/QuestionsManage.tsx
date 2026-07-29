@@ -24,7 +24,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function QuestionsManage() {
-  const [certification, setCertification] = useState("ccaf");
+  const [certification, setCertification] = useState("ccar-f");
   const [file, setFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -116,8 +116,8 @@ export function QuestionsManage() {
 
       <div className="field" style={{ marginBottom: 20 }}>
         <SelectField label="Certification" value={certification} onChange={(e) => setCertification(e.target.value)}>
-          <option value="ccaf">CCAF</option>
-          <option value="ccap">CCAP</option>
+          <option value="ccar-f">CCAR-F</option>
+          <option value="ccar-p">CCAR-P</option>
         </SelectField>
       </div>
 

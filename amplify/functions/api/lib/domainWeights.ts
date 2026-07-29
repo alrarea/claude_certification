@@ -21,8 +21,8 @@ export const CCAP_DOMAIN_WEIGHTS: Record<string, number> = {
 };
 
 export function domainWeightsForCert(certCode: string): Record<string, number> | null {
-  if (certCode === "CCAF") return CCAF_DOMAIN_WEIGHTS;
-  if (certCode === "CCAP") return CCAP_DOMAIN_WEIGHTS;
+  if (certCode === "CCAR-F") return CCAF_DOMAIN_WEIGHTS;
+  if (certCode === "CCAR-P") return CCAP_DOMAIN_WEIGHTS;
   return null;
 }
 

@@ -39,8 +39,8 @@ onboardingRoutes.post("/choice", async (c) => {
     return c.json({ ok: true });
   }
 
-  const ccaf = await prisma.certification.findUniqueOrThrow({ where: { code: "CCAF" } });
-  const ccap = await prisma.certification.findUnique({ where: { code: "CCAP" } });
+  const ccaf = await prisma.certification.findUniqueOrThrow({ where: { code: "CCAR-F" } });
+  const ccap = await prisma.certification.findUnique({ where: { code: "CCAR-P" } });
 
   const ccafPool = await fetchPool(ccaf.id, userId);
   const ccapPool = ccap ? await fetchPool(ccap.id, userId) : [];

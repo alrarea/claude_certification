@@ -12,10 +12,10 @@ import { Alert } from "../components/Alert";
 // own clean step size (60/3=20, 63/3=21) so the real exam length always
 // lands on one of the presets.
 const QUESTION_COUNT_PRESETS: Record<string, number[]> = {
-  ccaf: [20, 40, 60, 80, 100, 120],
-  ccap: [21, 42, 63, 84, 105, 126],
+  "ccar-f": [20, 40, 60, 80, 100, 120],
+  "ccar-p": [21, 42, 63, 84, 105, 126],
 };
-const REAL_EXAM_LENGTH: Record<string, number> = { ccaf: 60, ccap: 63 };
+const REAL_EXAM_LENGTH: Record<string, number> = { "ccar-f": 60, "ccar-p": 63 };
 
 interface LiveExamSummary {
   id: string;
@@ -99,19 +99,19 @@ export function ExamNew() {
   const lockedTopic = searchParams.get("topic");
   const lockedCert = searchParams.get("cert");
 
-  const initialCert = lockedCert ?? "ccaf";
+  const initialCert = lockedCert ?? "ccar-f";
   const [certification, setCertification] = useState(initialCert);
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | "mixed">("mixed");
   const [questionCount, setQuestionCount] = useState(REAL_EXAM_LENGTH[initialCert] ?? 60);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const presets = QUESTION_COUNT_PRESETS[certification] ?? QUESTION_COUNT_PRESETS.ccaf;
+  const presets = QUESTION_COUNT_PRESETS[certification] ?? QUESTION_COUNT_PRESETS["ccar-f"];
   const realLength = REAL_EXAM_LENGTH[certification] ?? 60;
 
   function onCertificationChange(next: string) {
     setCertification(next);
-    // Presets differ per certification (CCAF steps of 20, CCAP steps of 21) -
+    // Presets differ per certification (CCAR-F steps of 20, CCAR-P steps of 21) -
     // snap the count back to that cert's real exam length rather than
     // leaving a value that doesn't belong to the new preset list.
     setQuestionCount(REAL_EXAM_LENGTH[next] ?? 60);
@@ -146,8 +146,8 @@ export function ExamNew() {
       <form onSubmit={onSubmit} className="card flex flex-col gap-4" style={{ padding: 28 }}>
         {!lockedCert && (
           <SelectField label="Certification" value={certification} onChange={(e) => onCertificationChange(e.target.value)}>
-            <option value="ccaf">CCAF</option>
-            <option value="ccap">CCAP</option>
+            <option value="ccar-f">CCAR-F</option>
+            <option value="ccar-p">CCAR-P</option>
           </SelectField>
         )}
         <SelectField label="Difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value as typeof difficulty)}>

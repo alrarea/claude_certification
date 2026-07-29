@@ -85,7 +85,7 @@ export function ExamResults() {
   const weakTopics = results.byTopic
     .filter((t) => t.correct < t.total)
     .sort((a, b) => a.correct / a.total - b.correct / b.total);
-  const ccapEntry = results.byCertification.find((c) => c.code === "CCAP");
+  const ccapEntry = results.byCertification.find((c) => c.code === "CCAR-P");
   const readiness = ccapEntry ? readinessVerdict(ccapEntry) : null;
 
   return (

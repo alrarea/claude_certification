@@ -3,24 +3,24 @@ import { prisma } from "../src/client";
 
 async function main() {
   await prisma.certification.upsert({
-    where: { code: "CCAF" },
+    where: { code: "CCAR-F" },
     update: {},
     create: {
-      code: "CCAF",
+      code: "CCAR-F",
       name: "Claude Certified Architect – Foundations (CCAR-F)",
     },
   });
 
   await prisma.certification.upsert({
-    where: { code: "CCAP" },
+    where: { code: "CCAR-P" },
     update: {},
     create: {
-      code: "CCAP",
+      code: "CCAR-P",
       name: "Claude Certified Architect – Professional (CCAR-P)",
     },
   });
 
-  console.log("Seeded certifications: CCAF, CCAP");
+  console.log("Seeded certifications: CCAR-F, CCAR-P");
 
   // Super admin: set directly here, never via a self-service or
   // admin-grantable endpoint (same principle the spec applies to admin).

@@ -34,7 +34,7 @@ export function Register() {
   }
 
   return (
-    <AuthLayout title="Create your account" subtitle="Start prepping for CCAF / CCAP">
+    <AuthLayout title="Create your account" subtitle="Start prepping for CCAR-F / CCAR-P">
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <TextField label="Name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
         <TextField

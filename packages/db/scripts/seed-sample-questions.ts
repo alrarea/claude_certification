@@ -7,7 +7,7 @@
 import { prisma } from "../src/client";
 
 async function main() {
-  const cert = await prisma.certification.findUniqueOrThrow({ where: { code: "CCAF" } });
+  const cert = await prisma.certification.findUniqueOrThrow({ where: { code: "CCAR-F" } });
   const superAdmin = await prisma.user.findUniqueOrThrow({ where: { email: "tech@alignminds.com" } });
   const topic = await prisma.topic.findFirstOrThrow({
     where: { certificationId: cert.id, title: "The Agentic Loop — The Core of Everything" },

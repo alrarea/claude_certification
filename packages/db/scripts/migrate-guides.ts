@@ -28,12 +28,12 @@ interface CertManifest {
 
 const CERTS: CertManifest[] = [
   {
-    code: "CCAF",
+    code: "CCAR-F",
     file: "ccaf-tutorial.html",
     sectionOrder: ["overview", "scenarios", "d1", "d2", "d3", "d4", "d5", "sampleq", "scope", "quickref"],
   },
   {
-    code: "CCAP",
+    code: "CCAR-P",
     file: "ccar-p-guide.html",
     sectionOrder: [
       "overview",

@@ -11,7 +11,7 @@ const QUESTION_PRESETS = [5, 10, 15, 20];
 export function LiveExamCreate() {
   const navigate = useNavigate();
 
-  const [certification, setCertification] = useState("ccaf");
+  const [certification, setCertification] = useState("ccar-f");
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | "mixed">("mixed");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerSeconds, setAnswerSeconds] = useState(30);
@@ -41,8 +41,8 @@ export function LiveExamCreate() {
       <h1 style={{ fontSize: 28, marginBottom: 24 }}>Host a live exam</h1>
       <form onSubmit={onSubmit} className="card flex flex-col gap-4" style={{ padding: 28 }}>
         <SelectField label="Certification" value={certification} onChange={(e) => setCertification(e.target.value)}>
-          <option value="ccaf">CCAF</option>
-          <option value="ccap">CCAP</option>
+          <option value="ccar-f">CCAR-F</option>
+          <option value="ccar-p">CCAR-P</option>
         </SelectField>
         <SelectField label="Difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value as typeof difficulty)}>
           <option value="mixed">Mixed</option>
