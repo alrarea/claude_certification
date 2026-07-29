@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { prisma } from "@claude-cert/db";
 import { onboardingChoiceSchema } from "@claude-cert/shared";
 import { requireAuth, type AuthedVars } from "../lib/authMiddleware.ts";
-import { shuffle } from "../lib/shuffle.ts";
+import { CCAF_DOMAIN_WEIGHTS, CCAP_DOMAIN_WEIGHTS, weightedShuffle } from "../lib/domainWeights.ts";
 
 export const onboardingRoutes = new Hono<{ Variables: AuthedVars }>();
 onboardingRoutes.use("*", requireAuth);
@@ -35,18 +35,36 @@ async function fetchPool(certificationId: string, userId: string) {
       isActive: true,
       OR: [{ reviewStatus: "approved" }, { reviewStatus: "pending", createdBy: userId }],
     },
-    select: { id: true, difficulty: true },
+    select: { id: true, difficulty: true, topic: { select: { examDomain: true } } },
   });
 }
 
-function buildAssessmentOrder<T extends { difficulty: string }>(
+type PoolItem = { difficulty: string; topic: { examDomain: string | null } };
+
+// Within each difficulty bucket, draw with probability proportional to the
+// certification's official domain weights instead of a flat shuffle - a
+// 10-15 question assessment can't give every domain its own guaranteed
+// slot, but across the picks it should still lean toward matching the
+// blueprint percentages rather than whatever domain happens to have the
+// biggest question pool.
+function buildAssessmentOrder<T extends PoolItem>(
   pool: T[],
-  sequence: readonly ("easy" | "medium" | "hard")[]
+  sequence: readonly ("easy" | "medium" | "hard")[],
+  domainWeights: Record<string, number>
 ): T[] {
   const byDifficulty: Record<"easy" | "medium" | "hard", T[]> = {
-    easy: shuffle(pool.filter((q) => q.difficulty === "easy")),
-    medium: shuffle(pool.filter((q) => q.difficulty === "medium")),
-    hard: shuffle(pool.filter((q) => q.difficulty === "hard")),
+    easy: weightedShuffle(
+      pool.filter((q) => q.difficulty === "easy"),
+      (q) => domainWeights[q.topic.examDomain ?? ""] ?? 0.01
+    ),
+    medium: weightedShuffle(
+      pool.filter((q) => q.difficulty === "medium"),
+      (q) => domainWeights[q.topic.examDomain ?? ""] ?? 0.01
+    ),
+    hard: weightedShuffle(
+      pool.filter((q) => q.difficulty === "hard"),
+      (q) => domainWeights[q.topic.examDomain ?? ""] ?? 0.01
+    ),
   };
 
   const selected: T[] = [];
@@ -80,8 +98,8 @@ onboardingRoutes.post("/choice", async (c) => {
   // matters here (unlike the weighted-random "mixed" exam type), since the
   // second block is what tells the user whether they're ready for CCAR-P.
   const selected = [
-    ...buildAssessmentOrder(ccafPool, CCAF_SEQUENCE),
-    ...buildAssessmentOrder(ccapPool, CCAP_SEQUENCE),
+    ...buildAssessmentOrder(ccafPool, CCAF_SEQUENCE, CCAF_DOMAIN_WEIGHTS),
+    ...buildAssessmentOrder(ccapPool, CCAP_SEQUENCE, CCAP_DOMAIN_WEIGHTS),
   ];
   if (selected.length === 0) {
     return c.json({ error: "No approved questions available yet for an assessment." }, 422);

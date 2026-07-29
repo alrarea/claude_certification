@@ -5,6 +5,7 @@ import { requireAuth, type AuthedVars } from "../lib/authMiddleware.ts";
 import { decrypt } from "../lib/crypto.ts";
 import { generateAssessmentSummary } from "../lib/anthropicSummary.ts";
 import { shuffle } from "../lib/shuffle.ts";
+import { allocateByWeights, domainWeightsForCert } from "../lib/domainWeights.ts";
 
 export const examRoutes = new Hono<{ Variables: AuthedVars }>();
 examRoutes.use("*", requireAuth);
@@ -42,6 +43,44 @@ function selectMixed<T extends { difficulty: string }>(pool: T[], count: number)
   return shuffle(selected).slice(0, count);
 }
 
+type PoolItem = { id: string; difficulty: string; topic: { examDomain: string | null } };
+
+// Allocates `count` across the certification's official exam-blueprint
+// domains (e.g. CCAF's Agentic Architecture at 27%, Tool Design at 18%,
+// ...), then applies the existing difficulty selection within each domain's
+// share. Falls back to topping up from whatever's left in the whole pool if
+// a domain's own sub-pool comes up short at the requested difficulty, so a
+// thin domain never silently shrinks the total below `count`.
+function selectByDomain(pool: PoolItem[], count: number, difficulty: string, domainWeights: Record<string, number>): PoolItem[] {
+  const byDomain = new Map<string, PoolItem[]>();
+  for (const q of pool) {
+    const domain = q.topic.examDomain;
+    if (!domain || !(domain in domainWeights)) continue;
+    if (!byDomain.has(domain)) byDomain.set(domain, []);
+    byDomain.get(domain)!.push(q);
+  }
+
+  const targets = allocateByWeights(count, domainWeights);
+  const selected: PoolItem[] = [];
+  const usedIds = new Set<string>();
+
+  for (const [domain, target] of Object.entries(targets)) {
+    const domainPool = byDomain.get(domain) ?? [];
+    const picked = difficulty === "mixed" ? selectMixed(domainPool, target) : shuffle(domainPool).slice(0, target);
+    for (const q of picked) usedIds.add(q.id);
+    selected.push(...picked);
+  }
+
+  if (selected.length < count) {
+    for (const q of shuffle(pool.filter((p) => !usedIds.has(p.id)))) {
+      if (selected.length >= count) break;
+      selected.push(q);
+    }
+  }
+
+  return shuffle(selected).slice(0, count);
+}
+
 examRoutes.post("/", async (c) => {
   const body = createExamSchema.safeParse(await c.req.json());
   if (!body.success) return c.json({ error: body.error.flatten() }, 400);
@@ -63,10 +102,18 @@ examRoutes.post("/", async (c) => {
       ...(difficulty !== "mixed" ? { difficulty } : {}),
       ...(topicScope ? { topicId: topicScope } : {}),
     },
-    select: { id: true, difficulty: true },
+    select: { id: true, difficulty: true, topic: { select: { examDomain: true } } },
   });
 
-  const selected = difficulty === "mixed" ? selectMixed(pool, questionCount) : shuffle(pool).slice(0, questionCount);
+  // Domain-weighted selection only makes sense across a whole certification -
+  // a single-topic practice run (topicScope) is inherently confined to that
+  // topic's one domain already.
+  const domainWeights = topicScope ? null : domainWeightsForCert(cert.code);
+  const selected = domainWeights
+    ? selectByDomain(pool, questionCount, difficulty, domainWeights)
+    : difficulty === "mixed"
+      ? selectMixed(pool, questionCount)
+      : shuffle(pool).slice(0, questionCount);
   if (selected.length === 0) {
     return c.json({ error: "No approved questions match this setup yet." }, 422);
   }
