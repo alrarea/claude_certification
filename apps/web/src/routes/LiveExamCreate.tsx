@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { SelectField } from "../components/TextField";
@@ -38,6 +38,13 @@ export function LiveExamCreate() {
 
   return (
     <AppShell maxWidth={520}>
+      <Link
+        to="/exam/new"
+        className="text-sm"
+        style={{ color: "var(--color-ink-500)", display: "inline-block", marginBottom: 12 }}
+      >
+        ← Back to exams
+      </Link>
       <h1 style={{ fontSize: 28, marginBottom: 24 }}>Host a live exam</h1>
       <form onSubmit={onSubmit} className="card flex flex-col gap-4" style={{ padding: 28 }}>
         <SelectField label="Certification" value={certification} onChange={(e) => setCertification(e.target.value)}>

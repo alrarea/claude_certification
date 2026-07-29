@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
@@ -50,6 +51,13 @@ export function QuestionsReview() {
 
   return (
     <AppShell maxWidth={720}>
+      <Link
+        to="/questions/manage"
+        className="text-sm"
+        style={{ color: "var(--color-ink-500)", display: "inline-block", marginBottom: 12 }}
+      >
+        ← Back to question bank
+      </Link>
       <h1 style={{ fontSize: 28, marginBottom: 20 }}>Pending questions ({pending.length})</h1>
       {error && (
         <div style={{ marginBottom: 16 }}>

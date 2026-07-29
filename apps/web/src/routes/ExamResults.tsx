@@ -90,6 +90,13 @@ export function ExamResults() {
 
   return (
     <AppShell maxWidth={700}>
+      <Link
+        to="/exam/new"
+        className="text-sm"
+        style={{ color: "var(--color-ink-500)", display: "inline-block", marginBottom: 12 }}
+      >
+        ← Back to exams
+      </Link>
       <div className="card flex flex-col items-center" style={{ padding: "32px 24px", marginBottom: 28 }}>
         <span className="text-sm" style={{ color: "var(--color-ink-500)" }}>
           Your score

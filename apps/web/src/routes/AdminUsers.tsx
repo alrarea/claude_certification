@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
@@ -87,6 +88,13 @@ export function AdminUsers() {
 
   return (
     <AppShell maxWidth={960}>
+      <Link
+        to="/profile"
+        className="text-sm"
+        style={{ color: "var(--color-ink-500)", display: "inline-block", marginBottom: 12 }}
+      >
+        ← Back to profile
+      </Link>
       <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 28 }}>Users</h1>
         {isSuperAdmin && (
