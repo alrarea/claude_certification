@@ -52,10 +52,10 @@ examRoutes.post("/", async (c) => {
     data: {
       userId,
       certificationId: cert.id,
-      // Per-question reveal is gone in favor of a single feedback pass at
-      // the end of the exam (see GET /:id/results) - every exam is created
-      // as "end_of_set" now, there's no user-facing choice anymore.
-      feedbackMode: "end_of_set",
+      // No more user-facing choice - every exam always reveals per-question
+      // immediately (see the answer endpoint below), so this is always
+      // "immediate" now rather than something the create form asks about.
+      feedbackMode: "immediate",
       difficulty,
       topicScope: topicScope ?? null,
       questionCount: selected.length,
@@ -101,9 +101,9 @@ examRoutes.get("/:id", async (c) => {
       questionText: eq.question.questionText,
       options: eq.question.options.map((o) => ({ id: o.id, optionText: o.optionText })),
       selectedOptionId: eq.selectedOptionId,
-      // Correctness/explanations are only revealed once the whole exam is
-      // complete - no more per-question reveal while the exam is in progress.
-      ...(exam.completedAt
+      // Revealed as soon as this question has been answered (or once the
+      // whole exam is complete) - every exam is always "immediate" mode.
+      ...(eq.answeredAt || exam.completedAt
         ? {
             isCorrect: eq.isCorrect,
             correctOptionId: eq.question.options.find((o) => o.isCorrect)?.id,
@@ -144,9 +144,13 @@ examRoutes.post("/:id/questions/:questionId/answer", async (c) => {
     },
   });
 
-  // No per-question reveal - correctness and explanations only show up in
-  // the end-of-exam results (GET /:id/results).
-  return c.json({ ok: true });
+  // Immediate reveal - every exam always shows correctness/explanations for
+  // every option right after answering.
+  return c.json({
+    isCorrect: selectedOption.isCorrect,
+    correctOptionId: examQuestion.question.options.find((o) => o.isCorrect)?.id,
+    explanations: Object.fromEntries(examQuestion.question.options.map((o) => [o.id, o.explanation])),
+  });
 });
 
 examRoutes.post("/:id/complete", async (c) => {

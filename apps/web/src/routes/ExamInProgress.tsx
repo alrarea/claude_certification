@@ -11,6 +11,9 @@ interface ExamQuestion {
   questionText: string;
   options: { id: string; optionText: string }[];
   selectedOptionId: string | null;
+  isCorrect?: boolean;
+  correctOptionId?: string;
+  explanations?: Record<string, string>;
 }
 
 export function ExamInProgress() {
@@ -35,13 +38,11 @@ export function ExamInProgress() {
   async function selectAnswer(optionId: string) {
     const q = questions[current];
     try {
-      // No reveal here anymore - correctness/explanations only show up in
-      // the end-of-exam results.
-      await apiFetch(`/exams/${id}/questions/${q.questionId}/answer`, {
+      const result = await apiFetch(`/exams/${id}/questions/${q.questionId}/answer`, {
         method: "POST",
         body: JSON.stringify({ selectedOptionId: optionId }),
       });
-      setQuestions((qs) => qs.map((item, i) => (i === current ? { ...item, selectedOptionId: optionId } : item)));
+      setQuestions((qs) => qs.map((item, i) => (i === current ? { ...item, selectedOptionId: optionId, ...result } : item)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit answer");
     }
@@ -65,6 +66,7 @@ export function ExamInProgress() {
   }
 
   const q = questions[current];
+  const showFeedback = !!q.selectedOptionId;
 
   return (
     <AppShell maxWidth={700}>
@@ -81,24 +83,31 @@ export function ExamInProgress() {
       <div className="flex flex-col gap-3" style={{ marginBottom: 28 }}>
         {q.options.map((o) => {
           const isSelected = q.selectedOptionId === o.id;
+          const isCorrectOption = showFeedback && q.correctOptionId === o.id;
           return (
-            <button
-              key={o.id}
-              onClick={() => !q.selectedOptionId && selectAnswer(o.id)}
-              disabled={!!q.selectedOptionId}
-              className="card"
-              style={{
-                width: "100%",
-                textAlign: "left",
-                padding: "14px 18px",
-                cursor: q.selectedOptionId ? "default" : "pointer",
-                borderColor: isSelected ? "var(--color-ink)" : undefined,
-                background: "#fff",
-                fontSize: 15,
-              }}
-            >
-              {o.optionText}
-            </button>
+            <div key={o.id}>
+              <button
+                onClick={() => !q.selectedOptionId && selectAnswer(o.id)}
+                disabled={!!q.selectedOptionId}
+                className="card"
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "14px 18px",
+                  cursor: q.selectedOptionId ? "default" : "pointer",
+                  borderColor: isCorrectOption ? "var(--color-success, #2f6f4f)" : isSelected ? "var(--color-ink)" : undefined,
+                  background: isCorrectOption ? "var(--color-success-bg)" : "#fff",
+                  fontSize: 15,
+                }}
+              >
+                {o.optionText}
+              </button>
+              {showFeedback && q.explanations?.[o.id] && (
+                <p className="text-xs" style={{ color: "var(--color-ink-500)", marginLeft: 4, marginTop: 6 }}>
+                  {q.explanations[o.id]}
+                </p>
+              )}
+            </div>
           );
         })}
       </div>
