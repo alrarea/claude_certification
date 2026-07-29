@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Mermaid } from "./Mermaid";
 
 function flattenText(node: ReactNode): string {
   if (typeof node === "string") return node;
@@ -50,9 +51,29 @@ function Blockquote({ children, ...rest }: { children?: ReactNode }) {
   );
 }
 
+// Fenced ```mermaid blocks render as diagrams instead of literal code -
+// react-markdown always wraps a fenced block as <pre><code className="language-x">,
+// so `code` renders the Mermaid component in place of <code>, and `pre` unwraps
+// its own tag for that one case (mermaid renders its own container, not <pre>).
+function CodeBlock({ className, children }: { className?: string; children?: ReactNode }) {
+  if (className?.includes("language-mermaid")) {
+    return <Mermaid chart={flattenText(children).replace(/\n$/, "")} />;
+  }
+  return <code className={className}>{children}</code>;
+}
+
+function Pre({ children }: { children?: ReactNode }) {
+  const child = Array.isArray(children) ? children[0] : children;
+  const childClassName = child && typeof child === "object" && "props" in (child as any) ? (child as any).props?.className : undefined;
+  if (typeof childClassName === "string" && childClassName.includes("language-mermaid")) {
+    return <>{children}</>;
+  }
+  return <pre>{children}</pre>;
+}
+
 export function MarkdownContent({ children }: { children: string }) {
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ blockquote: Blockquote }}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ blockquote: Blockquote, code: CodeBlock, pre: Pre }}>
       {children}
     </ReactMarkdown>
   );

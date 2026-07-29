@@ -5,6 +5,7 @@ import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
 import { Button } from "../components/Button";
 import { MarkdownContent } from "../components/MarkdownContent";
+import { InDepthWizard } from "../components/InDepthWizard";
 import { CONTENT_MODES, MODE_LABELS, type ContentMode } from "../lib/contentModes";
 
 function isContentMode(value: string | null): value is ContentMode {
@@ -15,10 +16,14 @@ export function LearnTopic() {
   const { cert = "ccar-f", topicId = "" } = useParams();
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get("mode");
-  // The course-overview page's mode selector carries its choice here via
-  // ?mode= so picking "In-depth" out there and clicking a topic lands you
-  // already in In-depth mode, instead of always resetting to Normal.
-  const [mode, setMode] = useState<ContentMode>(isContentMode(initialMode) ? initialMode : "normal");
+  // In-depth never has its own flat page anymore - it always opens the
+  // wizard - so this page's own fetched `mode` can only ever be normal or
+  // concise. A `?mode=in_depth` link (none currently generated, but kept
+  // robust) falls back to Normal underneath and opens the wizard on load.
+  const [mode, setMode] = useState<ContentMode>(
+    isContentMode(initialMode) && initialMode !== "in_depth" ? initialMode : "normal"
+  );
+  const [wizardOpen, setWizardOpen] = useState(initialMode === "in_depth");
   const [title, setTitle] = useState("");
   const [contentMd, setContentMd] = useState<string | null>(null);
   const [available, setAvailable] = useState(true);
@@ -67,7 +72,11 @@ export function LearnTopic() {
 
       <div className="flex gap-2" style={{ marginBottom: 24 }}>
         {CONTENT_MODES.map((m) => (
-          <button key={m} onClick={() => setMode(m)} className={`chip ${mode === m ? "active" : ""}`}>
+          <button
+            key={m}
+            onClick={() => (m === "in_depth" ? setWizardOpen(true) : setMode(m))}
+            className={`chip ${(m === "in_depth" ? wizardOpen : mode === m) ? "active" : ""}`}
+          >
             {MODE_LABELS[m]}
           </button>
         ))}
@@ -88,6 +97,18 @@ export function LearnTopic() {
       <Button onClick={markComplete} disabled={completed} variant={completed ? "secondary" : "primary"}>
         {completed ? "Completed" : "Mark as complete"}
       </Button>
+
+      {wizardOpen && (
+        <InDepthWizard
+          cert={cert}
+          topicId={topicId}
+          topicTitle={title}
+          onClose={(wasCompleted) => {
+            setWizardOpen(false);
+            if (wasCompleted) setCompleted(true);
+          }}
+        />
+      )}
     </AppShell>
   );
 }

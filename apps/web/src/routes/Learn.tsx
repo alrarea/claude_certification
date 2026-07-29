@@ -4,6 +4,7 @@ import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
 import { MarkdownContent } from "../components/MarkdownContent";
+import { InDepthWizard } from "../components/InDepthWizard";
 import { CONTENT_MODES, MODE_LABELS, type ContentMode } from "../lib/contentModes";
 
 interface TopicNode {
@@ -39,9 +40,10 @@ interface TopicTreeProps {
   onToggleExpand: (topicId: string) => void;
   contentCache: Record<string, string | null>;
   loadingIds: Set<string>;
+  onOpenWizard: (topicId: string, topicTitle: string) => void;
 }
 
-function TopicTree({ cert, nodes, mode, expandedIds, onToggleExpand, contentCache, loadingIds }: TopicTreeProps) {
+function TopicTree({ cert, nodes, mode, expandedIds, onToggleExpand, contentCache, loadingIds, onOpenWizard }: TopicTreeProps) {
   return (
     <ul className="flex flex-col gap-1">
       {nodes.map((node) => {
@@ -68,6 +70,24 @@ function TopicTree({ cert, nodes, mode, expandedIds, onToggleExpand, contentCach
                 <span style={{ marginLeft: "auto", color: "var(--color-ink-500)", fontSize: 12 }}>
                   {isExpanded ? "▾" : "▸"}
                 </span>
+              </button>
+            ) : mode === "in_depth" ? (
+              <button
+                onClick={() => onOpenWizard(node.id, node.title)}
+                className="flex items-center"
+                style={{
+                  padding: "6px 4px",
+                  color: "var(--color-ink-700)",
+                  background: "none",
+                  border: "none",
+                  width: "100%",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  fontSize: 15,
+                }}
+              >
+                <StatusDot status={node.status} />
+                {node.title}
               </button>
             ) : (
               <Link
@@ -108,6 +128,7 @@ function TopicTree({ cert, nodes, mode, expandedIds, onToggleExpand, contentCach
                   onToggleExpand={onToggleExpand}
                   contentCache={contentCache}
                   loadingIds={loadingIds}
+                  onOpenWizard={onOpenWizard}
                 />
               </ul>
             )}
@@ -129,15 +150,20 @@ export function Learn() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [contentCache, setContentCache] = useState<Record<string, string | null>>({});
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+  const [wizardTopic, setWizardTopic] = useState<{ id: string; title: string } | null>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    apiFetch(`/courses/${cert}/topics`).then((data) => {
+  function loadTopics() {
+    return apiFetch(`/courses/${cert}/topics`).then((data) => {
       setTopics(data.topics);
       setPercentComplete(data.percentComplete);
       setCertName(data.certification.name);
-      setLoading(false);
     });
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    loadTopics().then(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cert]);
 
   function toggleExpand(topicId: string) {
@@ -180,6 +206,13 @@ export function Learn() {
 
   return (
     <AppShell maxWidth={720}>
+      <Link
+        to="/learn"
+        className="text-sm"
+        style={{ color: "var(--color-ink-500)", display: "inline-block", marginBottom: 12 }}
+      >
+        ← Back to courses
+      </Link>
       <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
         <h1 style={{ fontSize: 28 }}>{certName}</h1>
         <Link to={`/exam/new?cert=${cert}`} className="btn btn-clay btn-sm" style={{ textDecoration: "none" }}>
@@ -212,8 +245,21 @@ export function Learn() {
           onToggleExpand={toggleExpand}
           contentCache={contentCache}
           loadingIds={loadingIds}
+          onOpenWizard={(id, title) => setWizardTopic({ id, title })}
         />
       </div>
+
+      {wizardTopic && (
+        <InDepthWizard
+          cert={cert}
+          topicId={wizardTopic.id}
+          topicTitle={wizardTopic.title}
+          onClose={(completed) => {
+            setWizardTopic(null);
+            if (completed) loadTopics();
+          }}
+        />
+      )}
     </AppShell>
   );
 }
