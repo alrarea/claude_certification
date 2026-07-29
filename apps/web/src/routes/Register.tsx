@@ -1,14 +1,20 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
+import { useAuth } from "../lib/AuthContext";
+import { useOnboardingGate } from "../lib/useOnboardingGate";
 import { AuthLayout } from "../components/AuthLayout";
 import { TextField } from "../components/TextField";
 import { PasswordField } from "../components/PasswordField";
 import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
+import { OnboardingModal } from "../components/OnboardingModal";
 
 export function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const { showOnboarding, onboardingSubmitting, onboardingError, handleAuthResult, chooseNew, chooseAssess } =
+    useOnboardingGate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +30,13 @@ export function Register() {
         method: "POST",
         body: JSON.stringify({ name, email, password }),
       });
+      if (data.accessToken) {
+        // OTP verification is currently disabled - registering logs you
+        // straight in instead of sending you to /register/verify.
+        login(data.accessToken, data.refreshToken);
+        handleAuthResult(data);
+        return;
+      }
       const suffix = data.emailSent === false ? "&emailSent=0" : "";
       navigate(`/register/verify?email=${encodeURIComponent(email)}${suffix}`);
     } catch (err) {
@@ -54,7 +67,7 @@ export function Register() {
         />
         {error && <Alert kind="error">{error}</Alert>}
         <Button type="submit" loading={submitting} block>
-          {submitting ? "Sending code..." : "Create account"}
+          {submitting ? "Creating account..." : "Create account"}
         </Button>
       </form>
       <p className="text-sm text-center" style={{ marginTop: 20, color: "var(--color-ink-500)" }}>
@@ -63,6 +76,14 @@ export function Register() {
           Log in
         </Link>
       </p>
+      {showOnboarding && (
+        <OnboardingModal
+          submitting={onboardingSubmitting}
+          error={onboardingError}
+          onNew={chooseNew}
+          onAssess={chooseAssess}
+        />
+      )}
     </AuthLayout>
   );
 }

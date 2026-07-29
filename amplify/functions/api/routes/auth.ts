@@ -17,6 +17,12 @@ import { assertOtpSendAllowed, assertLoginAllowed, recordLoginAttempt, RateLimit
 
 export const authRoutes = new Hono();
 
+// TEMP: OTP email verification is switched off for now - re-enable by
+// flipping this back to true. Nothing else about the OTP system changes -
+// the columns, endpoints, and RegisterVerify page all stay intact so
+// bringing it back is just this one flag.
+const OTP_VERIFICATION_ENABLED = false;
+
 // Returns whether the email actually went out. The OTP row is always
 // created regardless - a delivery failure (e.g. SES sandbox mode /
 // unverified recipient, still pending here) shouldn't block the
@@ -60,11 +66,23 @@ authRoutes.post("/register", async (c) => {
 
   const passwordHash = await hashPassword(password);
 
-  await prisma.user.upsert({
+  const user = await prisma.user.upsert({
     where: { email },
     update: { name, passwordHash },
     create: { name, email, passwordHash },
   });
+
+  if (!OTP_VERIFICATION_ENABLED) {
+    // No OTP issued, no email sent - log the new account straight in.
+    const accessToken = await signAccessToken({ sub: user.id, email: user.email, role: user.role });
+    const refreshToken = await signRefreshToken({ sub: user.id });
+    return c.json({
+      accessToken,
+      refreshToken,
+      hasSeenOnboardingPrompt: user.onboardingPromptSeenAt !== null,
+      lastCertificationCode: user.lastCertificationCode,
+    });
+  }
 
   try {
     const { emailSent } = await issueOtp(email);
@@ -143,7 +161,7 @@ authRoutes.post("/login", async (c) => {
     return c.json({ error: "Incorrect email or password" }, 401);
   }
 
-  if (!user.emailVerifiedAt) {
+  if (!user.emailVerifiedAt && OTP_VERIFICATION_ENABLED) {
     await recordLoginAttempt(email, false);
     // Send them straight back into OTP verification rather than a dead end -
     // issue a fresh code (tolerating the resend cooldown: RateLimitError here
