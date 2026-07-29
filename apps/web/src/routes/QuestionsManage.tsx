@@ -107,7 +107,11 @@ export function QuestionsManage() {
 
   return (
     <AppShell maxWidth={560}>
-      <h1 style={{ fontSize: 28, marginBottom: 24 }}>Question bank</h1>
+      <h1 style={{ fontSize: 28, marginBottom: 12 }}>Question bank</h1>
+      <p className="text-sm" style={{ color: "var(--color-ink-500)", marginBottom: 20 }}>
+        Both actions below use Claude and need an Anthropic API key — your saved key is used automatically if you
+        have one, otherwise you'll be asked for one at the time.
+      </p>
 
       <div className="field" style={{ marginBottom: 20 }}>
         <SelectField label="Certification" value={certification} onChange={(e) => setCertification(e.target.value)}>
@@ -117,8 +121,13 @@ export function QuestionsManage() {
       </div>
 
       <form onSubmit={onUpload} className="card flex flex-col gap-3" style={{ padding: 24, marginBottom: 20 }}>
-        <label className="field-label">Upload a document (PDF/DOCX/HTML) — converted into questions by Claude</label>
-        <input type="file" accept=".pdf,.docx,.html" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
+        <label className="field-label">Upload a document (PDF/DOCX/PPTX/MD/HTML) — converted into questions by Claude</label>
+        <input
+          type="file"
+          accept=".pdf,.docx,.html,.pptx,.md"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          className="text-sm"
+        />
         <Button size="sm" variant="secondary" loading={uploading}>
           Upload
         </Button>

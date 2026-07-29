@@ -22,4 +22,4 @@ export const MAX_AI_GENERATIONS_PER_DAY = 20; // per-user daily cap, spec Sectio
 // base64 inflates size ~33%; Lambda Function URLs cap synchronous request
 // bodies at 6MB, so this leaves headroom for the JSON wrapper too.
 export const MAX_UPLOAD_SIZE_BYTES = 4 * 1024 * 1024;
-export const ALLOWED_UPLOAD_EXTENSIONS = [".pdf", ".docx", ".html"] as const;
+export const ALLOWED_UPLOAD_EXTENSIONS = [".pdf", ".docx", ".html", ".pptx", ".md"] as const;
