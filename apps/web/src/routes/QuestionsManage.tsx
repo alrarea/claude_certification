@@ -5,6 +5,7 @@ import { SelectField } from "../components/TextField";
 import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
 import { ApiKeyPromptModal } from "../components/ApiKeyPromptModal";
+import { FileDropzone } from "../components/FileDropzone";
 
 type PendingAction =
   | { kind: "upload"; body: { certification: string; filename: string; contentBase64: string } }
@@ -122,12 +123,7 @@ export function QuestionsManage() {
 
       <form onSubmit={onUpload} className="card flex flex-col gap-3" style={{ padding: 24, marginBottom: 20 }}>
         <label className="field-label">Upload a document (PDF/DOCX/PPTX/MD/HTML) — converted into questions by Claude</label>
-        <input
-          type="file"
-          accept=".pdf,.docx,.html,.pptx,.md"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="text-sm"
-        />
+        <FileDropzone accept=".pdf,.docx,.html,.pptx,.md" file={file} onFileSelected={setFile} />
         <Button size="sm" variant="secondary" loading={uploading}>
           Upload
         </Button>
