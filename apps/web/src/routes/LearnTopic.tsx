@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
 import { Button } from "../components/Button";
 import { MarkdownContent } from "../components/MarkdownContent";
+import { CONTENT_MODES, MODE_LABELS, type ContentMode } from "../lib/contentModes";
 
-type Mode = "in_depth" | "normal" | "concise";
-
-const MODE_LABELS: Record<Mode, string> = {
-  in_depth: "In-depth",
-  normal: "Normal",
-  concise: "Concise",
-};
+function isContentMode(value: string | null): value is ContentMode {
+  return value !== null && (CONTENT_MODES as string[]).includes(value);
+}
 
 export function LearnTopic() {
-  const { cert = "ccaf", topicId = "" } = useParams();
-  const [mode, setMode] = useState<Mode>("normal");
+  const { cert = "ccar-f", topicId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode");
+  // The course-overview page's mode selector carries its choice here via
+  // ?mode= so picking "In-depth" out there and clicking a topic lands you
+  // already in In-depth mode, instead of always resetting to Normal.
+  const [mode, setMode] = useState<ContentMode>(isContentMode(initialMode) ? initialMode : "normal");
   const [title, setTitle] = useState("");
   const [contentMd, setContentMd] = useState<string | null>(null);
   const [available, setAvailable] = useState(true);
@@ -57,7 +59,7 @@ export function LearnTopic() {
       </div>
 
       <div className="flex gap-2" style={{ marginBottom: 24 }}>
-        {(Object.keys(MODE_LABELS) as Mode[]).map((m) => (
+        {CONTENT_MODES.map((m) => (
           <button key={m} onClick={() => setMode(m)} className={`chip ${mode === m ? "active" : ""}`}>
             {MODE_LABELS[m]}
           </button>
