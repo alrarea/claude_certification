@@ -51,6 +51,13 @@ export function LearnTopic() {
 
   return (
     <AppShell maxWidth={760}>
+      <Link
+        to={`/learn/${cert}`}
+        className="text-sm"
+        style={{ color: "var(--color-ink-500)", display: "inline-block", marginBottom: 12 }}
+      >
+        ← Back to course
+      </Link>
       <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
         <h1 style={{ fontSize: 26 }}>{title}</h1>
         <Link to={`/exam/new?cert=${cert}&topic=${topicId}`} className="text-sm" style={{ color: "var(--color-clay)" }}>
