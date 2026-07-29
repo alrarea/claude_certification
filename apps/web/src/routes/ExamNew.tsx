@@ -6,7 +6,16 @@ import { SelectField } from "../components/TextField";
 import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
 
-const PRESETS = [10, 20, 40, 60];
+// The real CCAR-F exam is 60 questions, CCAR-P is 63 - options run from the
+// smallest count that still gives every exam-blueprint domain a shot at
+// representation up to double the real exam length, in the certification's
+// own clean step size (60/3=20, 63/3=21) so the real exam length always
+// lands on one of the presets.
+const QUESTION_COUNT_PRESETS: Record<string, number[]> = {
+  ccaf: [20, 40, 60, 80, 100, 120],
+  ccap: [21, 42, 63, 84, 105, 126],
+};
+const REAL_EXAM_LENGTH: Record<string, number> = { ccaf: 60, ccap: 63 };
 
 interface LiveExamSummary {
   id: string;
@@ -90,12 +99,23 @@ export function ExamNew() {
   const lockedTopic = searchParams.get("topic");
   const lockedCert = searchParams.get("cert");
 
-  const [certification, setCertification] = useState(lockedCert ?? "ccaf");
+  const initialCert = lockedCert ?? "ccaf";
+  const [certification, setCertification] = useState(initialCert);
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | "mixed">("mixed");
-  const [feedbackMode, setFeedbackMode] = useState<"immediate" | "end_of_set">("immediate");
-  const [questionCount, setQuestionCount] = useState(10);
+  const [questionCount, setQuestionCount] = useState(REAL_EXAM_LENGTH[initialCert] ?? 60);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const presets = QUESTION_COUNT_PRESETS[certification] ?? QUESTION_COUNT_PRESETS.ccaf;
+  const realLength = REAL_EXAM_LENGTH[certification] ?? 60;
+
+  function onCertificationChange(next: string) {
+    setCertification(next);
+    // Presets differ per certification (CCAF steps of 20, CCAP steps of 21) -
+    // snap the count back to that cert's real exam length rather than
+    // leaving a value that doesn't belong to the new preset list.
+    setQuestionCount(REAL_EXAM_LENGTH[next] ?? 60);
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -107,7 +127,6 @@ export function ExamNew() {
         body: JSON.stringify({
           certification,
           difficulty,
-          feedbackMode,
           questionCount,
           ...(lockedTopic ? { topicScope: lockedTopic } : {}),
         }),
@@ -126,7 +145,7 @@ export function ExamNew() {
       <h1 style={{ fontSize: 28, marginBottom: 24 }}>New exam</h1>
       <form onSubmit={onSubmit} className="card flex flex-col gap-4" style={{ padding: 28 }}>
         {!lockedCert && (
-          <SelectField label="Certification" value={certification} onChange={(e) => setCertification(e.target.value)}>
+          <SelectField label="Certification" value={certification} onChange={(e) => onCertificationChange(e.target.value)}>
             <option value="ccaf">CCAF</option>
             <option value="ccap">CCAP</option>
           </SelectField>
@@ -137,35 +156,21 @@ export function ExamNew() {
           <option value="medium">Medium</option>
           <option value="hard">Hard</option>
         </SelectField>
-        <SelectField
-          label="Feedback"
-          value={feedbackMode}
-          onChange={(e) => setFeedbackMode(e.target.value as typeof feedbackMode)}
-        >
-          <option value="immediate">Immediate feedback</option>
-          <option value="end_of_set">Feedback at the end</option>
-        </SelectField>
         <div className="field">
           <label className="field-label">Number of questions</label>
           <div className="flex items-center gap-2 flex-wrap">
-            {PRESETS.map((n) => (
+            {presets.map((n) => (
               <button
                 type="button"
                 key={n}
                 onClick={() => setQuestionCount(n)}
                 className={`chip ${questionCount === n ? "active" : ""}`}
+                title={n === realLength ? "Same length as the real exam" : undefined}
               >
                 {n}
+                {n === realLength ? " (real length)" : ""}
               </button>
             ))}
-            <input
-              type="number"
-              className="input"
-              style={{ width: 84 }}
-              value={questionCount}
-              onChange={(e) => setQuestionCount(Number(e.target.value))}
-              min={1}
-            />
           </div>
         </div>
         {error && <Alert kind="error">{error}</Alert>}

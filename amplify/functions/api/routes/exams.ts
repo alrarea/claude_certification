@@ -5,86 +5,16 @@ import { requireAuth, type AuthedVars } from "../lib/authMiddleware.ts";
 import { decrypt } from "../lib/crypto.ts";
 import { generateAssessmentSummary } from "../lib/anthropicSummary.ts";
 import { shuffle } from "../lib/shuffle.ts";
-import { allocateByWeights, domainWeightsForCert } from "../lib/domainWeights.ts";
+import { domainWeightsForCert } from "../lib/domainWeights.ts";
+import { selectByDomain, selectMixed } from "../lib/questionSelection.ts";
 
 export const examRoutes = new Hono<{ Variables: AuthedVars }>();
 examRoutes.use("*", requireAuth);
 
-// For "mixed" exams, skew the draw toward the harder end instead of pulling
-// evenly across difficulties - hard should outnumber medium, medium should
-// outnumber easy.
-const MIXED_DIFFICULTY_WEIGHTS: Record<"hard" | "medium" | "easy", number> = {
-  hard: 0.5,
-  medium: 0.3,
-  easy: 0.2,
-};
-
-function selectMixed<T extends { difficulty: string }>(pool: T[], count: number): T[] {
-  const byDifficulty: Record<"hard" | "medium" | "easy", T[]> = {
-    hard: shuffle(pool.filter((q) => q.difficulty === "hard")),
-    medium: shuffle(pool.filter((q) => q.difficulty === "medium")),
-    easy: shuffle(pool.filter((q) => q.difficulty === "easy")),
-  };
-
-  const selected: T[] = [];
-  for (const diff of ["hard", "medium", "easy"] as const) {
-    const target = Math.round(count * MIXED_DIFFICULTY_WEIGHTS[diff]);
-    selected.push(...byDifficulty[diff].splice(0, target));
-  }
-
-  // A bucket may have come up short of its target (e.g. not enough easy
-  // questions yet) - top the exam back up to `count` from whatever's left,
-  // hardest-first, so the total is still as close to `count` as the pool allows.
-  const leftover = [...byDifficulty.hard, ...byDifficulty.medium, ...byDifficulty.easy];
-  while (selected.length < count && leftover.length > 0) {
-    selected.push(leftover.shift()!);
-  }
-
-  return shuffle(selected).slice(0, count);
-}
-
-type PoolItem = { id: string; difficulty: string; topic: { examDomain: string | null } };
-
-// Allocates `count` across the certification's official exam-blueprint
-// domains (e.g. CCAF's Agentic Architecture at 27%, Tool Design at 18%,
-// ...), then applies the existing difficulty selection within each domain's
-// share. Falls back to topping up from whatever's left in the whole pool if
-// a domain's own sub-pool comes up short at the requested difficulty, so a
-// thin domain never silently shrinks the total below `count`.
-function selectByDomain(pool: PoolItem[], count: number, difficulty: string, domainWeights: Record<string, number>): PoolItem[] {
-  const byDomain = new Map<string, PoolItem[]>();
-  for (const q of pool) {
-    const domain = q.topic.examDomain;
-    if (!domain || !(domain in domainWeights)) continue;
-    if (!byDomain.has(domain)) byDomain.set(domain, []);
-    byDomain.get(domain)!.push(q);
-  }
-
-  const targets = allocateByWeights(count, domainWeights);
-  const selected: PoolItem[] = [];
-  const usedIds = new Set<string>();
-
-  for (const [domain, target] of Object.entries(targets)) {
-    const domainPool = byDomain.get(domain) ?? [];
-    const picked = difficulty === "mixed" ? selectMixed(domainPool, target) : shuffle(domainPool).slice(0, target);
-    for (const q of picked) usedIds.add(q.id);
-    selected.push(...picked);
-  }
-
-  if (selected.length < count) {
-    for (const q of shuffle(pool.filter((p) => !usedIds.has(p.id)))) {
-      if (selected.length >= count) break;
-      selected.push(q);
-    }
-  }
-
-  return shuffle(selected).slice(0, count);
-}
-
 examRoutes.post("/", async (c) => {
   const body = createExamSchema.safeParse(await c.req.json());
   if (!body.success) return c.json({ error: body.error.flatten() }, 400);
-  const { certification, difficulty, feedbackMode, questionCount, topicScope } = body.data;
+  const { certification, difficulty, questionCount, topicScope } = body.data;
   const userId = c.get("userId");
 
   const cert = await prisma.certification.findUnique({ where: { code: certification.toUpperCase() } });
@@ -122,7 +52,10 @@ examRoutes.post("/", async (c) => {
     data: {
       userId,
       certificationId: cert.id,
-      feedbackMode,
+      // Per-question reveal is gone in favor of a single feedback pass at
+      // the end of the exam (see GET /:id/results) - every exam is created
+      // as "end_of_set" now, there's no user-facing choice anymore.
+      feedbackMode: "end_of_set",
       difficulty,
       topicScope: topicScope ?? null,
       questionCount: selected.length,
@@ -168,9 +101,9 @@ examRoutes.get("/:id", async (c) => {
       questionText: eq.question.questionText,
       options: eq.question.options.map((o) => ({ id: o.id, optionText: o.optionText })),
       selectedOptionId: eq.selectedOptionId,
-      // Correctness/explanations only revealed once this question has been
-      // answered under 'immediate' mode, or once the whole exam is complete.
-      ...((eq.answeredAt && exam.feedbackMode === "immediate") || exam.completedAt
+      // Correctness/explanations are only revealed once the whole exam is
+      // complete - no more per-question reveal while the exam is in progress.
+      ...(exam.completedAt
         ? {
             isCorrect: eq.isCorrect,
             correctOptionId: eq.question.options.find((o) => o.isCorrect)?.id,
@@ -211,14 +144,8 @@ examRoutes.post("/:id/questions/:questionId/answer", async (c) => {
     },
   });
 
-  if (exam.feedbackMode === "immediate") {
-    return c.json({
-      isCorrect: selectedOption.isCorrect,
-      correctOptionId: examQuestion.question.options.find((o) => o.isCorrect)?.id,
-      explanations: Object.fromEntries(examQuestion.question.options.map((o) => [o.id, o.explanation])),
-    });
-  }
-
+  // No per-question reveal - correctness and explanations only show up in
+  // the end-of-exam results (GET /:id/results).
   return c.json({ ok: true });
 });
 
@@ -264,7 +191,15 @@ examRoutes.get("/:id/results", async (c) => {
   const byTopic = new Map<string, { title: string; certCode: string; correct: number; total: number }>();
   const byDifficulty = new Map<string, { correct: number; total: number }>();
   const byCertification = new Map<string, { name: string; correct: number; total: number }>();
-  const missed: Array<{ questionId: string; questionText: string; topicId: string; topicTitle: string; certCode: string }> = [];
+  const missed: Array<{
+    questionId: string;
+    questionText: string;
+    topicId: string;
+    topicTitle: string;
+    certCode: string;
+    selectedOptionId: string | null;
+    options: Array<{ id: string; optionText: string; isCorrect: boolean; explanation: string }>;
+  }> = [];
 
   for (const eq of exam.examQuestions) {
     const certCode = eq.question.certification.code.toLowerCase();
@@ -293,6 +228,16 @@ examRoutes.get("/:id/results", async (c) => {
         topicId: eq.question.topicId,
         topicTitle: eq.question.topic.title,
         certCode,
+        selectedOptionId: eq.selectedOptionId,
+        // Full per-option breakdown (right and wrong) - this is now the only
+        // place a completed exam explains "why", since there's no more
+        // per-question reveal while answering.
+        options: eq.question.options.map((o) => ({
+          id: o.id,
+          optionText: o.optionText,
+          isCorrect: o.isCorrect,
+          explanation: o.explanation,
+        })),
       });
     }
   }

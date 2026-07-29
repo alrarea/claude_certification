@@ -45,26 +45,3 @@ export function allocateByWeights(total: number, weights: Record<string, number>
   }
   return result;
 }
-
-// Weighted random sample without replacement - each remaining item's chance
-// of being drawn next is proportional to its weight, so items from
-// higher-weight domains tend to surface earlier without ever being
-// guaranteed a fixed slot count.
-export function weightedShuffle<T>(items: T[], weightFn: (item: T) => number): T[] {
-  const pool = items.map((item) => ({ item, w: Math.max(weightFn(item), 0.0001) }));
-  const result: T[] = [];
-  while (pool.length > 0) {
-    const total = pool.reduce((sum, p) => sum + p.w, 0);
-    let r = Math.random() * total;
-    let idx = pool.length - 1;
-    for (let i = 0; i < pool.length; i++) {
-      r -= pool[i].w;
-      if (r <= 0) {
-        idx = i;
-        break;
-      }
-    }
-    result.push(pool.splice(idx, 1)[0].item);
-  }
-  return result;
-}

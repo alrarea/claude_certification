@@ -2,31 +2,18 @@ import { Hono } from "hono";
 import { prisma } from "@claude-cert/db";
 import { onboardingChoiceSchema } from "@claude-cert/shared";
 import { requireAuth, type AuthedVars } from "../lib/authMiddleware.ts";
-import { CCAF_DOMAIN_WEIGHTS, CCAP_DOMAIN_WEIGHTS, weightedShuffle } from "../lib/domainWeights.ts";
+import { CCAF_DOMAIN_WEIGHTS, CCAP_DOMAIN_WEIGHTS } from "../lib/domainWeights.ts";
+import { selectByDomain } from "../lib/questionSelection.ts";
 
 export const onboardingRoutes = new Hono<{ Variables: AuthedVars }>();
 onboardingRoutes.use("*", requireAuth);
 
-// Foundations block: 2 easy / 3 medium / 5 hard, interleaved - first question
-// easy, then one medium, then two hard, then the rest of each bucket in the
-// same easy/medium/hard order.
-const CCAF_SEQUENCE = [
-  "easy",
-  "medium",
-  "hard",
-  "hard",
-  "easy",
-  "medium",
-  "medium",
-  "hard",
-  "hard",
-  "hard",
-] as const;
-
-// Professional-tier tail: 1 easy / 2 medium / 2 hard, appended after the
-// foundations block. This is the "ready for CCAR-P?" check - the score on
-// this block is what the results page uses as the readiness signal.
-const CCAP_SEQUENCE = ["easy", "medium", "hard", "medium", "hard"] as const;
+// Smallest counts where every domain's floor allocation is already >= 1
+// (CCAF's thinnest domain is 15%, CCAP's is 7%) - below these, a
+// deterministic domain-weighted draw would leave some domains at zero
+// just from the block being too small to represent all of them.
+const CCAF_ASSESSMENT_COUNT = 20;
+const CCAP_ASSESSMENT_COUNT = 21;
 
 async function fetchPool(certificationId: string, userId: string) {
   return prisma.question.findMany({
@@ -37,42 +24,6 @@ async function fetchPool(certificationId: string, userId: string) {
     },
     select: { id: true, difficulty: true, topic: { select: { examDomain: true } } },
   });
-}
-
-type PoolItem = { difficulty: string; topic: { examDomain: string | null } };
-
-// Within each difficulty bucket, draw with probability proportional to the
-// certification's official domain weights instead of a flat shuffle - a
-// 10-15 question assessment can't give every domain its own guaranteed
-// slot, but across the picks it should still lean toward matching the
-// blueprint percentages rather than whatever domain happens to have the
-// biggest question pool.
-function buildAssessmentOrder<T extends PoolItem>(
-  pool: T[],
-  sequence: readonly ("easy" | "medium" | "hard")[],
-  domainWeights: Record<string, number>
-): T[] {
-  const byDifficulty: Record<"easy" | "medium" | "hard", T[]> = {
-    easy: weightedShuffle(
-      pool.filter((q) => q.difficulty === "easy"),
-      (q) => domainWeights[q.topic.examDomain ?? ""] ?? 0.01
-    ),
-    medium: weightedShuffle(
-      pool.filter((q) => q.difficulty === "medium"),
-      (q) => domainWeights[q.topic.examDomain ?? ""] ?? 0.01
-    ),
-    hard: weightedShuffle(
-      pool.filter((q) => q.difficulty === "hard"),
-      (q) => domainWeights[q.topic.examDomain ?? ""] ?? 0.01
-    ),
-  };
-
-  const selected: T[] = [];
-  for (const diff of sequence) {
-    const next = byDifficulty[diff].shift();
-    if (next) selected.push(next);
-  }
-  return selected;
 }
 
 onboardingRoutes.post("/choice", async (c) => {
@@ -94,12 +45,15 @@ onboardingRoutes.post("/choice", async (c) => {
   const ccafPool = await fetchPool(ccaf.id, userId);
   const ccapPool = ccap ? await fetchPool(ccap.id, userId) : [];
 
-  // Foundations block first, professional-tier block appended after - order
-  // matters here (unlike the weighted-random "mixed" exam type), since the
-  // second block is what tells the user whether they're ready for CCAR-P.
+  // Foundations block first, professional-tier block appended after - the
+  // second block's score is what the results page uses as the "ready for
+  // CCAR-P?" signal. Each block is a real domain-weighted draw (same
+  // allocator full exams use), not a difficulty-only sequence, so the mix
+  // actually reflects the blueprint instead of just skewing toward whatever
+  // domain has the most questions.
   const selected = [
-    ...buildAssessmentOrder(ccafPool, CCAF_SEQUENCE, CCAF_DOMAIN_WEIGHTS),
-    ...buildAssessmentOrder(ccapPool, CCAP_SEQUENCE, CCAP_DOMAIN_WEIGHTS),
+    ...selectByDomain(ccafPool, CCAF_ASSESSMENT_COUNT, "mixed", CCAF_DOMAIN_WEIGHTS),
+    ...selectByDomain(ccapPool, CCAP_ASSESSMENT_COUNT, "mixed", CCAP_DOMAIN_WEIGHTS),
   ];
   if (selected.length === 0) {
     return c.json({ error: "No approved questions available yet for an assessment." }, 422);

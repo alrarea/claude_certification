@@ -11,22 +11,17 @@ interface ExamQuestion {
   questionText: string;
   options: { id: string; optionText: string }[];
   selectedOptionId: string | null;
-  isCorrect?: boolean;
-  correctOptionId?: string;
-  explanations?: Record<string, string>;
 }
 
 export function ExamInProgress() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
-  const [feedbackMode, setFeedbackMode] = useState<"immediate" | "end_of_set">("immediate");
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [current, setCurrent] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     const data = await apiFetch(`/exams/${id}`);
-    setFeedbackMode(data.feedbackMode);
     setQuestions(data.questions);
     const firstUnanswered = data.questions.findIndex((q: ExamQuestion) => !q.selectedOptionId);
     setCurrent(firstUnanswered === -1 ? 0 : firstUnanswered);
@@ -40,11 +35,13 @@ export function ExamInProgress() {
   async function selectAnswer(optionId: string) {
     const q = questions[current];
     try {
-      const result = await apiFetch(`/exams/${id}/questions/${q.questionId}/answer`, {
+      // No reveal here anymore - correctness/explanations only show up in
+      // the end-of-exam results.
+      await apiFetch(`/exams/${id}/questions/${q.questionId}/answer`, {
         method: "POST",
         body: JSON.stringify({ selectedOptionId: optionId }),
       });
-      setQuestions((qs) => qs.map((item, i) => (i === current ? { ...item, selectedOptionId: optionId, ...result } : item)));
+      setQuestions((qs) => qs.map((item, i) => (i === current ? { ...item, selectedOptionId: optionId } : item)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit answer");
     }
@@ -68,7 +65,6 @@ export function ExamInProgress() {
   }
 
   const q = questions[current];
-  const showFeedback = feedbackMode === "immediate" && q.selectedOptionId;
 
   return (
     <AppShell maxWidth={700}>
@@ -85,31 +81,24 @@ export function ExamInProgress() {
       <div className="flex flex-col gap-3" style={{ marginBottom: 28 }}>
         {q.options.map((o) => {
           const isSelected = q.selectedOptionId === o.id;
-          const isCorrectOption = showFeedback && q.correctOptionId === o.id;
           return (
-            <div key={o.id}>
-              <button
-                onClick={() => !q.selectedOptionId && selectAnswer(o.id)}
-                disabled={!!q.selectedOptionId}
-                className="card"
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "14px 18px",
-                  cursor: q.selectedOptionId ? "default" : "pointer",
-                  borderColor: isSelected ? "var(--color-ink)" : undefined,
-                  background: isCorrectOption ? "var(--color-success-bg)" : "#fff",
-                  fontSize: 15,
-                }}
-              >
-                {o.optionText}
-              </button>
-              {showFeedback && q.explanations?.[o.id] && (
-                <p className="text-xs" style={{ color: "var(--color-ink-500)", marginLeft: 4, marginTop: 6 }}>
-                  {q.explanations[o.id]}
-                </p>
-              )}
-            </div>
+            <button
+              key={o.id}
+              onClick={() => !q.selectedOptionId && selectAnswer(o.id)}
+              disabled={!!q.selectedOptionId}
+              className="card"
+              style={{
+                width: "100%",
+                textAlign: "left",
+                padding: "14px 18px",
+                cursor: q.selectedOptionId ? "default" : "pointer",
+                borderColor: isSelected ? "var(--color-ink)" : undefined,
+                background: "#fff",
+                fontSize: 15,
+              }}
+            >
+              {o.optionText}
+            </button>
           );
         })}
       </div>

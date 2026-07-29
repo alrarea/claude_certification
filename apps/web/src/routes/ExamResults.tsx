@@ -12,7 +12,15 @@ interface Results {
   byTopic: { topicId: string; title: string; certCode: string; correct: number; total: number }[];
   byDifficulty: { difficulty: string; correct: number; total: number }[];
   byCertification: { code: string; name: string; correct: number; total: number }[];
-  missed: { questionId: string; questionText: string; topicId: string; topicTitle: string; certCode: string }[];
+  missed: {
+    questionId: string;
+    questionText: string;
+    topicId: string;
+    topicTitle: string;
+    certCode: string;
+    selectedOptionId: string | null;
+    options: { id: string; optionText: string; isCorrect: boolean; explanation: string }[];
+  }[];
 }
 
 interface AiSummary {
@@ -187,10 +195,44 @@ export function ExamResults() {
       {results.missed.length > 0 && (
         <div className="card" style={{ padding: 24 }}>
           <h2 style={{ fontSize: 17, marginBottom: 12 }}>Missed questions</h2>
-          <ul className="flex flex-col gap-3 text-sm">
+          <ul className="flex flex-col gap-5 text-sm">
             {results.missed.map((m) => (
-              <li key={m.questionId}>
-                <p style={{ marginBottom: 4 }}>{m.questionText}</p>
+              <li key={m.questionId} style={{ paddingBottom: 20, borderBottom: "1px solid var(--color-border)" }}>
+                <p style={{ marginBottom: 10, fontWeight: 500 }}>{m.questionText}</p>
+                <ul className="flex flex-col gap-2" style={{ marginBottom: 10 }}>
+                  {m.options.map((o) => {
+                    const wasSelected = o.id === m.selectedOptionId;
+                    return (
+                      <li
+                        key={o.id}
+                        style={{
+                          padding: "10px 12px",
+                          borderRadius: 8,
+                          border: "1px solid var(--color-border)",
+                          borderColor: o.isCorrect
+                            ? "var(--color-success, #2f6f4f)"
+                            : wasSelected
+                              ? "var(--color-error, #b3432b)"
+                              : "var(--color-border)",
+                          background: o.isCorrect ? "var(--color-success-bg)" : "#fff",
+                        }}
+                      >
+                        <p style={{ marginBottom: 4 }}>
+                          {o.optionText}
+                          {o.isCorrect && (
+                            <span style={{ color: "var(--color-success, #2f6f4f)" }}> — correct answer</span>
+                          )}
+                          {wasSelected && !o.isCorrect && (
+                            <span style={{ color: "var(--color-error, #b3432b)" }}> — your answer</span>
+                          )}
+                        </p>
+                        <p className="text-xs" style={{ color: "var(--color-ink-500)" }}>
+                          {o.explanation}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
                 <Link to={`/learn/${m.certCode}/${m.topicId}`} style={{ color: "var(--color-clay)" }}>
                   Review {m.topicTitle} →
                 </Link>

@@ -4,6 +4,8 @@ import { createLiveExamSchema, liveExamSubmitAnswerSchema } from "@claude-cert/s
 import { requireAuth, requireAdmin, type AuthedVars } from "../lib/authMiddleware.ts";
 import { shuffle } from "../lib/shuffle.ts";
 import { broadcastToLiveExam } from "../lib/liveExamBroadcast.ts";
+import { domainWeightsForCert } from "../lib/domainWeights.ts";
+import { selectByDomain, selectMixed } from "../lib/questionSelection.ts";
 
 export const liveExamRoutes = new Hono<{ Variables: AuthedVars }>();
 liveExamRoutes.use("*", requireAuth);
@@ -78,10 +80,17 @@ liveExamRoutes.post("/", requireAdmin, async (c) => {
       ...(difficulty !== "mixed" ? { difficulty } : {}),
       ...(topicScope ? { topicId: topicScope } : {}),
     },
-    select: { id: true },
+    select: { id: true, difficulty: true, topic: { select: { examDomain: true } } },
   });
 
-  const selected = shuffle(pool).slice(0, questionCount);
+  // Same domain-weighted draw as a regular full-certification exam - a
+  // single-topic session (topicScope) is already confined to one domain.
+  const domainWeights = topicScope ? null : domainWeightsForCert(cert.code);
+  const selected = domainWeights
+    ? selectByDomain(pool, questionCount, difficulty, domainWeights)
+    : difficulty === "mixed"
+      ? selectMixed(pool, questionCount)
+      : shuffle(pool).slice(0, questionCount);
   if (selected.length === 0) {
     return c.json({ error: "No approved questions match this setup yet." }, 422);
   }
