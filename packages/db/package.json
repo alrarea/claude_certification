@@ -10,9 +10,12 @@
     "generate": "prisma generate && node scripts/patch-prisma-wasm.js",
     "studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
-    "migrate:guides": "tsx scripts/migrate-guides.ts"
+    "migrate:guides": "tsx scripts/migrate-guides.ts",
+    "ingest:content": "tsx scripts/ingest-topic-content.ts",
+    "check:content": "tsx scripts/check-content-drift.ts"
   },
   "dependencies": {
+    "@claude-cert/shared": "*",
     "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.9.0",
     "dotenv": "^17.4.2",

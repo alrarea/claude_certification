@@ -468,3 +468,17 @@ select.input {
   background: var(--color-cream-100);
   opacity: 0.85;
 }
+
+/* ---- In-depth wizard body ----
+   Scoped to the wizard's scroll container so normal-mode topic pages keep
+   their larger code type. In-depth steps carry real 40-line implementations,
+   so code is set tighter and capped in height - otherwise one block fills the
+   whole step and the prose around it scrolls out of view. */
+
+.wizard-body .prose pre {
+  font-size: 13px;
+  line-height: 1.55;
+  tab-size: 2;
+  max-height: 60vh;
+  overflow-y: auto;
+}

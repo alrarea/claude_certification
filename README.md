@@ -33,7 +33,13 @@ amplify/                  Amplify Gen 2 backend: one Lambda (Hono), Function URL
                              s3, extractDocumentText, anthropicGenerate, optionBalance
 apps/web/                  React + Vite SPA
 packages/db/               Prisma schema, client, seed scripts, guide-migration script
+                           plus the content pipeline: ingest-topic-content,
+                           check-content-drift, export-topic-content
 packages/shared/           zod schemas + constants shared by web and the function
+                           plus inDepth.ts, the in-depth content contract
+content/in-depth/          Hand-authored in-depth course content (markdown, per topic)
+                           AUTHORING.md is the contract every domain follows
+guides/                    Source HTML study guides (the origin of mode='normal')
 ```
 
 ## Database
@@ -317,8 +323,12 @@ AI generation, and the admin review queue (`/questions/manage`,
 
 - No server-side refresh-token revocation list — logout is client-side-only token
   discard. A leaked refresh token remains valid until natural expiry (14 days).
-- Only `mode='normal'` course content is populated (migrated from the existing
-  HTML guides). In-depth/concise variants are a later, one-time authoring step.
+- In-depth course content is authored per domain and is not finished yet.
+  `mode='normal'` is populated for every topic (migrated from the HTML guides)
+  and `mode='concise'` for all of them, but `mode='in_depth'` currently holds a
+  byte-for-byte copy of the normal text for every topic outside CCAR-F Domain 1
+  — so those topics show nothing extra. `npm run content:check` is the
+  burndown; see `content/in-depth/AUTHORING.md` to add a domain.
 - Admin question review is approve/reject only - no inline edit before
   approving (spec mentions "approve/reject/edit inline" as a nice-to-have on
   the review screen; edit isn't built).
@@ -348,7 +358,15 @@ npm install
 cp packages/db/.env.example packages/db/.env   # fill in a real DATABASE_URL
 npm run db:migrate
 npm run db:seed              # certifications + tech@alignminds.com super_admin
-npm run db:migrate-guides
+npm run db:migrate-guides    # topics + mode='normal' from guides/*.html
+npm run content:ingest -- content/in-depth   # mode='in_depth' from content/
+```
+
+To see what in-depth content still needs writing:
+
+```
+npm run content:check                              # burndown across all domains
+npm run content:check -- --cert CCAR-F --domain D1  # exits 0 only when the domain is done
 ```
 
 Root `.env` (gitignored) needs `DATABASE_URL` plus `JWT_ACCESS_SECRET`,

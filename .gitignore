@@ -11,3 +11,4 @@ build/
 db-credentials.csv
 amplify_outputs.json
 .claude/
+.content-export/

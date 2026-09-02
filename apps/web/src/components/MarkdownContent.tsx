@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { calloutVariant } from "@claude-cert/shared";
 import { Mermaid } from "./Mermaid";
 
 function flattenText(node: ReactNode): string {
@@ -27,18 +28,6 @@ function findFirstStrongText(node: ReactNode): string | null {
     return findFirstStrongText(el.props?.children);
   }
   return null;
-}
-
-function calloutVariant(label: string): string {
-  const t = label.toLowerCase();
-  if (t.includes("tip")) return "tip";
-  if (t.includes("watch out") || t.includes("warning") || t.includes("caution")) return "warn";
-  if (t.includes("key takeaway") || t.includes("key point") || t.includes("the rule")) return "key";
-  if (t.includes("exam focus") || t.includes("exam tip") || t.includes("exam ")) return "exam";
-  if (t.includes("plain english") || t.includes("plain language")) return "plain";
-  if (t.includes("real-world") || t.includes("real world")) return "real";
-  if (t.includes("out of scope") || t.includes("not on the exam")) return "oos";
-  return "default";
 }
 
 function Blockquote({ children, ...rest }: { children?: ReactNode }) {

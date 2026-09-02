@@ -45,5 +45,10 @@ export function Mermaid({ chart }: { chart: string }) {
       </p>
     );
   }
-  return <div style={{ display: "flex", justifyContent: "center", margin: "16px 0" }} dangerouslySetInnerHTML={{ __html: svg }} />;
+  return (
+    <div
+      style={{ display: "flex", justifyContent: "center", margin: "16px 0", maxWidth: "100%", overflowX: "auto" }}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
 }

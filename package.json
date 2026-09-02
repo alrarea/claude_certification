@@ -15,7 +15,10 @@
     "db:migrate": "npm run migrate:deploy --workspace=@claude-cert/db",
     "db:generate": "npm run generate --workspace=@claude-cert/db",
     "db:seed": "npm run seed --workspace=@claude-cert/db",
-    "db:migrate-guides": "npm run migrate:guides --workspace=@claude-cert/db"
+    "db:migrate-guides": "npm run migrate:guides --workspace=@claude-cert/db",
+    "content:ingest": "tsx packages/db/scripts/ingest-topic-content.ts",
+    "content:check": "tsx packages/db/scripts/check-content-drift.ts",
+    "content:export": "tsx packages/db/scripts/export-topic-content.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

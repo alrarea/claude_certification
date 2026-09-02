@@ -1,43 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { parseInDepthSteps, type InDepthStep } from "@claude-cert/shared";
 import { apiFetch } from "../lib/api";
 import { Button } from "./Button";
 import { MarkdownContent } from "./MarkdownContent";
-
-interface WizardStep {
-  title: string;
-  body: string;
-}
-
-// In-depth content is stored as plain markdown - each "## Heading" starts a
-// new wizard step (title = heading text, body = everything until the next
-// "## "); anything before the first "##" becomes an unnumbered intro step.
-// "###" and deeper stay inside a step as ordinary subheadings.
-function parseSteps(markdown: string): WizardStep[] {
-  const lines = markdown.split("\n");
-  const steps: WizardStep[] = [];
-  let currentTitle: string | null = null;
-  let currentBody: string[] = [];
-
-  function flush() {
-    const bodyText = currentBody.join("\n").trim();
-    if (currentTitle !== null || bodyText) {
-      steps.push({ title: currentTitle ?? "Introduction", body: bodyText });
-    }
-  }
-
-  for (const line of lines) {
-    const headingMatch = /^##\s+(.*)$/.exec(line);
-    if (headingMatch) {
-      flush();
-      currentTitle = headingMatch[1].trim();
-      currentBody = [];
-    } else {
-      currentBody.push(line);
-    }
-  }
-  flush();
-  return steps;
-}
 
 interface InDepthWizardProps {
   cert: string;
@@ -51,15 +16,23 @@ interface InDepthWizardProps {
 }
 
 export function InDepthWizard({ cert, topicId, topicTitle, onClose }: InDepthWizardProps) {
-  const [steps, setSteps] = useState<WizardStep[] | null>(null);
+  const [steps, setSteps] = useState<InDepthStep[] | null>(null);
   const [available, setAvailable] = useState(true);
   const [stepIndex, setStepIndex] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Steps can be long (a 45-line code block plus a diagram), and the scroll
+  // container is reused across steps - without this, Next lands you wherever
+  // the previous step was scrolled to rather than at the new step's heading.
+  useEffect(() => {
+    bodyRef.current?.scrollTo({ top: 0 });
+  }, [stepIndex]);
 
   useEffect(() => {
     apiFetch(`/courses/${cert}/topics/${topicId}?mode=in_depth`).then((data) => {
       setAvailable(data.available);
-      setSteps(data.available ? parseSteps(data.contentMd ?? "") : []);
+      setSteps(data.available ? parseInDepthSteps(data.contentMd ?? "") : []);
     });
   }, [cert, topicId]);
 
@@ -98,7 +71,7 @@ export function InDepthWizard({ cert, topicId, topicTitle, onClose }: InDepthWiz
     >
       <div
         className="card"
-        style={{ maxWidth: 720, width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", padding: 0 }}
+        style={{ maxWidth: 1080, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}
       >
         <div
           className="flex items-center justify-between"
@@ -137,7 +110,7 @@ export function InDepthWizard({ cert, topicId, topicTitle, onClose }: InDepthWiz
           </div>
         )}
 
-        <div style={{ padding: 28, overflowY: "auto", flex: 1 }}>
+        <div ref={bodyRef} className="wizard-body" style={{ padding: 28, overflowY: "auto", flex: 1 }}>
           {!steps ? (
             <p className="text-sm" style={{ color: "var(--color-ink-500)" }}>
               Loading...
