@@ -133,3 +133,34 @@ npm run content:check -- --cert CCAR-F --domain D1 --verbose
 `content:check` classifies every topic as `OK`, `NONCONFORMING` (distinct but off-contract),
 `IDENTICAL` (in_depth is a copy of normal — the original problem), or `MISSING`. Run it with no
 filters for the cross-domain burndown.
+
+## Checking the code and diagrams
+
+`lintInDepth` counts and measures code blocks but cannot parse them — it's TypeScript and the
+samples are Python. Run this before committing a domain; it has already caught a Python block
+broken by an editing slip that every other check passed:
+
+```bash
+python - <<'EOF'
+import pathlib, re, json
+bad = []
+for f in sorted(pathlib.Path("content/in-depth").rglob("*.md")):
+    if f.name.startswith("_"):
+        continue
+    for lang, body in re.findall(r"```(python|json)\n(.*?)```",
+                                 f.read_text(encoding="utf-8"), re.S):
+        try:
+            compile(body, f.name, "exec") if lang == "python" else json.loads(body)
+        except Exception as exc:
+            bad.append(f"{f.name} [{lang}]: {exc}")
+print("\n".join(bad) or "all python compiles, all json parses")
+EOF
+```
+
+Two things it does not cover, worth doing by hand per domain:
+
+- **Mermaid labels.** `securityLevel: "strict"` means a label containing `(`, `)` or a quote must
+  be wrapped as `["…"]`. An unwrapped one renders as "(diagram couldn't be rendered)" — silent.
+  Apostrophes in labels (`the role's tools`) are the usual offender.
+- **Step 4 actually running.** Compiling is not running. Where the sample needs no API key (2.6's
+  `edit_unique`, for instance), extract it and run it.
