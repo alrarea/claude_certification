@@ -143,6 +143,7 @@ broken by an editing slip that every other check passed:
 ```bash
 python - <<'EOF'
 import pathlib, re, json
+BS = chr(92)
 bad = []
 for f in sorted(pathlib.Path("content/in-depth").rglob("*.md")):
     if f.name.startswith("_"):
@@ -153,9 +154,18 @@ for f in sorted(pathlib.Path("content/in-depth").rglob("*.md")):
             compile(body, f.name, "exec") if lang == "python" else json.loads(body)
         except Exception as exc:
             bad.append(f"{f.name} [{lang}]: {exc}")
-print("\n".join(bad) or "all python compiles, all json parses")
+        # A doubled backslash-n in a Python string is a literal two-character
+        # sequence, not a newline - and it compiles cleanly, so nothing else
+        # catches it. Same for a backslash before a real newline.
+        if lang == "python" and ((BS + BS + "n") in body or (BS + "\n") in body):
+            bad.append(f"{f.name}: escape hazard in a string literal")
+print("\n".join(bad) or "all python compiles, all json parses, no escape hazards")
 EOF
 ```
+
+**Prefer code that needs no escapes at all.** Triple-quoted strings and f-strings with real line
+breaks avoid the whole category — `TESTS = """..."""` rather than a single-quoted string full of
+`\n`. 3.5's sample is written that way deliberately.
 
 Two things it does not cover, worth doing by hand per domain:
 
