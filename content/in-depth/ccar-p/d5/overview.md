@@ -39,6 +39,10 @@ reasonable-sounding measure is the wrong class.
 |---|---|---|
 | What stops an unsafe action? | **5.1** Guardrails | Layered controls; a deterministic hook, not a prompt instruction |
 | Which rules apply to us? | **5.2** Compliance | Triggers per data flow; build to the strictest, and erasure reaches every store |
+
+A **guardrail** is a check outside the model that stops output or actions it shouldn't produce;
+**deterministic** means the same input always produces the same result, which is exactly what a
+prompt instruction cannot promise.
 | When does a human decide? | **5.3** HITL | Per action, from reversibility, stakes and volume |
 | What do we owe the people affected? | **5.4** Ethical AI | Four artefacts: measure bias, choose fairness, disclose *and* explain, name an owner |
 | What can go wrong? | **5.5** Risk & failure modes | Six modes by origin, each with a different control |
