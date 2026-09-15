@@ -8,18 +8,23 @@ title: Agentic Architecture & Orchestration
 
 ## What Problem Are We Solving?
 
-This is the largest and hardest domain on the exam: 27% of questions, around 16 items. It's hard
-for a specific reason, and it isn't the volume of facts.
+Before any of the detail: an **agent** is a program that lets a model act before it answers — look
+a file up, run a command, check its own work — instead of replying from memory alone. This domain
+is about everything that surrounds the model while it does that: the code that decides when to
+stop, what a helper agent gets told, and whether an action is permitted at all. That surrounding
+code is usually called the **scaffolding**.
+
+The scaffolding is what this domain tests, and it is the largest and hardest on the exam: 27% of
+questions, around 16 items. It's hard for a specific reason, and it isn't the volume of facts.
 
 Every other domain tests things that fail loudly. A malformed tool schema errors. A bad prompt
 returns something visibly wrong. The failures in *this* domain are silent. Every component reports
 success and the deliverable is still incomplete — a report missing a section nobody asked for, a
 test "fixed" but never re-run, a refund that shouldn't have gone out.
 
-That's because agentic architecture is about the parts of the system that *aren't* the model: the
-loop that decides when to stop, the code that decides what a subagent is told, the gate that
-decides whether an action is permitted at all. When those are wrong, the model does exactly what
-it was asked and the outcome is still wrong.
+When the scaffolding is wrong, the model does exactly what it was asked and the outcome is still
+wrong. Nothing raises an error, because nothing technically failed — which is precisely what makes
+these failures hard to find and worth a quarter of the exam.
 
 So the exam doesn't mostly ask you to recall definitions. It hands you production evidence — logs,
 failure rates, a description of what shipped — and asks you to trace the failure to its true
@@ -35,12 +40,14 @@ the one before:
 
 - **1.1 The agentic loop.** The engine. Your code calls the model, reads `stop_reason`, runs
   requested tools, and calls again. Everything else in this domain is this loop plus something.
-- **1.2 Multi-agent systems.** One loop becomes several when the work is too broad for one context.
-  Introduces the coordinator, and the rule that dominates: a worker knows only what its prompt says.
+- **1.2 Multi-agent systems.** One loop becomes several when the work is too broad for a single
+  **context** — the working memory one request can hold. Introduces the coordinator, and the rule
+  that dominates: a worker knows only what its prompt says.
 - **1.3 Spawning subagents.** The mechanism for 1.2 — delegation is an ordinary tool call, so it
   must be permitted, and several calls in one reply is what makes it parallel.
-- **1.4 Programmatic enforcement.** Rules that must hold every time can't live in the prompt,
-  because a prompt is a request to a probabilistic system.
+- **1.4 Programmatic enforcement.** Rules that must hold every time can't live in the prompt. A
+  prompt is a request, not a guarantee: the model is **probabilistic**, so "always do X" is
+  followed nearly always — and nearly is not the same as always.
 - **1.5 Hooks.** The mechanism for 1.4 — event-driven code in front of the tool call, which can
   veto before the action or record after it.
 - **1.6 Task decomposition.** How the coordinator splits work, which silently defines everything

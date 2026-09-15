@@ -99,10 +99,19 @@ export interface InDepthStepSpec {
   maxDiagrams: number;
 }
 
-/** The nine steps, in order. A conforming topic has exactly these. */
+/**
+ * The nine steps, in order. A conforming topic has exactly these.
+ *
+ * Steps 1 and 2 carry larger budgets than the rest because they do the
+ * teaching. A reader can open In-depth without having read Normal first (the
+ * mode chips in LearnTopic are freely selectable), so these two steps have to
+ * introduce the concept and its vocabulary from nothing before the production
+ * scenario arrives. Budgets are warnings, not errors - going under them is
+ * fine when a topic genuinely needs less.
+ */
 export const IN_DEPTH_STEPS: readonly InDepthStepSpec[] = [
-  { match: "exact", heading: "What Problem Are We Solving?", maxWords: 280, maxCodeBlocks: 0, maxDiagrams: 0 },
-  { match: "exact", heading: "Meet the Moving Parts", maxWords: 280, maxCodeBlocks: 0, maxDiagrams: 0 },
+  { match: "exact", heading: "What Problem Are We Solving?", maxWords: 420, maxCodeBlocks: 0, maxDiagrams: 0 },
+  { match: "exact", heading: "Meet the Moving Parts", maxWords: 400, maxCodeBlocks: 0, maxDiagrams: 0 },
   { match: "exact", heading: "How It Works, Step by Step", maxWords: 400, maxCodeBlocks: 1, maxDiagrams: 1 },
   { match: "exact", heading: "Minimal Working Implementation", maxWords: 180, maxCodeBlocks: 2, maxDiagrams: 0 },
   { match: "exact", heading: "Production Implementation", maxWords: 300, maxCodeBlocks: 2, maxDiagrams: 0 },
@@ -118,7 +127,7 @@ const MINIMAL_IMPL_STEP_INDEX = 3;
 export const MAX_CODE_LINE_LENGTH = 88;
 export const MAX_CODE_BLOCK_LINES = 45;
 export const MIN_TOPIC_WORDS = 1500;
-export const MAX_TOPIC_WORDS = 2900;
+export const MAX_TOPIC_WORDS = 3400;
 export const MAX_DIAGRAMS_PER_TOPIC = 2;
 
 /** Fences we accept a language tag from. `text` is the escape hatch. */

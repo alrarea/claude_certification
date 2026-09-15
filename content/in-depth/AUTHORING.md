@@ -1,12 +1,31 @@
 # Authoring in-depth course content
 
-In-depth is the mode a candidate opens when they want to *actually build the thing*. Normal mode
-already carries the clear explanation. In-depth exists to add what Normal deliberately leaves out:
-**real implementation code and a named production system where the concept earns its keep.**
+In-depth is the mode a candidate opens when they want to *actually build the thing*. It adds what
+Normal leaves out: **real implementation code and a named production system where the concept
+earns its keep.**
 
-The test for a finished topic is blunt. Open the topic in Normal, then in In-depth. If In-depth is
-just a friendlier version of the same page — no runnable code, no production architecture — it
-isn't done.
+**Write it for a beginner.** This is the rule that outranks the rest of this document. Do not
+assume the reader has read Normal first — the mode chips in `LearnTopic.tsx` are freely
+selectable, so In-depth is a landing page as often as it is a second pass. A reader who has never
+met the concept must be able to start here and follow it.
+
+In practice that means three things, and they are checked in review:
+
+1. **Concept before scenario.** Step 1 opens by explaining what the thing *is*, in plain language,
+   in two to four sentences. The production scenario comes after that, not instead of it. An
+   opening that leads with "90,000 requests a day against a 7,200-token prefix" has already lost
+   the reader it was written for.
+2. **Define every specialist term at its first use**, inline, in the same sentence or the next
+   one. `p95`, `breakpoint`, `idempotent`, `prefix`, `TTL`, `drift`, `noise floor` — all of these
+   appeared across topics with no definition anywhere. `_GLOSSARY.md` holds the agreed one-line
+   wording; use it so the same term isn't explained three different ways.
+3. **Scaffold more than once.** `🗣️ In plain English` is not rationed to one per topic. Use it
+   wherever a paragraph just demanded something of the reader, especially in steps 3, 5 and 8.
+
+The test for a finished topic is blunt, and it has two halves. Open it in Normal, then In-depth:
+if In-depth adds no runnable code and no production architecture, it isn't done. Then read In-depth
+as someone who has never met the concept: if you hit a term you'd have to look up, it isn't done
+either.
 
 ## How the content is rendered
 
