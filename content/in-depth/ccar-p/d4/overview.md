@@ -62,8 +62,9 @@ that would have caught it.
 
 1. **Define the metric portfolio and guardrail thresholds** — accuracy plus latency, cost, safety,
    security, hallucination (4.1).
-2. **Build the dataset from real traffic**, stratified and weighted, with the tail and refusal
-   cases (4.2).
+2. **Build the dataset from real traffic**, stratified and weighted so each category keeps its
+   real share, with the tail and refusal cases, and sized against the **noise floor** — the
+   smallest difference the set can distinguish from luck (4.2).
 3. **Size it against the noise floor** before the first run, comparing to your smallest shippable
    change.
 4. **Establish a baseline** on every metric, not just the headline one.
