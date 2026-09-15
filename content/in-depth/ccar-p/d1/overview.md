@@ -45,7 +45,8 @@ answer the first before reaching for the fourth.
 
 Two things about how these relate.
 
-**The order is not arbitrary.** 1.1 constrains 1.2 — an SLA pillar rules out unbounded agentic
+**The order is not arbitrary.** 1.1 constrains 1.2 — an **SLA** pillar (a service level agreement,
+a promised bound such as "95% answered within two seconds") rules out unbounded agentic
 loops before you've considered them. 1.2 and 1.4 are separate cuts at the same problem: 1.2 asks
 who controls the *sequence*, 1.4 asks along what axis the *work* divides. 1.3 only applies once
 1.4 has produced more than one piece. Teams that start at 1.3 — "we're building a multi-agent
@@ -235,7 +236,8 @@ multi-trade coordination — averaging 21 minutes each. The primary pillar was e
 **Pattern and routing (1.2).** Routine jobs became a three-step workflow. Multi-trade
 coordination — where the next action genuinely depends on which engineer's availability comes
 back — became a bounded agentic path, capped at 10 turns. Policy questions from field engineers
-became a RAG path.
+became a **RAG** path — retrieval-augmented generation, where the relevant documents are fetched
+and put in the prompt so the model answers from them.
 
 **Decomposition (1.4).** The original scheduler had one step checking nine constraints — skills,
 certifications, parts, travel, SLA, working time, customer windows, access, subcontractor
