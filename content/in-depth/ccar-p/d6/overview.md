@@ -13,8 +13,9 @@ the right thing, whether anyone approved it understanding what they were approvi
 still works a year after you left.
 
 Those are the failures that don't look like failures. A system that's technically excellent and
-solves a problem nobody had. A design deferred twice by a board that couldn't evaluate it. An SLA
-signed before anyone checked it was buildable. A handover that was a slide deck. A quality drop
+solves a problem nobody had. A design deferred twice by a board that couldn't evaluate it. An **SLA** — a
+service level agreement, a binding promise about speed, accuracy or availability — signed before
+anyone checked it was buildable. A handover that was a slide deck. A quality drop
 nobody could diagnose because the only signal was a thumbs-down rate.
 
 None of those is fixed by better engineering, and none of them shows up in a code review. They
