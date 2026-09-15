@@ -3,6 +3,8 @@ import { parseInDepthSteps, type InDepthStep } from "@claude-cert/shared";
 import { apiFetch } from "../lib/api";
 import { Button } from "./Button";
 import { MarkdownContent } from "./MarkdownContent";
+import { useLocale } from "../lib/LocaleContext";
+import { DEFAULT_LOCALE, type Locale } from "@claude-cert/shared";
 
 interface InDepthWizardProps {
   cert: string;
@@ -18,6 +20,8 @@ interface InDepthWizardProps {
 export function InDepthWizard({ cert, topicId, topicTitle, onClose }: InDepthWizardProps) {
   const [steps, setSteps] = useState<InDepthStep[] | null>(null);
   const [available, setAvailable] = useState(true);
+  const [contentLocale, setContentLocale] = useState<Locale | null>(null);
+  const { locale } = useLocale();
   const [stepIndex, setStepIndex] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -30,11 +34,12 @@ export function InDepthWizard({ cert, topicId, topicTitle, onClose }: InDepthWiz
   }, [stepIndex]);
 
   useEffect(() => {
-    apiFetch(`/courses/${cert}/topics/${topicId}?mode=in_depth`).then((data) => {
+    apiFetch(`/courses/${cert}/topics/${topicId}?mode=in_depth&locale=${locale}`).then((data) => {
       setAvailable(data.available);
+      setContentLocale(data.contentLocale ?? null);
       setSteps(data.available ? parseInDepthSteps(data.contentMd ?? "") : []);
     });
-  }, [cert, topicId]);
+  }, [cert, topicId, locale]);
 
   async function handleNext() {
     if (steps && stepIndex < steps.length - 1) {
@@ -121,7 +126,9 @@ export function InDepthWizard({ cert, topicId, topicTitle, onClose }: InDepthWiz
             </p>
           ) : (
             <div className="prose">
-              <MarkdownContent>{steps[stepIndex].body}</MarkdownContent>
+              <MarkdownContent locale={contentLocale ?? DEFAULT_LOCALE}>
+                {steps[stepIndex].body}
+              </MarkdownContent>
             </div>
           )}
         </div>

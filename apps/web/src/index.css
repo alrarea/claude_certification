@@ -521,3 +521,44 @@ select.input {
   line-height: 1.45;
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
 }
+
+/* Malayalam. The face is only pulled in for elements actually marked as
+   Malayalam, so English pages are unaffected by it. */
+:lang(ml) {
+  font-family: "Noto Sans Malayalam", var(--font-sans);
+  /* Malayalam glyphs carry more vertical detail than Latin at the same size;
+     a little extra leading keeps conjuncts from colliding between lines. */
+  line-height: 1.75;
+}
+
+/* Language switch */
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--color-ink-300);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang-option {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--color-ink-500);
+  line-height: 1.6;
+}
+
+.lang-option:hover {
+  color: var(--color-ink);
+}
+
+.lang-option.active {
+  background: var(--color-ink);
+  color: var(--color-cream, #fff);
+}
+
+.lang-option:focus-visible {
+  outline: 2px solid var(--color-clay);
+  outline-offset: -2px;
+}

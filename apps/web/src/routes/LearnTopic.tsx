@@ -6,6 +6,8 @@ import { FullPageLoader } from "../components/FullPageLoader";
 import { Button } from "../components/Button";
 import { MarkdownContent } from "../components/MarkdownContent";
 import { InDepthWizard } from "../components/InDepthWizard";
+import { useLocale } from "../lib/LocaleContext";
+import { DEFAULT_LOCALE, type Locale } from "@claude-cert/shared";
 import { CONTENT_MODES, MODE_LABELS, type ContentMode } from "../lib/contentModes";
 
 function isContentMode(value: string | null): value is ContentMode {
@@ -27,19 +29,24 @@ export function LearnTopic() {
   const [title, setTitle] = useState("");
   const [contentMd, setContentMd] = useState<string | null>(null);
   const [available, setAvailable] = useState(true);
+  // Which language the body actually came back in, which is not always the
+  // one asked for while a translation is still in progress.
+  const [contentLocale, setContentLocale] = useState<Locale | null>(null);
+  const { locale } = useLocale();
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    apiFetch(`/courses/${cert}/topics/${topicId}?mode=${mode}`).then((data) => {
+    apiFetch(`/courses/${cert}/topics/${topicId}?mode=${mode}&locale=${locale}`).then((data) => {
       setTitle(data.topic.title);
       setContentMd(data.contentMd);
       setAvailable(data.available);
+      setContentLocale(data.contentLocale ?? null);
       setCompleted(data.progressStatus === "completed");
       setLoading(false);
     });
-  }, [cert, topicId, mode]);
+  }, [cert, topicId, mode, locale]);
 
   async function markComplete() {
     await apiFetch(`/courses/${cert}/topics/${topicId}/progress`, { method: "POST" });
@@ -85,7 +92,14 @@ export function LearnTopic() {
       <div className="card" style={{ padding: 32, marginBottom: 24 }}>
         {available ? (
           <div className="prose">
-            <MarkdownContent>{contentMd ?? ""}</MarkdownContent>
+            {contentLocale && contentLocale !== locale && (
+              <p className="italic" style={{ color: "var(--color-ink-500)", marginTop: 0 }}>
+                ഈ വിഷയം ഇതുവരെ മലയാളത്തിലേക്ക് പരിഭാഷപ്പെടുത്തിയിട്ടില്ല — ഇംഗ്ലീഷ് കാണിക്കുന്നു.
+              </p>
+            )}
+            <MarkdownContent locale={contentLocale ?? DEFAULT_LOCALE}>
+              {contentMd ?? ""}
+            </MarkdownContent>
           </div>
         ) : (
           <p className="italic" style={{ color: "var(--color-ink-500)" }}>

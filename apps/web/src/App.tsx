@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./lib/AuthContext";
+import { LocaleProvider } from "./lib/LocaleContext";
 import { Register } from "./routes/Register";
 import { RegisterVerify } from "./routes/RegisterVerify";
 import { Login } from "./routes/Login";
@@ -24,6 +25,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <LocaleProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -130,5 +132,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </LocaleProvider>
   );
 }

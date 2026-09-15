@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Spark } from "./Spark";
 import { useAuth } from "../lib/AuthContext";
+import { LanguageSwitch } from "./LanguageSwitch";
 
 function NavLink({ to, children }: { to: string; children: ReactNode }) {
   const location = useLocation();
@@ -35,9 +36,12 @@ export function AppShell({ children, maxWidth = 720 }: { children: ReactNode; ma
             <NavLink to="/questions/manage">Questions</NavLink>
             <NavLink to="/profile">Profile</NavLink>
           </nav>
-          <button className="nav-link" style={{ border: "none", background: "transparent", cursor: "pointer" }} onClick={logout}>
-            Log out
-          </button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitch />
+            <button className="nav-link" style={{ border: "none", background: "transparent", cursor: "pointer" }} onClick={logout}>
+              Log out
+            </button>
+          </div>
         </div>
       </header>
       <main style={{ maxWidth, margin: "0 auto", padding: "48px 24px" }}>{children}</main>

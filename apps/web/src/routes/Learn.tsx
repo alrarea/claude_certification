@@ -6,6 +6,7 @@ import { FullPageLoader } from "../components/FullPageLoader";
 import { MarkdownContent } from "../components/MarkdownContent";
 import { InDepthWizard } from "../components/InDepthWizard";
 import { CONTENT_MODES, MODE_LABELS, type ContentMode } from "../lib/contentModes";
+import { useLocale } from "../lib/LocaleContext";
 
 interface TopicNode {
   id: string;
@@ -144,6 +145,7 @@ export function Learn() {
   const [topics, setTopics] = useState<TopicNode[]>([]);
   const [percentComplete, setPercentComplete] = useState(0);
   const [certName, setCertName] = useState("");
+  const { locale } = useLocale();
   const [loading, setLoading] = useState(true);
 
   const [mode, setMode] = useState<ContentMode>("normal");
@@ -153,7 +155,7 @@ export function Learn() {
   const [wizardTopic, setWizardTopic] = useState<{ id: string; title: string } | null>(null);
 
   function loadTopics() {
-    return apiFetch(`/courses/${cert}/topics`).then((data) => {
+    return apiFetch(`/courses/${cert}/topics?locale=${locale}`).then((data) => {
       setTopics(data.topics);
       setPercentComplete(data.percentComplete);
       setCertName(data.certification.name);
@@ -179,7 +181,7 @@ export function Learn() {
     // collapsing and re-expanding reuses whatever's already in contentCache.
     if (!wasExpanded && !(topicId in contentCache) && !loadingIds.has(topicId)) {
       setLoadingIds((prev) => new Set(prev).add(topicId));
-      apiFetch(`/courses/${cert}/topics/${topicId}?mode=concise`)
+      apiFetch(`/courses/${cert}/topics/${topicId}?mode=concise&locale=${locale}`)
         .then((data) => {
           setContentCache((prev) => ({ ...prev, [topicId]: data.available ? data.contentMd : null }));
         })
