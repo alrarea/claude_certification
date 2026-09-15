@@ -41,6 +41,10 @@ produce consequences.
 | What documents reach the prompt | **3.2** RAG | Six stages; hybrid retrieval, structural chunking, metadata filtering |
 | What capabilities reach the agent | **3.3** Least privilege | Remove the tool — mitigations are not the fix |
 | Who may perform an action | **3.4** AuthN / AuthZ | Authenticate the caller, authorise **every action**, per object |
+
+**RAG** is retrieval-augmented generation: fetch the relevant passages from your own source and
+put them in the prompt. **Least privilege** is giving each component exactly the access its job
+needs and nothing more.
 | What the system optimises for | **3.5** Accuracy-latency | Pick a corner per path, with a number, and name the sacrifice |
 | What you can see | **3.6** Observability | Per-stage spans, retrieval quality, prompt versions |
 | When information enters context | **3.7** Progressive vs monolithic | Size and predictability decide it |
