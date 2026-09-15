@@ -1,5 +1,4 @@
-| ≤280 w, no code |
-| 2 || ≤280 w, no code |# Authoring in-depth course content
+# Authoring in-depth course content
 
 In-depth is the mode a candidate opens when they want to *actually build the thing*. Normal mode
 already carries the clear explanation. In-depth exists to add what Normal deliberately leaves out:
