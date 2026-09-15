@@ -1,8 +1,10 @@
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { calloutVariant } from "@claude-cert/shared";
+import { calloutVariant, DEFAULT_LOCALE, type Locale } from "@claude-cert/shared";
 import { Mermaid } from "./Mermaid";
+import { GlossaryTerm } from "./GlossaryTerm";
+import { rehypeGlossary } from "../lib/rehypeGlossary";
 
 function flattenText(node: ReactNode): string {
   if (typeof node === "string") return node;
@@ -60,9 +62,39 @@ function Pre({ children }: { children?: ReactNode }) {
   return <pre>{children}</pre>;
 }
 
-export function MarkdownContent({ children }: { children: string }) {
+// The glossary plugin marks terms with data attributes rather than a custom
+// tag, so the override stays on a real element type and untagged spans pass
+// straight through.
+function Span({ children, ...rest }: ComponentPropsWithoutRef<"span">) {
+  const attrs = rest as Record<string, unknown>;
+  const term = attrs["data-term"];
+  const meaning = attrs["data-meaning"];
+  if (typeof term === "string" && typeof meaning === "string") {
+    return (
+      <GlossaryTerm term={term} meaning={meaning}>
+        {children}
+      </GlossaryTerm>
+    );
+  }
+  return <span {...rest}>{children}</span>;
+}
+
+export function MarkdownContent({
+  children,
+  locale = DEFAULT_LOCALE,
+}: {
+  children: string;
+  locale?: Locale;
+}) {
+  // Only translated prose gets glossary tooltips. In English the terms are
+  // just the words of the sentence.
+  const rehypePlugins = locale === DEFAULT_LOCALE ? [] : [rehypeGlossary];
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ blockquote: Blockquote, code: CodeBlock, pre: Pre }}>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={rehypePlugins}
+      components={{ blockquote: Blockquote, code: CodeBlock, pre: Pre, span: Span }}
+    >
       {children}
     </ReactMarkdown>
   );

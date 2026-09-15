@@ -482,3 +482,42 @@ select.input {
   max-height: 60vh;
   overflow-y: auto;
 }
+
+/* Glossary terms — English technical vocabulary kept inside translated prose,
+   with the meaning a hover or a tap away. The dotted underline is the only
+   affordance, so it has to read as "there is more here" without competing
+   with links, which are solid. */
+.glossary-term {
+  position: relative;
+  border-bottom: 1px dotted var(--color-clay);
+  cursor: help;
+  /* The term is Latin script inside Malayalam text; keep it from being broken
+     across lines, which would split a term away from its own underline. */
+  white-space: nowrap;
+}
+
+.glossary-term:focus-visible {
+  outline: 2px solid var(--color-clay);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.glossary-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: block;
+  /* Malayalam definitions run long; allow wrapping even though the term
+     itself does not wrap. */
+  white-space: normal;
+  width: max-content;
+  max-width: min(22rem, 80vw);
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  background: var(--color-ink-700);
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
+}

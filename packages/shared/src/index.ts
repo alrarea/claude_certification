@@ -7,3 +7,4 @@ export * from "./schemas/onboarding";
 export * from "./schemas/liveExam";
 export * from "./inDepth";
 export * from "./locales";
+export * from "./glossary";

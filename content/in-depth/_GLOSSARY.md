@@ -4,8 +4,14 @@ Every term here appeared in in-depth topics **with no definition anywhere in the
 the bug this file exists to prevent: the reader may have opened In-depth first, so a term used as
 though known is a wall.
 
+**The authoritative list now lives in `packages/shared/src/glossary.ts`**, which carries the same
+wording plus a Malayalam translation. It is no longer only an authoring aid: in translated content
+these terms stay in English and the site renders each one with its Malayalam meaning on hover or
+tap, so the list is a user-facing feature and the two copies must not drift. Add terms there; this
+file is the editorial guidance around it.
+
 **How to use it.** Define the term inline at its first use in the topic — same sentence or the
-next one — using the wording below, adapted to fit the sentence. Do not link here; the learner
+next one — using the agreed wording, adapted to fit the sentence. Do not link here; the learner
 never sees this file. Its job is to stop the same term being explained three different ways
 across three topics.
 
