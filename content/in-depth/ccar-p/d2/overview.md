@@ -14,8 +14,9 @@ different discipline, and mostly a different set of decisions.
 
 The shift is that everything here is a **trade-off with a number attached**. A bigger model is
 more capable and slower and dearer. Chain-of-thought is more accurate and spends output tokens at
-five times the input rate. Few-shot examples improve reliability and lengthen the prefix — which
-is fine, because the prefix caches, unlike the reasoning. Keeping a reference document resident
+five times the input rate. Few-shot examples improve reliability and lengthen the **prefix** —
+the identical opening every request shares — which is fine, because the prefix caches, unlike the
+reasoning. Keeping a reference document resident
 improves grounding and consumes window. None of these has a right answer in the abstract; each
 has a right answer for a stated volume, latency target and accuracy bar.
 
