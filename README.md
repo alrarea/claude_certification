@@ -323,12 +323,13 @@ AI generation, and the admin review queue (`/questions/manage`,
 
 - No server-side refresh-token revocation list — logout is client-side-only token
   discard. A leaked refresh token remains valid until natural expiry (14 days).
-- In-depth course content is authored per domain and is not finished yet.
-  `mode='normal'` is populated for every topic (migrated from the HTML guides)
-  and `mode='concise'` for all of them, but `mode='in_depth'` currently holds a
-  byte-for-byte copy of the normal text for every topic outside CCAR-F Domain 1
-  — so those topics show nothing extra. `npm run content:check` is the
-  burndown; see `content/in-depth/AUTHORING.md` to add a domain.
+- In-depth course content is complete for all 79 subject topics across both
+  certifications. The remaining 10 topics are exam logistics — registration and
+  policy, sample-question walkthroughs, revision checklists — and deliberately
+  serve the normal text in `mode='in_depth'` too, so In-depth shows nothing
+  extra on those pages by design. `npm run content:check` reports them as
+  `META` and exits 0; see `content/in-depth/AUTHORING.md` for why they are out
+  of scope and what a future pass on them would require.
 - Admin question review is approve/reject only - no inline edit before
   approving (spec mentions "approve/reject/edit inline" as a nice-to-have on
   the review screen; edit isn't built).
@@ -362,7 +363,7 @@ npm run db:migrate-guides    # topics + mode='normal' from guides/*.html
 npm run content:ingest -- content/in-depth   # mode='in_depth' from content/
 ```
 
-To see what in-depth content still needs writing:
+To verify in-depth content (79 OK, 10 META, exit 0 when healthy):
 
 ```
 npm run content:check                              # burndown across all domains

@@ -112,6 +112,30 @@ title: Hooks — Intercepting Tool Calls
 - `mode` is authoritative, so this same pipeline serves `concise` when that pass happens.
 - Files whose basename starts with `_` are skipped, which is why `_TEMPLATE.md` is safe to keep here.
 
+## Meta topics are out of scope
+
+The 89 topics in scope are not all subject matter. Ten carry no exam domain — registration and
+exam-day policy, sample-question walkthroughs, "what is and is not on the exam", the revision
+checklists, and CCAR-P's Professional-vs-Foundations comparison. **Do not write in-depth content
+for these, and do not try to fit them to the nine steps.** They have no problem to solve, no
+implementation to show and no failure mode to diagnose; forcing the contract onto them produces
+padding around a fee table.
+
+Their `in_depth` row deliberately serves the same text as `normal`. That is the finished state,
+not an unfinished one. `check-content-drift.ts` reports them as `META` and exempts them from the
+exit code, so a clean run means **79 subject topics conform and 10 meta topics are exempt**:
+
+```text
+ 79 OK             conforms to the in-depth contract
+ 10 META           exam logistics, not subject matter - exempt from the contract
+ 89 topics in scope
+```
+
+The exemption keys off a missing `examDomain` and nothing else, so it cannot mask a real
+regression: any topic that *has* a domain still reports `IDENTICAL` and fails the run if its
+in-depth text is a copy. If these pages ever do need more depth, they need a second, shorter
+contract in `inDepth.ts` — four steps or so — not an exception carved into this one.
+
 ## Workflow
 
 ```bash
@@ -129,9 +153,10 @@ npm run content:ingest -- content/in-depth/ccar-f/d1/1.5-hooks.md
 npm run content:check -- --cert CCAR-F --domain D1 --verbose
 ```
 
-`content:check` classifies every topic as `OK`, `NONCONFORMING` (distinct but off-contract),
-`IDENTICAL` (in_depth is a copy of normal — the original problem), or `MISSING`. Run it with no
-filters for the cross-domain burndown.
+`content:check` classifies every topic as `OK`, `META` (exam logistics, exempt — see above),
+`NONCONFORMING` (distinct but off-contract), `IDENTICAL` (in_depth is a copy of normal — the
+original problem), or `MISSING`. Only `OK` and `META` exit 0. Run it with no filters for the
+cross-domain burndown.
 
 ## Checking the code and diagrams
 

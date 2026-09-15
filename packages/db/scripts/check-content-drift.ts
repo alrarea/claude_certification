@@ -4,9 +4,16 @@
  *
  * When the in-depth wizard was introduced, `normal` absorbed the old in-depth
  * text and only three topics were re-authored as wizard walkthroughs - the
- * other 86 in_depth rows are byte-for-byte copies of their normal row, so the
- * mode looks populated while delivering nothing extra. A copy is invisible in
- * any "is content present?" check, which is why this compares digests instead.
+ * rest were byte-for-byte copies of their normal row, so the mode looked
+ * populated while delivering nothing extra. A copy is invisible in any "is
+ * content present?" check, which is why this compares digests instead.
+ *
+ * Topics with no exam domain - registration, policies, sample questions,
+ * revision checklists - are exempt. They are exam logistics, not subject
+ * matter: there is no problem to solve, no implementation and no failure mode,
+ * so the nine-step contract has nothing to attach to. They report as META and
+ * do not fail the run. Serving the normal text in both modes is the intended
+ * behaviour for them, not an unfinished task.
  *
  * Not part of any Lambda runtime path. Usage:
  *   npm run content:check                                  # every domain
@@ -20,7 +27,7 @@ import { createHash } from "node:crypto";
 import { lintInDepth } from "@claude-cert/shared";
 import { prisma } from "../src/client";
 
-type Status = "OK" | "IDENTICAL" | "MISSING" | "NONCONFORMING";
+type Status = "OK" | "META" | "IDENTICAL" | "MISSING" | "NONCONFORMING";
 
 interface Row {
   cert: string;
@@ -35,6 +42,7 @@ interface Row {
 
 const EXPLANATION: Record<Status, string> = {
   OK: "conforms to the in-depth contract",
+  META: "exam logistics, not subject matter - exempt from the contract",
   IDENTICAL: "in_depth is a byte-for-byte copy of normal - no extra depth",
   MISSING: "no in_depth row at all",
   NONCONFORMING: "distinct content, but fails the in-depth contract",
@@ -92,7 +100,14 @@ async function main() {
       let steps = 0;
 
       if (!inDepth) {
+        // Still a real fault for a meta topic: the mode would render empty.
         status = "MISSING";
+      } else if (domain === "-") {
+        status = "META";
+        detail =
+          normal && digest(inDepth) === digest(normal)
+            ? "serves the normal text in both modes, by design"
+            : "distinct from normal, but not held to the contract";
       } else if (normal && digest(inDepth) === digest(normal)) {
         status = "IDENTICAL";
       } else {
@@ -143,10 +158,14 @@ async function main() {
       if (group !== currentGroup) {
         const inGroup = rows.filter((r) => `${r.cert} ${r.domain}` === group);
         const ok = inGroup.filter((r) => r.status === "OK").length;
-        console.log(`\n${group}  —  ${ok}/${inGroup.length} OK`);
+        const tally = inGroup.every((r) => r.status === "META")
+          ? `${inGroup.length} meta, exempt`
+          : `${ok}/${inGroup.length} OK`;
+        console.log(`\n${group}  —  ${tally}`);
         currentGroup = group;
       }
-      const mark = row.status === "OK" ? "✓" : "✗";
+      const mark =
+        row.status === "OK" ? "✓" : row.status === "META" ? "·" : "✗";
       console.log(
         `  ${mark} ${row.subtopic.padEnd(8)} ${row.status.padEnd(14)} ` +
           `${row.steps ? `${row.steps} steps, ` : ""}${row.chars} chars  ${row.title}`
@@ -155,14 +174,15 @@ async function main() {
     }
 
     console.log("\nSummary");
-    for (const status of ["OK", "NONCONFORMING", "IDENTICAL", "MISSING"] as Status[]) {
+    const order: Status[] = ["OK", "META", "NONCONFORMING", "IDENTICAL", "MISSING"];
+    for (const status of order) {
       const n = rows.filter((r) => r.status === status).length;
       if (n > 0) console.log(`  ${String(n).padStart(3)} ${status.padEnd(14)} ${EXPLANATION[status]}`);
     }
     console.log(`  ${String(rows.length).padStart(3)} topics in scope`);
   }
 
-  if (rows.some((r) => r.status !== "OK")) process.exitCode = 1;
+  if (rows.some((r) => r.status !== "OK" && r.status !== "META")) process.exitCode = 1;
 }
 
 main()
