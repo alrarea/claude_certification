@@ -1,0 +1,221 @@
+Questions
+Q1. Transport Selection
+
+A financial organization is building an MCP server that must:
+
+Push fraud alerts to Claude immediately
+Maintain a persistent connection
+Support bidirectional communication
+
+Which transport is MOST appropriate?
+
+A. STDIO
+B. HTTP
+C. WebSocket
+D. SSE
+
+Q2. Scope Precedence
+
+An MCP server named github exists in:
+
+User Scope
+Project Scope
+Local Scope
+
+Claude starts inside the project.
+
+Which configuration is used?
+
+A. User Scope
+B. Project Scope
+C. Local Scope
+D. All three merged
+
+Q3. Tool Search
+
+A company has:
+
+2,000 MCP tools
+50 connected servers
+
+Claude is consuming excessive context at startup.
+
+Which feature directly addresses this issue?
+
+A. Channels
+B. OAuth
+C. Tool Search
+D. Dynamic Headers
+
+Q4. Tools vs Resources
+
+An MCP server exposes:
+
+schema://users
+schema://orders
+
+Claude reads them to understand the database structure.
+
+These are best classified as:
+
+A. Tools
+B. Resources
+C. Channels
+D. Prompts
+
+Q5. Authentication Failure
+
+An HTTP MCP server returns:
+
+401 Unauthorized
+
+during connection.
+
+What should Claude Code do?
+
+A. Disable the server permanently
+
+B. Mark it as needing authentication and initiate OAuth flow
+
+C. Switch to STDIO transport
+
+D. Retry forever
+
+Q6. Dynamic Tool Discovery
+
+A server adds five new tools while Claude Code is already connected.
+
+The server sends:
+
+list_changed
+
+What happens?
+
+A. Claude must restart
+
+B. Server must reconnect
+
+C. Claude refreshes available capabilities automatically
+
+D. Nothing
+
+Q7. Enterprise Team Sharing
+
+A team wants:
+
+Shared MCP configuration
+Version control support
+Same tools for every developer
+
+Best solution?
+
+A. User Scope
+
+B. Local Scope
+
+C. Project Scope
+
+D. OAuth Scope
+
+Q8. Event Driven Architecture
+
+An organization wants Claude to:
+
+React instantly when Jenkins builds fail
+Receive notifications while idle
+Avoid polling
+
+Which MCP capability is required?
+
+A. Resources
+
+B. Channels
+
+C. Tool Search
+
+D. OAuth
+
+Q9. Tool Search Exception
+
+A company has a critical MCP server containing:
+
+3 tools
+Used in nearly every conversation
+
+They want those tools always available without search.
+
+Which configuration should be used?
+
+A. Tool Search = false globally
+
+B. alwaysLoad = true
+
+C. Disable OAuth
+
+D. Use SSE
+
+Q10. Architecture Scenario
+
+A user types:
+
+Review PR #321 and summarize all linked Jira issues.
+
+Claude:
+
+Discovers GitHub tools
+Discovers Jira tools
+Invokes both servers
+Combines results
+
+Which MCP concept enabled discovery of tools without loading all schemas at startup?
+
+A. OAuth
+
+B. Channels
+
+C. Tool Search
+
+D. Resources
+
+
+=======================
+
+
+Question 1
+ 
+A refund agent occasionally processes refunds before customer verification because the system prompt says:
+Always verify customers before refunds.
+ 
+ 
+What is the BEST fix?
+ 
+A. Add more few-shot examples
+B. Strengthen the prompt wording
+C. Add a PreToolUse hook blocking refunds until verification
+D. Add sentiment analysis
+ 
+Question 2
+ 
+A synthesis agent produces incomplete reports because it only receives:
+Analyze the findings.
+ 
+What is the root issue?
+ 
+A. Tool descriptions too short
+B. Subagents inherit incomplete memory
+C. Missing explicit context passing
+D. Hooks interfering with context
+ 
+ Question 3
+ 
+A search subagent times out.
+Which is BEST?
+ 
+A. Return `"search unavailable"`
+B. Return empty results as success
+C. Terminate the workflow
+D. Return structured error metadata with retryability and partial results
+ 
+
+
+
