@@ -26,8 +26,8 @@ reading the answer: guaranteeing its shape, checking its meaning, and choosing a
 that fits the workload rather than fighting it.
 
 The thread running through all six is a single distinction the exam returns to repeatedly: the
-difference between what you can *enforce* and what you can only *check*. A schema enforces
-structure. Nothing enforces truth. Everything in the back half of this domain is built on that
+difference between what you can *enforce* and what you can only *check*. A **schema** — the declared shape of the
+output, which fields exist and which are required — enforces structure. Nothing enforces truth. Everything in the back half of this domain is built on that
 gap.
 
 > **🗣️ In plain English:** Six tools for "the output is wrong". Picking the right one starts with naming precisely what's wrong — the instruction, the shape, the values, or the shape of the whole job.
@@ -67,7 +67,8 @@ shape of the job", not "change the words".
 3. **Inconsistent format → 4.2.** Two to four examples, identical formatting, one negative case.
 4. **A machine reads the output → 4.3.** Forced `tool_use` with a JSON schema; nullable *and*
    required for anything the source may omit; enums with an `"other"` escape hatch.
-5. **Check meaning separately → 4.4.** Deterministic validation, then feedback carrying the input,
+5. **Check meaning separately → 4.4.** Deterministic validation — ordinary code, same answer
+   every time — then feedback carrying the input,
    the failed attempt, and the specific error. Cap at 2–3 and escalate.
 6. **Ask who's waiting → 4.5.** Nobody waiting means batch, at roughly half the cost, keyed by
    `custom_id`.
