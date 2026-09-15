@@ -208,7 +208,7 @@ async function main() {
 
       let blocked = false;
       if (parsed.frontMatter.mode === "in_depth") {
-        const lint = lintInDepth(parsed.contentMd);
+        const lint = lintInDepth(parsed.contentMd, parsed.frontMatter.locale);
         for (const err of lint.errors) console.log(`  ✗ ${err}`);
         for (const warn of lint.warnings) console.log(`  ⚠ ${warn}`);
         if (verbose) {

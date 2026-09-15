@@ -64,7 +64,25 @@ export function parseInDepthSteps(markdown: string): InDepthStep[] {
  * `exam` one. Authors don't need to care - they just need a label that lands
  * on something other than "default", which is what `lintInDepth` warns about.
  */
+const EMOJI_VARIANTS: readonly (readonly [string, string])[] = [
+  ["🗣", "plain"],
+  ["💡", "tip"],
+  ["⚠", "warn"],
+  ["🔑", "key"],
+  ["📝", "exam"],
+  ["🌍", "real"],
+  ["🚫", "oos"],
+] as const;
+
 export function calloutVariant(label: string): string {
+  // The emoji is the locale-independent half of the label, so it is matched
+  // first: a translated label still styles correctly without every language
+  // needing an exact-wording table. Matched without the variation selector
+  // (U+FE0F) so both "⚠️" and a bare "⚠" land on the same variant.
+  for (const [emoji, variant] of EMOJI_VARIANTS) {
+    if (label.includes(emoji)) return variant;
+  }
+  // English fallback, for rows authored before the emoji convention.
   const t = label.toLowerCase();
   if (t.includes("tip")) return "tip";
   if (t.includes("watch out") || t.includes("warning") || t.includes("caution")) return "warn";
@@ -120,6 +138,40 @@ export const IN_DEPTH_STEPS: readonly InDepthStepSpec[] = [
   { match: "exact", heading: "Failure Modes Seen in the Wild", maxWords: 350, maxCodeBlocks: 1, maxDiagrams: 0 },
   { match: "exact", heading: "Exam Lens & Key Takeaway", maxWords: 240, maxCodeBlocks: 0, maxDiagrams: 0 },
 ] as const;
+
+/**
+ * The same nine steps in Malayalam. Headings are translated once, here, and
+ * never by the per-topic translation pass: `lintInDepth` compares them for
+ * exact equality, so they have to be byte-identical across every topic in the
+ * locale. Budgets are shared with the English table - a translated topic says
+ * the same thing, so it gets the same allowance.
+ */
+export const IN_DEPTH_STEPS_ML: readonly InDepthStepSpec[] = IN_DEPTH_STEPS.map(
+  (spec, i) => ({
+    ...spec,
+    heading: [
+      "നാം പരിഹരിക്കുന്ന പ്രശ്നം എന്താണ്?",
+      "ഘടകങ്ങൾ പരിചയപ്പെടാം",
+      "ഘട്ടം ഘട്ടമായി ഇത് എങ്ങനെ പ്രവർത്തിക്കുന്നു",
+      "പ്രവർത്തിക്കുന്ന ഏറ്റവും ലളിതമായ നിർവഹണം",
+      "പ്രൊഡക്ഷൻ നിർവഹണം",
+      "പ്രൊഡക്ഷനിൽ:",
+      "ഇത് എവിടെ ബാധകമാണ് — എവിടെ അല്ല",
+      "യഥാർഥ സാഹചര്യങ്ങളിൽ കണ്ട പരാജയങ്ങൾ",
+      "പരീക്ഷാ വീക്ഷണവും പ്രധാന നിഗമനവും",
+    ][i],
+  })
+);
+
+const IN_DEPTH_STEPS_BY_LOCALE: Record<string, readonly InDepthStepSpec[]> = {
+  en: IN_DEPTH_STEPS,
+  ml: IN_DEPTH_STEPS_ML,
+};
+
+/** The nine step headings for a locale, falling back to English. */
+export function inDepthSteps(locale: string = "en"): readonly InDepthStepSpec[] {
+  return IN_DEPTH_STEPS_BY_LOCALE[locale] ?? IN_DEPTH_STEPS;
+}
 
 /** The step whose code block has to run exactly as pasted. */
 const MINIMAL_IMPL_STEP_INDEX = 3;
@@ -198,7 +250,10 @@ function countWords(proseLines: string[]): number {
     .join(" ")
     .replace(/[>|#*`_[\]()-]/g, " ")
     .split(/\s+/)
-    .filter((w) => /[a-zA-Z0-9]/.test(w)).length;
+    // Any Unicode letter or number, not just ASCII. The old [a-zA-Z0-9] test
+    // scored every Malayalam word as zero, which would have reported a fully
+    // translated topic as empty. Identical behaviour for English.
+    .filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
 /** The leading bold run of each blockquote line, i.e. the callout labels. */
@@ -231,10 +286,16 @@ export interface InDepthLintResult {
  * ingest - they mean the wizard would render something broken, or the content
  * isn't actually in-depth. Warnings are budget and style nudges.
  */
-export function lintInDepth(markdown: string): InDepthLintResult {
+export function lintInDepth(
+  markdown: string,
+  locale: string = "en"
+): InDepthLintResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const stats: InDepthStepStats[] = [];
+  // Default keeps every existing caller working untouched; translated content
+  // opts in explicitly.
+  const steps_spec = inDepthSteps(locale);
 
   if (markdown.includes("\r")) {
     errors.push("CRLF line endings - every step title would keep a trailing carriage return");
@@ -250,15 +311,15 @@ export function lintInDepth(markdown: string): InDepthLintResult {
   if (steps.length > 0 && steps[0].title === "Introduction") {
     errors.push("prose before the first `## ` heading - it renders as a phantom 'Introduction' step");
   }
-  if (steps.length !== IN_DEPTH_STEPS.length) {
-    errors.push(`has ${steps.length} steps, contract requires exactly ${IN_DEPTH_STEPS.length}`);
+  if (steps.length !== steps_spec.length) {
+    errors.push(`has ${steps.length} steps, contract requires exactly ${steps_spec.length}`);
   }
 
   let totalWords = 0;
   let totalDiagrams = 0;
 
   steps.forEach((step, i) => {
-    const spec = IN_DEPTH_STEPS[i];
+    const spec = steps_spec[i];
     const { blocks, prose } = splitFencedBlocks(step.body);
     const diagrams = blocks.filter((b) => b.language === "mermaid").length;
     const codeBlocks = blocks.length - diagrams;
@@ -325,7 +386,7 @@ export function lintInDepth(markdown: string): InDepthLintResult {
   if (totalDiagrams > MAX_DIAGRAMS_PER_TOPIC) {
     warnings.push(`${totalDiagrams} diagrams in the topic, guideline is ${MAX_DIAGRAMS_PER_TOPIC}`);
   }
-  if (steps.length === IN_DEPTH_STEPS.length && totalWords < MIN_TOPIC_WORDS) {
+  if (steps.length === steps_spec.length && totalWords < MIN_TOPIC_WORDS) {
     warnings.push(`${totalWords} words total, contract targets at least ${MIN_TOPIC_WORDS}`);
   }
   if (totalWords > MAX_TOPIC_WORDS) {

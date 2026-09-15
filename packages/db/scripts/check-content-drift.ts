@@ -128,7 +128,7 @@ async function main() {
       } else if (normal && digest(inDepth) === digest(normal)) {
         status = "IDENTICAL";
       } else {
-        const lint = lintInDepth(inDepth);
+        const lint = lintInDepth(inDepth, locale);
         steps = lint.steps.length;
         if (lint.errors.length > 0) {
           status = "NONCONFORMING";
