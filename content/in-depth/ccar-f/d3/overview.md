@@ -9,7 +9,8 @@ title: Claude Code Configuration & Workflows
 ## What Problem Are We Solving?
 
 An engineer has Claude Code working beautifully. Her conventions are configured, her shortcuts are
-saved, her guardrails hold. She's fast.
+saved, her **guardrails** — the checks that sit outside the model and stop it doing what it
+shouldn't — hold. She's fast.
 
 None of it exists for anyone else on her team.
 
@@ -25,8 +26,9 @@ surfaces when someone else's session behaves differently, and the person who dis
 usually a new hire who has no idea what they're missing.
 
 The second half of the domain is operational: choosing plan mode when a change is big enough to
-warrant a review, refining iteratively instead of rephrasing hopefully, and running headless when
-there's no human in the loop at all.
+warrant a review, refining iteratively instead of rephrasing hopefully, and running **headless** —
+non-interactively, with nobody there to answer a prompt — when there's no human in the loop at
+all.
 
 > **🗣️ In plain English:** Everything here answers "mine or the team's?" and "how much ceremony does this change deserve?" Both are easy to get wrong in a way that only hurts other people.
 
