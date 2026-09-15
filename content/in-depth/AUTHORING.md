@@ -179,6 +179,21 @@ cross-domain burndown.
 
 ## Checking the code and diagrams
 
+**Diagrams: `npm run content:mermaid`.** This parses every ```mermaid block with the real Mermaid
+parser at the version and `securityLevel` the app renders with. `lintInDepth` counts diagrams but
+cannot parse them, so a broken one passes every other check and then fails in the browser with
+"Syntax error in text" — visible only to whoever opens that topic. Two live examples it caught:
+
+- `participant Loop as Agent loop` — **`loop` is a reserved keyword** (`loop … end`), so every
+  `X->>Loop:` after it failed to parse. Reserved words to avoid as participant ids: `loop`, `alt`,
+  `opt`, `par`, `end`, `note`, `rect`, `critical`, `break`.
+- `Q-->>C: answer; cannot mutate anything` — **`;` is a statement separator**, so the message was
+  cut short and the next line was read as a malformed statement.
+
+Regex checks are not a substitute. The ad-hoc ones used while authoring caught unquoted
+parentheses and apostrophes and still missed both of the above.
+
+
 `lintInDepth` counts and measures code blocks but cannot parse them — it's TypeScript and the
 samples are Python. Run this before committing a domain; it has already caught a Python block
 broken by an editing slip that every other check passed:

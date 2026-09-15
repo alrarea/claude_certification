@@ -18,6 +18,7 @@
     "db:migrate-guides": "npm run migrate:guides --workspace=@claude-cert/db",
     "content:ingest": "tsx packages/db/scripts/ingest-topic-content.ts",
     "content:check": "tsx packages/db/scripts/check-content-drift.ts",
+    "content:mermaid": "node scripts/check-mermaid.mjs",
     "content:export": "tsx packages/db/scripts/export-topic-content.ts"
   },
   "dependencies": {
@@ -44,6 +45,7 @@
     "@types/node": "^26.1.1",
     "aws-cdk-lib": "^2.262.1",
     "constructs": "^10.7.1",
+    "jsdom": "^29.1.1",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   },
