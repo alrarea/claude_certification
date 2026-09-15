@@ -16,7 +16,8 @@ It's 18% of the exam, about 11 questions, and it has a distinctive character. Al
 in this domain traces back to a **string you wrote**. Not code, not architecture — a description, a
 parameter's documentation, an error message. Claude cannot see your source, your naming
 conventions, or your team's shared understanding. At the moment of choosing a tool it has the name,
-the description, and the schema, and nothing else.
+the description, and the **schema** — the declared shape of the input, which fields exist and
+which are required — and nothing else.
 
 That makes this the cheapest domain to fix and the easiest to neglect. A misrouting bug that looks
 like it needs a router usually needs two sentences added to a description. An agent that reports
