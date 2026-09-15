@@ -23,14 +23,22 @@
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, extname, join, relative, resolve } from "node:path";
-import { lintInDepth } from "@claude-cert/shared";
+import {
+  CONTENT_MODES,
+  DEFAULT_LOCALE,
+  LOCALES,
+  lintInDepth,
+  parseLocale,
+  type ContentMode,
+  type Locale,
+} from "@claude-cert/shared";
 import { prisma } from "../src/client";
 
 const REPO_ROOT = resolve(__dirname, "../../..");
 
-type Mode = "in_depth" | "normal" | "concise";
-const MODES: Mode[] = ["in_depth", "normal", "concise"];
-const FRONT_MATTER_KEYS = ["cert", "domain", "subtopic", "mode", "title"] as const;
+type Mode = ContentMode;
+const MODES: Mode[] = CONTENT_MODES;
+const FRONT_MATTER_KEYS = ["cert", "domain", "subtopic", "mode", "title", "locale"] as const;
 
 interface FrontMatter {
   cert: string;
@@ -38,6 +46,7 @@ interface FrontMatter {
   /** "1.3" for a subtopic, "overview" (or absent) for the domain topic itself. */
   subtopic?: string;
   mode: Mode;
+  locale: Locale;
   title?: string;
 }
 
@@ -74,6 +83,13 @@ function parseFrontMatter(path: string, raw: string): ParsedFile {
   if (!mode) throw new ContentError("front matter is missing `mode`");
   if (!MODES.includes(mode)) throw new ContentError(`\`mode\` must be one of ${MODES.join(", ")}`);
 
+  // Absent means English, so none of the existing files need touching. The
+  // file's own front matter is authoritative rather than its directory, so a
+  // translation filed in the wrong tree cannot silently ingest as English.
+  const rawLocale = fields.get("locale");
+  const locale = rawLocale ? parseLocale(rawLocale) : DEFAULT_LOCALE;
+  if (!locale) throw new ContentError(`\`locale\` must be one of ${LOCALES.join(", ")}`);
+
   const contentMd = text.slice(match[0].length).trim() + "\n";
   if (!contentMd.trim()) throw new ContentError("file has front matter but no content");
 
@@ -84,6 +100,7 @@ function parseFrontMatter(path: string, raw: string): ParsedFile {
       domain: fields.get("domain")?.toUpperCase(),
       subtopic: fields.get("subtopic"),
       mode,
+      locale,
       title: fields.get("title"),
     },
     contentMd,
@@ -212,7 +229,13 @@ async function main() {
       }
 
       const existing = await prisma.topicContent.findUnique({
-        where: { topicId_mode: { topicId: topic.id, mode: parsed.frontMatter.mode } },
+        where: {
+          topicId_mode_locale: {
+            topicId: topic.id,
+            mode: parsed.frontMatter.mode,
+            locale: parsed.frontMatter.locale,
+          },
+        },
       });
 
       if (existing && existing.contentMd === parsed.contentMd) {
@@ -228,9 +251,20 @@ async function main() {
       }
 
       await prisma.topicContent.upsert({
-        where: { topicId_mode: { topicId: topic.id, mode: parsed.frontMatter.mode } },
+        where: {
+          topicId_mode_locale: {
+            topicId: topic.id,
+            mode: parsed.frontMatter.mode,
+            locale: parsed.frontMatter.locale,
+          },
+        },
         update: { contentMd: parsed.contentMd },
-        create: { topicId: topic.id, mode: parsed.frontMatter.mode, contentMd: parsed.contentMd },
+        create: {
+          topicId: topic.id,
+          mode: parsed.frontMatter.mode,
+          locale: parsed.frontMatter.locale,
+          contentMd: parsed.contentMd,
+        },
       });
       console.log(`${label}: ${existing ? "updated" : "created"} (${topic.title})`);
       existing ? counts.updated++ : counts.created++;

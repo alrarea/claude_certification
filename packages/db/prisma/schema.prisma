@@ -24,6 +24,18 @@ enum ContentMode {
   @@map("content_mode")
 }
 
+/// Language of a piece of content. Deliberately separate from ContentMode:
+/// mode is the pedagogical *shape* of a topic (nine-step wizard, flowing
+/// prose, bullet notes), language is orthogonal to it. Folding language into
+/// ContentMode would also corrupt UserTopicProgress.lastMode, which means
+/// "depth last viewed" and must not start meaning "depth and language".
+enum Locale {
+  en
+  ml
+
+  @@map("locale")
+}
+
 enum TopicStatus {
   not_started
   in_progress
@@ -105,25 +117,26 @@ enum Role {
 }
 
 model User {
-  id                 String    @id @default(uuid()) @db.Uuid
-  email              String    @unique
-  name               String
-  passwordHash       String    @map("password_hash")
-  role               Role      @default(user)
-  emailVerifiedAt    DateTime? @map("email_verified_at") @db.Timestamptz
-  anthropicApiKeyEnc Bytes?    @map("anthropic_api_key_enc")
-  anthropicApiKeyIv  Bytes?    @map("anthropic_api_key_iv")
-  anthropicKeyLast4  String?   @map("anthropic_key_last4")
+  id                     String    @id @default(uuid()) @db.Uuid
+  email                  String    @unique
+  name                   String
+  passwordHash           String    @map("password_hash")
+  role                   Role      @default(user)
+  emailVerifiedAt        DateTime? @map("email_verified_at") @db.Timestamptz
+  anthropicApiKeyEnc     Bytes?    @map("anthropic_api_key_enc")
+  anthropicApiKeyIv      Bytes?    @map("anthropic_api_key_iv")
+  anthropicKeyLast4      String?   @map("anthropic_key_last4")
   onboardingPromptSeenAt DateTime? @map("onboarding_prompt_seen_at") @db.Timestamptz
-  lastCertificationCode String? @map("last_certification_code")
-  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  lastCertificationCode  String?   @map("last_certification_code")
+  locale                 Locale    @default(en)
+  deletedAt              DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  topicProgress   UserTopicProgress[]
-  documentUploads DocumentUpload[]
-  exams           Exam[]
-  createdQuestions Question[]         @relation("QuestionCreatedBy")
+  topicProgress          UserTopicProgress[]
+  documentUploads        DocumentUpload[]
+  exams                  Exam[]
+  createdQuestions       Question[]            @relation("QuestionCreatedBy")
   liveExamsHosted        LiveExam[]            @relation("LiveExamHost")
   liveExamParticipations LiveExamParticipant[]
 
@@ -171,12 +184,26 @@ model Certification {
   name        String
   description String?
 
-  topics   Topic[]
-  questions Question[]
-  exams    Exam[]
-  liveExams LiveExam[]
+  topics       Topic[]
+  questions    Question[]
+  exams        Exam[]
+  liveExams    LiveExam[]
+  translations CertificationTranslation[]
 
   @@map("certifications")
+}
+
+model CertificationTranslation {
+  id              String  @id @default(uuid()) @db.Uuid
+  certificationId String  @map("certification_id") @db.Uuid
+  locale          Locale
+  name            String
+  description     String?
+
+  certification Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+
+  @@unique([certificationId, locale])
+  @@map("certification_translations")
 }
 
 model Topic {
@@ -188,28 +215,42 @@ model Topic {
   examDomain      String? @map("exam_domain")
 
   certification Certification @relation(fields: [certificationId], references: [id])
-  parentTopic   Topic?  @relation("TopicToSubtopic", fields: [parentTopicId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  subtopics     Topic[] @relation("TopicToSubtopic")
+  parentTopic   Topic?        @relation("TopicToSubtopic", fields: [parentTopicId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subtopics     Topic[]       @relation("TopicToSubtopic")
 
-  content        TopicContent[]
-  userProgress   UserTopicProgress[]
-  questions      Question[]
-  examScopedExams Exam[]
+  content             TopicContent[]
+  translations        TopicTranslation[]
+  userProgress        UserTopicProgress[]
+  questions           Question[]
+  examScopedExams     Exam[]
   liveExamScopedExams LiveExam[]
 
   @@map("topics")
 }
 
-model TopicContent {
-  id         String      @id @default(uuid()) @db.Uuid
-  topicId    String      @map("topic_id") @db.Uuid
-  mode       ContentMode
-  contentMd  String      @map("content_md")
-  updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+model TopicTranslation {
+  id      String @id @default(uuid()) @db.Uuid
+  topicId String @map("topic_id") @db.Uuid
+  locale  Locale
+  title   String
 
   topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
-  @@unique([topicId, mode])
+  @@unique([topicId, locale])
+  @@map("topic_translations")
+}
+
+model TopicContent {
+  id        String      @id @default(uuid()) @db.Uuid
+  topicId   String      @map("topic_id") @db.Uuid
+  mode      ContentMode
+  locale    Locale      @default(en)
+  contentMd String      @map("content_md")
+  updatedAt DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, mode, locale])
   @@map("topic_content")
 }
 
@@ -240,11 +281,11 @@ model Question {
   reviewStatus    ReviewStatus   @default(approved) @map("review_status")
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
 
-  certification Certification    @relation(fields: [certificationId], references: [id])
-  topic         Topic            @relation(fields: [topicId], references: [id])
-  creator       User?            @relation("QuestionCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
-  options       QuestionOption[]
-  examQuestions ExamQuestion[]
+  certification     Certification      @relation(fields: [certificationId], references: [id])
+  topic             Topic              @relation(fields: [topicId], references: [id])
+  creator           User?              @relation("QuestionCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  options           QuestionOption[]
+  examQuestions     ExamQuestion[]
   liveExamQuestions LiveExamQuestion[]
 
   @@map("questions")
@@ -258,8 +299,8 @@ model QuestionOption {
   explanation String
   orderIndex  Int     @map("order_index")
 
-  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  examQuestions ExamQuestion[]
+  question        Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  examQuestions   ExamQuestion[]
   liveExamAnswers LiveExamAnswer[]
 
   @@map("question_options")
@@ -301,13 +342,13 @@ model Exam {
 }
 
 model ExamQuestion {
-  id                String    @id @default(uuid()) @db.Uuid
-  examId            String    @map("exam_id") @db.Uuid
-  questionId        String    @map("question_id") @db.Uuid
-  orderIndex        Int       @map("order_index")
-  selectedOptionId  String?   @map("selected_option_id") @db.Uuid
-  isCorrect         Boolean?  @map("is_correct")
-  answeredAt        DateTime? @map("answered_at") @db.Timestamptz
+  id               String    @id @default(uuid()) @db.Uuid
+  examId           String    @map("exam_id") @db.Uuid
+  questionId       String    @map("question_id") @db.Uuid
+  orderIndex       Int       @map("order_index")
+  selectedOptionId String?   @map("selected_option_id") @db.Uuid
+  isCorrect        Boolean?  @map("is_correct")
+  answeredAt       DateTime? @map("answered_at") @db.Timestamptz
 
   exam           Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
   question       Question        @relation(fields: [questionId], references: [id])
@@ -324,24 +365,24 @@ model ExamQuestion {
 // conditional update (`WHERE phase = <expected>`) means only the first
 // caller actually transitions - see `liveExams.ts`.
 model LiveExam {
-  id              String        @id @default(uuid()) @db.Uuid
-  certificationId String        @map("certification_id") @db.Uuid
-  topicScope      String?       @map("topic_scope") @db.Uuid
+  id              String         @id @default(uuid()) @db.Uuid
+  certificationId String         @map("certification_id") @db.Uuid
+  topicScope      String?        @map("topic_scope") @db.Uuid
   difficulty      ExamDifficulty
-  requestedCount  Int           @map("requested_count")
-  answerSeconds   Int           @map("answer_seconds")
-  revealSeconds   Int           @map("reveal_seconds")
-  phase           LiveExamPhase @default(lobby)
-  currentIndex    Int           @default(0) @map("current_index")
-  phaseStartedAt  DateTime?     @map("phase_started_at") @db.Timestamptz
-  hostId          String        @map("host_id") @db.Uuid
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  startedAt       DateTime?     @map("started_at") @db.Timestamptz
-  completedAt     DateTime?     @map("completed_at") @db.Timestamptz
+  requestedCount  Int            @map("requested_count")
+  answerSeconds   Int            @map("answer_seconds")
+  revealSeconds   Int            @map("reveal_seconds")
+  phase           LiveExamPhase  @default(lobby)
+  currentIndex    Int            @default(0) @map("current_index")
+  phaseStartedAt  DateTime?      @map("phase_started_at") @db.Timestamptz
+  hostId          String         @map("host_id") @db.Uuid
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  startedAt       DateTime?      @map("started_at") @db.Timestamptz
+  completedAt     DateTime?      @map("completed_at") @db.Timestamptz
 
-  host          User           @relation("LiveExamHost", fields: [hostId], references: [id], onDelete: Restrict)
-  certification Certification  @relation(fields: [certificationId], references: [id])
-  scopedTopic   Topic?         @relation(fields: [topicScope], references: [id])
+  host          User                  @relation("LiveExamHost", fields: [hostId], references: [id], onDelete: Restrict)
+  certification Certification         @relation(fields: [certificationId], references: [id])
+  scopedTopic   Topic?                @relation(fields: [topicScope], references: [id])
   questions     LiveExamQuestion[]
   participants  LiveExamParticipant[]
   connections   LiveExamConnection[]

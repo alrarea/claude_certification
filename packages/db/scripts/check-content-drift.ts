@@ -24,10 +24,15 @@
  * "is this domain finished?".
  */
 import { createHash } from "node:crypto";
-import { lintInDepth } from "@claude-cert/shared";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  lintInDepth,
+  parseLocale,
+} from "@claude-cert/shared";
 import { prisma } from "../src/client";
 
-type Status = "OK" | "META" | "IDENTICAL" | "MISSING" | "NONCONFORMING";
+type Status = "OK" | "META" | "UNTRANSLATED" | "IDENTICAL" | "MISSING" | "NONCONFORMING";
 
 interface Row {
   cert: string;
@@ -43,6 +48,7 @@ interface Row {
 const EXPLANATION: Record<Status, string> = {
   OK: "conforms to the in-depth contract",
   META: "exam logistics, not subject matter - exempt from the contract",
+  UNTRANSLATED: "no row in this locale yet - expected while a translation is in progress",
   IDENTICAL: "in_depth is a byte-for-byte copy of normal - no extra depth",
   MISSING: "no in_depth row at all",
   NONCONFORMING: "distinct content, but fails the in-depth contract",
@@ -60,6 +66,8 @@ async function main() {
   };
   const certFilter = flag("cert")?.toUpperCase();
   const domainFilter = flag("domain")?.toUpperCase();
+  const locale = parseLocale(flag("locale") ?? DEFAULT_LOCALE);
+  if (!locale) throw new Error(`--locale must be one of ${LOCALES.join(", ")}`);
   const verbose = argv.includes("--verbose");
   const asJson = argv.includes("--json");
 
@@ -79,7 +87,12 @@ async function main() {
     const content = await prisma.topicContent.findMany({
       where: { topicId: { in: topics.map((t) => t.id) } },
     });
-    const byTopicMode = new Map(content.map((c) => [`${c.topicId}:${c.mode}`, c.contentMd]));
+    // Keyed by locale as well, so a translation is only ever compared against
+    // its own language. Comparing an ml in_depth row to an en normal row would
+    // call every translated topic "distinct" for the wrong reason.
+    const byTopicMode = new Map(
+      content.map((c) => [`${c.topicId}:${c.mode}:${c.locale}`, c.contentMd])
+    );
     const parentById = new Map(topics.map((t) => [t.id, t]));
 
     for (const topic of topics) {
@@ -87,8 +100,8 @@ async function main() {
       const domain = topic.examDomain ?? parent?.examDomain ?? "-";
       if (domainFilter && domain !== domainFilter) continue;
 
-      const inDepth = byTopicMode.get(`${topic.id}:in_depth`);
-      const normal = byTopicMode.get(`${topic.id}:normal`);
+      const inDepth = byTopicMode.get(`${topic.id}:in_depth:${locale}`);
+      const normal = byTopicMode.get(`${topic.id}:normal:${locale}`);
 
       const domainNumber = domain.replace(/\D/g, "");
       const subtopic = topic.parentTopicId
@@ -99,7 +112,11 @@ async function main() {
       let detail = "";
       let steps = 0;
 
-      if (!inDepth) {
+      if (!inDepth && locale !== DEFAULT_LOCALE) {
+        // Absent translations are the normal state mid-pass, not a fault. The
+        // API falls back to English for these, so nothing renders empty.
+        status = "UNTRANSLATED";
+      } else if (!inDepth) {
         // Still a real fault for a meta topic: the mode would render empty.
         status = "MISSING";
       } else if (domain === "-") {
@@ -160,12 +177,18 @@ async function main() {
         const ok = inGroup.filter((r) => r.status === "OK").length;
         const tally = inGroup.every((r) => r.status === "META")
           ? `${inGroup.length} meta, exempt`
-          : `${ok}/${inGroup.length} OK`;
+          : inGroup.every((r) => r.status === "UNTRANSLATED")
+            ? `${inGroup.length} not translated yet`
+            : `${ok}/${inGroup.length} OK`;
         console.log(`\n${group}  —  ${tally}`);
         currentGroup = group;
       }
       const mark =
-        row.status === "OK" ? "✓" : row.status === "META" ? "·" : "✗";
+        row.status === "OK"
+          ? "✓"
+          : row.status === "META" || row.status === "UNTRANSLATED"
+            ? "·"
+            : "✗";
       console.log(
         `  ${mark} ${row.subtopic.padEnd(8)} ${row.status.padEnd(14)} ` +
           `${row.steps ? `${row.steps} steps, ` : ""}${row.chars} chars  ${row.title}`
@@ -174,7 +197,9 @@ async function main() {
     }
 
     console.log("\nSummary");
-    const order: Status[] = ["OK", "META", "NONCONFORMING", "IDENTICAL", "MISSING"];
+    const order: Status[] = [
+      "OK", "META", "UNTRANSLATED", "NONCONFORMING", "IDENTICAL", "MISSING",
+    ];
     for (const status of order) {
       const n = rows.filter((r) => r.status === status).length;
       if (n > 0) console.log(`  ${String(n).padStart(3)} ${status.padEnd(14)} ${EXPLANATION[status]}`);
@@ -182,7 +207,17 @@ async function main() {
     console.log(`  ${String(rows.length).padStart(3)} topics in scope`);
   }
 
-  if (rows.some((r) => r.status !== "OK" && r.status !== "META")) process.exitCode = 1;
+  // UNTRANSLATED only counts against the run when a specific slice was named -
+  // "is this domain's translation finished?" is a fair question to fail on,
+  // "is the whole corpus translated?" is not, while a pass is still under way.
+  const gatingASlice = Boolean(certFilter || domainFilter);
+  const failing = rows.filter(
+    (r) =>
+      r.status !== "OK" &&
+      r.status !== "META" &&
+      !(r.status === "UNTRANSLATED" && !gatingASlice)
+  );
+  if (failing.length > 0) process.exitCode = 1;
 }
 
 main()

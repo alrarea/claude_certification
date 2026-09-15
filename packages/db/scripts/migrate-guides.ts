@@ -15,6 +15,7 @@ import { resolve } from "node:path";
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import TurndownService from "turndown";
+import { DEFAULT_LOCALE } from "@claude-cert/shared";
 import { prisma } from "../src/client";
 
 const GUIDES_DIR = resolve(__dirname, "../../../guides");
@@ -199,9 +200,11 @@ async function upsertTopic(params: {
 async function upsertContent(topicId: string, contentMd: string) {
   if (!contentMd.trim()) return;
   await prisma.topicContent.upsert({
-    where: { topicId_mode: { topicId, mode: "normal" } },
+    where: {
+      topicId_mode_locale: { topicId, mode: "normal", locale: DEFAULT_LOCALE },
+    },
     update: { contentMd },
-    create: { topicId, mode: "normal", contentMd },
+    create: { topicId, mode: "normal", locale: DEFAULT_LOCALE, contentMd },
   });
 }
 

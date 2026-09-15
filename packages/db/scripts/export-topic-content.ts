@@ -18,15 +18,24 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import {
+  CONTENT_MODES,
+  DEFAULT_LOCALE,
+  LOCALES,
+  parseLocale,
+  type ContentMode,
+  type Locale,
+} from "@claude-cert/shared";
 import { prisma } from "../src/client";
 
-type Mode = "in_depth" | "normal" | "concise";
-const MODES: Mode[] = ["in_depth", "normal", "concise"];
+type Mode = ContentMode;
+const MODES: Mode[] = CONTENT_MODES;
 
 interface Args {
   cert: string;
   domain?: string;
   mode: Mode;
+  locale: Locale;
   out: string;
 }
 
@@ -42,7 +51,15 @@ function parseArgs(argv: string[]): Args {
   if (!cert) throw new Error("--cert is required (e.g. --cert CCAR-F)");
   if (!out) throw new Error("--out <dir> is required");
   if (!MODES.includes(mode)) throw new Error(`--mode must be one of ${MODES.join(", ")}`);
-  return { cert: cert.toUpperCase(), domain: flags.get("domain")?.toUpperCase(), mode, out };
+  const locale = parseLocale(flags.get("locale") ?? DEFAULT_LOCALE);
+  if (!locale) throw new Error(`--locale must be one of ${LOCALES.join(", ")}`);
+  return {
+    cert: cert.toUpperCase(),
+    domain: flags.get("domain")?.toUpperCase(),
+    mode,
+    locale,
+    out,
+  };
 }
 
 /** "The Agentic Loop — The Core of Everything" -> "the-agentic-loop-the-core-of-everything" */
@@ -93,7 +110,13 @@ async function main() {
 
     for (const { topic, subtopic } of targets) {
       const content = await prisma.topicContent.findUnique({
-        where: { topicId_mode: { topicId: topic.id, mode: args.mode } },
+        where: {
+          topicId_mode_locale: {
+            topicId: topic.id,
+            mode: args.mode,
+            locale: args.locale,
+          },
+        },
       });
       if (!content) {
         skipped++;
@@ -115,6 +138,7 @@ async function main() {
         ...(root.examDomain ? [`domain: ${root.examDomain}`] : []),
         `subtopic: ${subtopic}`,
         `mode: ${args.mode}`,
+        `locale: ${args.locale}`,
         `title: ${topic.title}`,
         "---",
         "",
@@ -131,7 +155,7 @@ async function main() {
   }
 
   console.log(
-    `\n${args.cert}${args.domain ? ` ${args.domain}` : ""} mode=${args.mode}: ` +
+    `\n${args.cert}${args.domain ? ` ${args.domain}` : ""} mode=${args.mode} locale=${args.locale}: ` +
       `${written} file(s) written to ${resolve(args.out)}, ${skipped} topic(s) had no content`
   );
 }
