@@ -6,6 +6,7 @@ import { FullPageLoader } from "../components/FullPageLoader";
 import { Button } from "../components/Button";
 import { MarkdownContent } from "../components/MarkdownContent";
 import { InDepthWizard } from "../components/InDepthWizard";
+import { TopicPager, type TopicLink } from "../components/TopicPager";
 import { useLocale } from "../lib/LocaleContext";
 import { DEFAULT_LOCALE, type Locale } from "@claude-cert/shared";
 import { CONTENT_MODES, MODE_LABELS, type ContentMode } from "../lib/contentModes";
@@ -34,6 +35,8 @@ export function LearnTopic() {
   const [contentLocale, setContentLocale] = useState<Locale | null>(null);
   const { locale } = useLocale();
   const [completed, setCompleted] = useState(false);
+  const [prev, setPrev] = useState<TopicLink | null>(null);
+  const [next, setNext] = useState<TopicLink | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,9 +47,18 @@ export function LearnTopic() {
       setAvailable(data.available);
       setContentLocale(data.contentLocale ?? null);
       setCompleted(data.progressStatus === "completed");
+      setPrev(data.prev ?? null);
+      setNext(data.next ?? null);
       setLoading(false);
     });
   }, [cert, topicId, mode, locale]);
+
+  // Paging keeps the URL but swaps the topic, so without this the next topic
+  // opens scrolled to wherever the reader left the last one - which reads as a
+  // page that failed to load its beginning.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [topicId]);
 
   async function markComplete() {
     await apiFetch(`/courses/${cert}/topics/${topicId}/progress`, { method: "POST" });
@@ -111,6 +123,8 @@ export function LearnTopic() {
       <Button onClick={markComplete} disabled={completed} variant={completed ? "secondary" : "primary"}>
         {completed ? "Completed" : "Mark as complete"}
       </Button>
+
+      <TopicPager cert={cert} mode={mode} prev={prev} next={next} />
 
       {wizardOpen && (
         <InDepthWizard

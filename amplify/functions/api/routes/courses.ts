@@ -15,6 +15,36 @@ interface TopicNode {
   children: TopicNode[];
 }
 
+/**
+ * The course in the order a reader actually moves through it: each section,
+ * then that section's subtopics, then the next section.
+ *
+ * This is the same pre-order walk the course page renders, and it has to stay
+ * that way - "next" means the row under this one on that page, so if the two
+ * ever disagree the arrows start skipping topics. Both orderings come from
+ * `orderIndex`, which is the one thing making them the same list.
+ */
+function readingOrder(topics: Topic[]): Topic[] {
+  const byIndex = (a: Topic, b: Topic) => a.orderIndex - b.orderIndex;
+  const childrenOf = new Map<string, Topic[]>();
+  const roots: Topic[] = [];
+  for (const topic of topics) {
+    if (topic.parentTopicId) {
+      const siblings = childrenOf.get(topic.parentTopicId) ?? [];
+      siblings.push(topic);
+      childrenOf.set(topic.parentTopicId, siblings);
+    } else {
+      roots.push(topic);
+    }
+  }
+  const ordered: Topic[] = [];
+  for (const root of roots.sort(byIndex)) {
+    ordered.push(root);
+    ordered.push(...(childrenOf.get(root.id) ?? []).sort(byIndex));
+  }
+  return ordered;
+}
+
 courseRoutes.get("/:cert/topics", async (c) => {
   const certCode = c.req.param("cert").toUpperCase();
   const userId = c.get("userId");
@@ -107,6 +137,19 @@ courseRoutes.get("/:cert/topics/:topicId", async (c) => {
   const topic = await prisma.topic.findUnique({ where: { id: topicId } });
   if (!topic) return c.json({ error: "Topic not found" }, 404);
 
+  // Neighbours are resolved here rather than on the client, which would
+  // otherwise have to pull the whole course tree on every topic view - and
+  // that endpoint writes `lastCertificationCode` as a side effect, so calling
+  // it just to read an ordering would be a write per page view.
+  const siblings = await prisma.topic.findMany({
+    where: { certificationId: topic.certificationId },
+    orderBy: { orderIndex: "asc" },
+  });
+  const ordered = readingOrder(siblings);
+  const position = ordered.findIndex((t: Topic) => t.id === topicId);
+  const prevTopic = position > 0 ? ordered[position - 1] : null;
+  const nextTopic = position >= 0 && position < ordered.length - 1 ? ordered[position + 1] : null;
+
   // Ask for the requested language, fall back to the default one. The response
   // reports which was actually served, so the client can say "not translated
   // yet" instead of silently framing English content in a Malayalam shell.
@@ -123,12 +166,21 @@ courseRoutes.get("/:cert/topics/:topicId", async (c) => {
           },
         }));
 
-  const translation =
+  // One lookup covering this topic and its two neighbours: the arrows name the
+  // topic they lead to, so those titles need translating too, and a missing
+  // row falls back to the base title rather than blanking the label.
+  const neighbourIds = [topicId, prevTopic?.id, nextTopic?.id].filter(
+    (id): id is string => id !== undefined
+  );
+  const translations =
     locale === DEFAULT_LOCALE
-      ? null
-      : await prisma.topicTranslation.findUnique({
-          where: { topicId_locale: { topicId, locale } },
+      ? []
+      : await prisma.topicTranslation.findMany({
+          where: { topicId: { in: neighbourIds }, locale },
         });
+  const titleByTopic = new Map(translations.map((t) => [t.topicId, t.title]));
+  const localisedTitle = (t: Topic) => titleByTopic.get(t.id) ?? t.title;
+  const asLink = (t: Topic | null) => (t === null ? null : { id: t.id, title: localisedTitle(t) });
 
   const progress = await prisma.userTopicProgress.upsert({
     where: { userId_topicId: { userId, topicId } },
@@ -149,9 +201,12 @@ courseRoutes.get("/:cert/topics/:topicId", async (c) => {
   return c.json({
     topic: {
       id: topic.id,
-      title: translation?.title ?? topic.title,
+      title: localisedTitle(topic),
       examDomain: topic.examDomain,
     },
+    // Null at the two ends of the course, which is what hides the arrow.
+    prev: asLink(prevTopic),
+    next: asLink(nextTopic),
     mode,
     locale,
     // Which language the body actually is, which is not always the one asked
