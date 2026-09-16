@@ -251,6 +251,96 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     ml: "സേവന നിലവാര കരാർ — വേഗത, കൃത്യത, ലഭ്യത എന്നിവയെക്കുറിച്ചുള്ള ബാധ്യതയുള്ള വാഗ്ദാനം",
     category: "api",
   },
+
+  // --- Agents and orchestration. The corpus's most-used vocabulary, and the
+  // words the exam itself asks about, so a Malayalam coinage for any of them
+  // would leave a reader meeting the real term for the first time on exam day.
+  {
+    term: "agent",
+    en: "a model given tools and a goal, which decides its own next step until the goal is met",
+    ml: "ടൂളുകളും ഒരു ലക്ഷ്യവും നൽകിയ മോഡൽ — ലക്ഷ്യം പൂർത്തിയാകുംവരെ അടുത്ത നടപടി സ്വയം തീരുമാനിക്കുന്നു",
+    category: "agents",
+  },
+  {
+    term: "subagent",
+    en: "a second agent an agent starts for one scoped piece of work, with its own context",
+    ml: "ഒരു ഏജന്റ് ഒരു പ്രത്യേക ജോലിക്കായി തുടങ്ങുന്ന രണ്ടാമത്തെ ഏജന്റ് — സ്വന്തം context-ഓടു കൂടി",
+    category: "agents",
+  },
+  {
+    term: "multi-agent",
+    en: "a design where several agents divide the work instead of one agent doing all of it",
+    ml: "ഒരൊറ്റ ഏജന്റ് എല്ലാം ചെയ്യുന്നതിനു പകരം പല ഏജന്റുകൾ ജോലി പങ്കിടുന്ന രൂപകൽപ്പന",
+    category: "agents",
+  },
+  {
+    term: "orchestration",
+    en: "deciding which agent or step runs when, and how results pass between them",
+    ml: "ഏത് ഏജന്റ് അഥവാ ഘട്ടം എപ്പോൾ പ്രവർത്തിക്കണം, ഫലങ്ങൾ എങ്ങനെ കൈമാറണം എന്ന ക്രമീകരണം",
+    category: "agents",
+  },
+  {
+    term: "coordinator",
+    en: "the agent that hands out work to the others and puts their results together",
+    ml: "മറ്റ് ഏജന്റുകൾക്ക് ജോലി വിഭജിച്ചു നൽകി അവയുടെ ഫലങ്ങൾ ചേർത്തുവയ്ക്കുന്ന ഏജന്റ്",
+    category: "agents",
+  },
+  {
+    term: "agentic loop",
+    en: "the repeating cycle of think, call a tool, read the result, decide again",
+    ml: "ചിന്തിക്കുക, ടൂൾ വിളിക്കുക, ഫലം വായിക്കുക, വീണ്ടും തീരുമാനിക്കുക — ഈ ആവർത്തിക്കുന്ന ചക്രം",
+    category: "agents",
+  },
+  {
+    term: "pipeline",
+    en: "a fixed sequence of steps where each step's output is the next one's input",
+    ml: "ഓരോ ഘട്ടത്തിന്റെയും ഫലം അടുത്തതിന്റെ ഇൻപുട്ടാകുന്ന, മുൻകൂട്ടി നിശ്ചയിച്ച ഘട്ടങ്ങളുടെ ശ്രേണി",
+    category: "agents",
+  },
+  {
+    term: "session",
+    en: "one continuous run with its own conversation history, which can be resumed later",
+    ml: "സ്വന്തം സംഭാഷണ ചരിത്രമുള്ള ഒരു തുടർച്ചയായ പ്രവർത്തനം — പിന്നീട് തുടരാവുന്നത്",
+    category: "agents",
+  },
+
+  // --- Configuration and control ---
+  {
+    term: "prompt",
+    en: "the instructions and context sent to the model for one request",
+    ml: "ഒരു അഭ്യർഥനയ്ക്കായി മോഡലിന് അയക്കുന്ന നിർദേശങ്ങളും context-ഉം",
+    category: "config",
+  },
+  {
+    term: "context",
+    en: "everything the model can see for this request — instructions, history, tool results",
+    ml: "ഈ അഭ്യർഥനയിൽ മോഡലിന് കാണാവുന്നതെല്ലാം — നിർദേശങ്ങൾ, ചരിത്രം, ടൂൾ ഫലങ്ങൾ",
+    category: "config",
+  },
+  {
+    term: "hook",
+    en: "code the harness runs on a tool call, which can block it — a rule, not a request",
+    ml: "ഒരു ടൂൾ വിളിക്കുമ്പോൾ harness പ്രവർത്തിപ്പിക്കുന്ന കോഡ് — തടയാനും കഴിയും; അഭ്യർഥനയല്ല, നിയമം",
+    category: "config",
+  },
+  {
+    term: "CLAUDE.md",
+    en: "the file Claude Code reads as standing project instructions on every session",
+    ml: "ഓരോ session-ലും Claude Code വായിക്കുന്ന, പ്രോജക്റ്റിന്റെ സ്ഥിരം നിർദേശങ്ങളുള്ള ഫയൽ",
+    category: "config",
+  },
+  {
+    term: "retry",
+    en: "running a failed step again, usually after a wait, rather than giving up on it",
+    ml: "പരാജയപ്പെട്ട ഘട്ടം ഉപേക്ഷിക്കാതെ, സാധാരണ അൽപ്പം കാത്തിരുന്ന ശേഷം വീണ്ടും പ്രവർത്തിപ്പിക്കൽ",
+    category: "config",
+  },
+  {
+    term: "validation",
+    en: "checking output against a rule before trusting it, not after something breaks",
+    ml: "എന്തെങ്കിലും തകർന്ന ശേഷമല്ല, വിശ്വസിക്കുന്നതിനു മുൻപ് ഫലം ഒരു നിയമവുമായി ഒത്തുനോക്കൽ",
+    category: "config",
+  },
 ] as const;
 
 /**
@@ -302,12 +392,32 @@ export function findGlossaryMatches(text: string): GlossaryMatch[] {
     // Reject a hit sitting inside a longer word: "tokenise" is not "token",
     // and "recalling" is not "recall". Underscores and hyphens count as part
     // of a term, so stop_reason and fan-out still match.
-    const before = text[m.index - 1];
-    const after = text[m.index + m[0].length];
     const isWordish = (ch: string | undefined) =>
       ch !== undefined && /[A-Za-z0-9_-]/.test(ch);
-    if (isWordish(before) || isWordish(after)) continue;
-    out.push({ start: m.index, end: m.index + m[0].length, entry });
+    const before = text[m.index - 1];
+    if (isWordish(before)) continue;
+
+    // An English plural is still the term: "agents" is agent. Only a single
+    // trailing "s" counts, so "recalling" is still not "recall". The character
+    // after it is tested without the hyphen, so "agents-ന്റെ" takes the plural
+    // and then the suffix rule below; "agents-based" is left to that rule to
+    // reject as the compound it is.
+    const isLetterish = (ch: string | undefined) =>
+      ch !== undefined && /[A-Za-z0-9_]/.test(ch);
+    let end = m.index + m[0].length;
+    if (text[end] === "s" && !isLetterish(text[end + 1])) end++;
+
+    // A trailing hyphen is the one case where "part of a longer word" is the
+    // wrong reading. Malayalam attaches a case ending to an English noun with
+    // a hyphen - "agent-ന്റെ", "context-ഇൽ" - so blanket-rejecting a hyphen
+    // after the term switched the tooltip off for exactly the construction the
+    // translated prose uses most. The compound it was written to catch is
+    // "fan-out", where a Latin letter follows the hyphen; a Malayalam letter
+    // following it is a suffix, and the term before it is the term.
+    const after = text[end];
+    const suffixHyphen = after === "-" && !/[A-Za-z0-9_]/.test(text[end + 1] ?? "");
+    if (isWordish(after) && !suffixHyphen) continue;
+    out.push({ start: m.index, end, entry });
   }
   return out;
 }

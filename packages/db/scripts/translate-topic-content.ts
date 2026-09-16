@@ -16,16 +16,32 @@
  *     tables so they are identical across every topic in the locale
  *
  * Usage:
- *   npx tsx packages/db/scripts/translate-topic-content.ts <files...> \
- *       --to ml --out content/ml
- *   ... --dry-run    no API call: translates by marking text, and still runs
- *                    every integrity check, so the structural half of the
- *                    pipeline can be proven without spending anything.
+ *   npm run content:translate -- <files...> --to ml --out content/ml
+ *   ... --base <dir>      the input tree's root: the output mirrors each
+ *                         file's path below it (default `content`, so an
+ *                         export dump must pass its own).
+ *   ... --concurrency N   files translated at once (default 4).
+ *   ... --skip-existing   leave files that already exist in the output tree
+ *                         alone, so an interrupted corpus run resumes instead
+ *                         of paying to translate the same pages twice.
+ *   ... --segments-out <f>  write each file's masked segments to JSON and
+ *                         stop, so a translator other than the Anthropic
+ *                         client can do the language half.
+ *   ... --segments-in <f>   read that JSON back with the text translated and
+ *                         reassemble from it. Needs no API key, and runs every
+ *                         integrity check the API path runs.
+ *   ... --dry-run         no API call: translates by marking text, and still
+ *                         runs every integrity check, so the structural half
+ *                         of the pipeline can be proven without spending
+ *                         anything.
  *
  * Needs ANTHROPIC_API_KEY for a real run. Exits 1 if any integrity check fails.
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+// Same convention as `src/client.ts`: secrets come from the gitignored root
+// `.env`, so ANTHROPIC_API_KEY does not have to be exported into the shell.
+import "dotenv/config";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   IN_DEPTH_STEPS,
@@ -36,7 +52,15 @@ import {
   type Locale,
 } from "@claude-cert/shared";
 
-const MODEL = "claude-sonnet-5";
+const MODEL = "claude-opus-5";
+
+/**
+ * Medium rather than the default high. The task is mechanical and fully
+ * specified - the rules are in the system prompt and the structure never
+ * reaches the model - so the depth of deliberation buys far less here than the
+ * model's own command of the language does, and this runs a few hundred times.
+ */
+const EFFORT = "medium" as const;
 
 /** Callout labels, keyed by the emoji, which is the locale-independent part. */
 const CALLOUT_LABELS: Record<string, Record<Locale, string>> = {
@@ -263,24 +287,53 @@ async function translateSegments(
 
   const out = new Map<number, string>();
   // Batches of segments rather than whole documents, so one bad response
-  // cannot corrupt a file - and small enough that a retry is cheap.
-  const CHUNK = 40;
+  // cannot corrupt a file - and small enough that a retry is cheap. 25 rather
+  // than 40 because Malayalam costs far more output tokens per character than
+  // the English it replaces, and a chunk that runs into max_tokens comes back
+  // as truncated tool JSON - which reads as "segments missing from the
+  // response", i.e. a whole file failed for a reason that looks like anything
+  // but the real one.
+  const CHUNK = 25;
   for (let i = 0; i < segments.length; i += CHUNK) {
     const chunk = segments.slice(i, i + CHUNK);
-    const res = await client.messages.create({
-      model: MODEL,
-      max_tokens: 8000,
-      system,
-      tools: [TOOL],
-      tool_choice: { type: "tool", name: TOOL.name },
-      messages: [{ role: "user", content: JSON.stringify({ segments: chunk }) }],
+    const translated = await withRetry(async () => {
+      const res = await client.messages.create({
+        model: MODEL,
+        max_tokens: 16000,
+        output_config: { effort: EFFORT },
+        system,
+        tools: [TOOL],
+        tool_choice: { type: "tool", name: TOOL.name },
+        messages: [{ role: "user", content: JSON.stringify({ segments: chunk }) }],
+      });
+      if (res.stop_reason === "max_tokens") {
+        throw new Error("response hit max_tokens - tool JSON is truncated");
+      }
+      const block = res.content.find((b) => b.type === "tool_use");
+      if (!block || block.type !== "tool_use") throw new Error("model returned no tool_use");
+      return (block.input as { segments: Segment[] }).segments;
     });
-    const block = res.content.find((b) => b.type === "tool_use");
-    if (!block || block.type !== "tool_use") throw new Error("model returned no tool_use");
-    const payload = block.input as { segments: Segment[] };
-    for (const s of payload.segments) out.set(s.id, s.text);
+    for (const s of translated) out.set(s.id, s.text);
   }
   return out;
+}
+
+/**
+ * One retry is the right number here. A 429 or an overloaded 529 clears on its
+ * own; a truncated response usually re-rolls shorter. Anything that fails
+ * twice is a real problem with the segment, and the integrity checks downstream
+ * will name the file rather than let a half-translated page through.
+ */
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    const status = (err as { status?: number }).status;
+    const retryable = status === undefined || status === 429 || status >= 500;
+    if (!retryable) throw err;
+    await new Promise((r) => setTimeout(r, 20_000));
+    return fn();
+  }
 }
 
 function parseFrontMatter(text: string) {
@@ -294,24 +347,96 @@ function parseFrontMatter(text: string) {
   return { fields, body: text.slice(m[0].length) };
 }
 
-async function main() {
-  const argv = process.argv.slice(2);
-  const files = argv.filter((a) => !a.startsWith("--") && !/^(ml|en)$/.test(a));
-  const flag = (n: string) => {
-    const i = argv.indexOf(`--${n}`);
-    return i === -1 ? undefined : argv[i + 1];
-  };
-  const dryRun = argv.includes("--dry-run");
-  const to = parseLocale(flag("to") ?? "ml");
-  if (!to) throw new Error(`--to must be one of ${LOCALES.join(", ")}`);
-  const outDir = flag("out") ?? "content/ml";
-  if (files.length === 0) throw new Error("no input files");
+/** Flags that take a value, so their value is never mistaken for an input file. */
+const VALUE_FLAGS = ["to", "out", "base", "concurrency", "segments-out", "segments-in"];
+const BOOL_FLAGS = ["dry-run", "skip-existing"];
 
-  const { GLOSSARY } = await import("@claude-cert/shared");
-  const terms = GLOSSARY.map((g) => g.term);
+/** One file's masked segments, as handed to a translator and handed back. */
+interface SegmentDump {
+  file: string;
+  title: string;
+  segments: Array<{ id: number; text: string }>;
+}
 
-  let failures = 0;
+/**
+ * Writes the masked segments of each file to JSON and stops, so something
+ * other than the Anthropic client can do the translating - this session's own
+ * model, a human translator, a different service.
+ *
+ * The split is pure, so `--segments-in` re-derives the identical skeleton from
+ * the same sources and only needs the strings back. Nothing about the
+ * integrity guarantees changes: the reassembly, the placeholder accounting,
+ * the fenced-block and table-shape comparisons and the contract lint all run
+ * exactly as they do on the API path.
+ */
+function dumpSegments(files: string[], to: Locale, target: string): void {
+  const dumps: SegmentDump[] = [];
   for (const file of files) {
+    const raw = readFileSync(file, "utf8").replace(/\r\n/g, "\n");
+    const { fields, body } = parseFrontMatter(raw);
+    const from = parseLocale(fields.get("locale") ?? "en") ?? "en";
+    const { segments } = splitPieces(body, from, to);
+    dumps.push({
+      file,
+      title: fields.get("title") ?? "",
+      segments: segments.map((s) => ({ id: s.id, text: protect(s.text).masked })),
+    });
+  }
+  mkdirSync(dirname(resolve(target)), { recursive: true });
+  writeFileSync(resolve(target), JSON.stringify(dumps, null, 2) + "\n", "utf8");
+  const total = dumps.reduce((n, d) => n + d.segments.length, 0);
+  console.log(`${dumps.length} file(s), ${total} segment(s) -> ${target}`);
+}
+
+/** Reads back a dump whose `text` fields have been replaced with translations. */
+function readSegments(source: string): Map<string, Map<number, string>> {
+  const parsed = JSON.parse(readFileSync(resolve(source), "utf8")) as SegmentDump[];
+  const out = new Map<string, Map<number, string>>();
+  for (const entry of parsed) {
+    out.set(entry.file, new Map(entry.segments.map((s) => [s.id, s.text])));
+  }
+  return out;
+}
+
+function parseArgv(argv: string[]) {
+  const flags = new Map<string, string>();
+  const bools = new Set<string>();
+  const files: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg.startsWith("--") && BOOL_FLAGS.includes(arg.slice(2))) {
+      bools.add(arg.slice(2));
+    } else if (arg.startsWith("--")) {
+      const name = arg.slice(2);
+      if (!VALUE_FLAGS.includes(name)) throw new Error(`unknown flag ${arg}`);
+      const value = argv[++i];
+      if (value === undefined) throw new Error(`${arg} needs a value`);
+      flags.set(name, value);
+    } else {
+      files.push(arg);
+    }
+  }
+  return { flags, files, bools };
+}
+
+/**
+ * Translates one file and returns how many integrity checks it failed, so the
+ * caller can run several at once and still get a per-file verdict.
+ */
+async function translateFile(
+  file: string,
+  opts: {
+    to: Locale;
+    outDir: string;
+    base: string;
+    dryRun: boolean;
+    terms: string[];
+    supplied?: Map<number, string>;
+  }
+): Promise<number> {
+  const { to, outDir, base, dryRun, terms, supplied } = opts;
+  let failures = 0;
+  {
     const raw = readFileSync(file, "utf8").replace(/\r\n/g, "\n");
     const { fields, body } = parseFrontMatter(raw);
     const from = parseLocale(fields.get("locale") ?? "en") ?? "en";
@@ -323,7 +448,12 @@ async function main() {
     });
 
     let translated: Map<number, string>;
-    if (dryRun) {
+    if (supplied) {
+      // Segments translated outside this process - see --segments-out. The
+      // split is pure, so re-running it here reproduces the same ids the dump
+      // was keyed by, and every check below still applies.
+      translated = supplied;
+    } else if (dryRun) {
       // Identity plus a marker: proves the skeleton survives a round trip
       // without spending anything. Every integrity check still runs.
       translated = new Map(masked.map((m) => [m.seg.id, m.seg.text]));
@@ -384,7 +514,10 @@ async function main() {
     if (!fields.has("locale")) front.push(`locale: ${to}`);
     front.push("---", "");
 
-    const target = resolve(outDir, file.replace(/^content[\\/]/, ""));
+    // The output path mirrors the input's own shape below `base`, so a source
+    // tree and its translation come out the same shape. `base` defaults to
+    // `content` for the hand-authored files; an export dump passes its own.
+    const target = resolve(outDir, relative(base, file));
     if (!dryRun) {
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, front.join("\n") + outBody.trimEnd() + "\n", "utf8");
@@ -394,6 +527,77 @@ async function main() {
         (dryRun ? " [dry run]" : ` -> ${target}`)
     );
   }
+  return failures;
+}
+
+async function main() {
+  const { flags, files: requested, bools } = parseArgv(process.argv.slice(2));
+  const dryRun = bools.has("dry-run");
+  const to = parseLocale(flags.get("to") ?? "ml");
+  if (!to) throw new Error(`--to must be one of ${LOCALES.join(", ")}`);
+  const outDir = flags.get("out") ?? "content/ml";
+  const base = flags.get("base") ?? "content";
+  const concurrency = Math.max(1, Number(flags.get("concurrency") ?? "4"));
+  if (requested.length === 0) throw new Error("no input files");
+
+  // A corpus-sized run is one network failure away from stopping half-done,
+  // and re-translating what already landed costs real money. Existing output
+  // is the resume point.
+  const files = bools.has("skip-existing")
+    ? requested.filter((f) => !existsSync(resolve(outDir, relative(base, f))))
+    : requested;
+  const skipped = requested.length - files.length;
+  if (skipped) console.log(`${skipped} file(s) already translated, skipping\n`);
+  if (files.length === 0) {
+    console.log("nothing left to translate");
+    return;
+  }
+
+  const segmentsOut = flags.get("segments-out");
+  if (segmentsOut) {
+    dumpSegments(files, to, segmentsOut);
+    return;
+  }
+
+  const segmentsIn = flags.get("segments-in");
+  const supplied = segmentsIn ? readSegments(segmentsIn) : undefined;
+  if (supplied) {
+    const absent = files.filter((f) => !supplied.has(f));
+    if (absent.length) {
+      throw new Error(
+        `${absent.length} input file(s) are not in ${segmentsIn}, starting with ${absent[0]}`
+      );
+    }
+  }
+
+  const { GLOSSARY } = await import("@claude-cert/shared");
+  const terms = GLOSSARY.map((g) => g.term);
+  const opts = { to, outDir, base, dryRun, terms };
+
+  // Files are independent, so run several at once - at one file at a time the
+  // corpus is hours spent waiting on the network rather than on the work.
+  let failures = 0;
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, files.length) }, async () => {
+      while (next < files.length) {
+        const file = files[next++];
+        try {
+          // Bind the result before adding it: `failures += await ...` reads
+          // `failures` before suspending, so concurrent workers would each
+          // write back a total that predates the others' increments.
+          const failed = await translateFile(file, {
+            ...opts,
+            supplied: supplied?.get(file),
+          });
+          failures += failed;
+        } catch (err) {
+          console.log(`${file}: ${err instanceof Error ? err.message : err}`);
+          failures++;
+        }
+      }
+    })
+  );
 
   console.log(failures === 0 ? "\nall integrity checks passed" : `\n${failures} check(s) failed`);
   if (failures) process.exitCode = 1;

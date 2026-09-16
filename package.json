@@ -19,7 +19,10 @@
     "content:ingest": "tsx packages/db/scripts/ingest-topic-content.ts",
     "content:check": "tsx packages/db/scripts/check-content-drift.ts",
     "content:mermaid": "node scripts/check-mermaid.mjs",
-    "content:export": "tsx packages/db/scripts/export-topic-content.ts"
+    "content:export": "tsx packages/db/scripts/export-topic-content.ts",
+    "content:translate": "tsx packages/db/scripts/translate-topic-content.ts",
+    "content:mirror-meta": "tsx packages/db/scripts/mirror-meta-indepth.ts",
+    "content:glossary": "tsx packages/db/scripts/check-glossary-coverage.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
