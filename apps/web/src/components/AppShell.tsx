@@ -20,10 +20,9 @@ export function AppShell({ children, maxWidth = 720 }: { children: ReactNode; ma
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-cream)" }}>
       <header className="app-nav">
-        <div
-          className="flex items-center justify-between"
-          style={{ maxWidth: 1080, margin: "0 auto", padding: "0 24px", height: 64 }}
-        >
+        {/* Sizing lives in CSS, not inline, so the narrow-screen rules can
+            reach it - an inline height and padding would win over them. */}
+        <div className="app-nav-inner flex items-center justify-between">
           <Link to="/learn" className="flex items-center gap-2" style={{ textDecoration: "none" }}>
             <Spark size={18} spinning={false} />
             <span style={{ fontFamily: "var(--font-serif)", fontSize: 17, color: "var(--color-ink)" }}>
