@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
-import { Button } from "../components/Button";
 import { MarkdownContent } from "../components/MarkdownContent";
 import { InDepthWizard } from "../components/InDepthWizard";
 import { TopicPager, type TopicLink } from "../components/TopicPager";
@@ -14,6 +13,14 @@ import { CONTENT_MODES, MODE_LABELS, type ContentMode } from "../lib/contentMode
 function isContentMode(value: string | null): value is ContentMode {
   return value !== null && (CONTENT_MODES as string[]).includes(value);
 }
+
+/**
+ * How near the bottom counts as having reached it. Readers stop short of the
+ * literal last pixel, and the page has a footer's worth of chrome below the
+ * text, so requiring an exact bottom would leave topics unfinished for people
+ * who did read them.
+ */
+const BOTTOM_SLACK = 120;
 
 export function LearnTopic() {
   const { cert = "ccar-f", topicId = "" } = useParams();
@@ -38,6 +45,7 @@ export function LearnTopic() {
   const [prev, setPrev] = useState<TopicLink | null>(null);
   const [next, setNext] = useState<TopicLink | null>(null);
   const [loading, setLoading] = useState(true);
+  const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -60,10 +68,56 @@ export function LearnTopic() {
     window.scrollTo({ top: 0 });
   }, [topicId]);
 
-  async function markComplete() {
-    await apiFetch(`/courses/${cert}/topics/${topicId}/progress`, { method: "POST" });
+  // Finishing is something the reader does, not something they declare, so it
+  // is fired by reaching the end or moving on rather than by a button. Both
+  // triggers land here, and the ref makes it at-most-once per topic: the
+  // observer can fire repeatedly while someone scrolls around near the bottom,
+  // and paging forward from an already-finished topic should not re-post.
+  const markedRef = useRef(false);
+  const markComplete = useCallback(() => {
+    if (markedRef.current) return;
+    markedRef.current = true;
     setCompleted(true);
-  }
+    // Not awaited: this rides alongside a navigation the reader already
+    // started, and a slow write should never hold up the next page.
+    apiFetch(`/courses/${cert}/topics/${topicId}/progress`, { method: "POST" }).catch(() => {
+      // Progress is a convenience, not the content, so a failed write is not
+      // worth an error in the reader's face - but it must not leave the page
+      // claiming a tick the server never stored. Roll both back together so
+      // the next trigger can try again.
+      markedRef.current = false;
+      setCompleted(false);
+    });
+  }, [cert, topicId]);
+
+  // Re-arm per topic. Paging into an already-finished topic must not re-post,
+  // and paging into an unfinished one must be able to.
+  useEffect(() => {
+    markedRef.current = completed;
+  }, [topicId, completed]);
+
+  // Reaching the end of the text is the other way to finish. The sentinel sits
+  // directly after the content, so what counts is the end of the topic rather
+  // than the end of the page furniture below it.
+  useEffect(() => {
+    const sentinel = endRef.current;
+    if (!sentinel || loading || completed) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        // A topic short enough to fit on screen has its end visible the moment
+        // it loads, and completing on that would just be completing on open -
+        // which is the thing this is meant to avoid. Those finish via Next.
+        const scrollable =
+          document.documentElement.scrollHeight > window.innerHeight + BOTTOM_SLACK;
+        if (scrollable) markComplete();
+      },
+      { rootMargin: `0px 0px -${BOTTOM_SLACK}px 0px` }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loading, completed, markComplete, topicId]);
 
   if (loading) {
     return (
@@ -120,11 +174,16 @@ export function LearnTopic() {
         )}
       </div>
 
-      <Button onClick={markComplete} disabled={completed} variant={completed ? "secondary" : "primary"}>
-        {completed ? "Completed" : "Mark as complete"}
-      </Button>
+      {/* Marks the end of the topic itself, above the navigation below it. */}
+      <div ref={endRef} aria-hidden="true" />
 
-      <TopicPager cert={cert} mode={mode} prev={prev} next={next} />
+      {completed && (
+        <p className="text-sm" style={{ color: "var(--color-success)", margin: 0 }}>
+          ✓ Completed
+        </p>
+      )}
+
+      <TopicPager cert={cert} mode={mode} prev={prev} next={next} onAdvance={markComplete} />
 
       {wizardOpen && (
         <InDepthWizard

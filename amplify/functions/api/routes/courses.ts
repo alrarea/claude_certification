@@ -182,10 +182,20 @@ courseRoutes.get("/:cert/topics/:topicId", async (c) => {
   const localisedTitle = (t: Topic) => titleByTopic.get(t.id) ?? t.title;
   const asLink = (t: Topic | null) => (t === null ? null : { id: t.id, title: localisedTitle(t) });
 
+  // Viewing starts a topic but must never un-finish one. This used to write
+  // "in_progress" unconditionally, so re-opening a finished topic quietly
+  // reverted it and the course percentage went backwards - survivable while a
+  // button was the only way to finish, and not survivable now that reaching
+  // the end finishes it, because re-reading would undo the tick every time.
+  const existing = await prisma.userTopicProgress.findUnique({
+    where: { userId_topicId: { userId, topicId } },
+  });
+  const status = existing?.status === "completed" ? "completed" : "in_progress";
+
   const progress = await prisma.userTopicProgress.upsert({
     where: { userId_topicId: { userId, topicId } },
     update: {
-      status: "in_progress",
+      status,
       lastMode: mode,
       lastViewedAt: new Date(),
     },

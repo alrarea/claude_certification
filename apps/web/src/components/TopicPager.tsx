@@ -11,6 +11,12 @@ interface TopicPagerProps {
   mode: ContentMode;
   prev: TopicLink | null;
   next: TopicLink | null;
+  /**
+   * Called when the reader moves forward, which is what finishes a topic.
+   * Going back deliberately does not - returning to the previous page is not
+   * a statement about having finished this one.
+   */
+  onAdvance?: () => void;
 }
 
 /**
@@ -26,7 +32,7 @@ interface TopicPagerProps {
  * The current mode rides along in the link so paging does not silently drop
  * someone from Concise back into Normal.
  */
-export function TopicPager({ cert, mode, prev, next }: TopicPagerProps) {
+export function TopicPager({ cert, mode, prev, next, onAdvance }: TopicPagerProps) {
   if (!prev && !next) return null;
 
   return (
@@ -46,7 +52,9 @@ export function TopicPager({ cert, mode, prev, next }: TopicPagerProps) {
         {prev && <PagerLink cert={cert} mode={mode} topic={prev} direction="prev" />}
       </div>
       <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-        {next && <PagerLink cert={cert} mode={mode} topic={next} direction="next" />}
+        {next && (
+          <PagerLink cert={cert} mode={mode} topic={next} direction="next" onClick={onAdvance} />
+        )}
       </div>
     </nav>
   );
@@ -57,16 +65,19 @@ function PagerLink({
   mode,
   topic,
   direction,
+  onClick,
 }: {
   cert: string;
   mode: ContentMode;
   topic: TopicLink;
   direction: "prev" | "next";
+  onClick?: () => void;
 }) {
   const isNext = direction === "next";
   return (
     <Link
       to={`/learn/${cert}/${topic.id}?mode=${mode}`}
+      onClick={onClick}
       className="card"
       style={{
         display: "flex",
