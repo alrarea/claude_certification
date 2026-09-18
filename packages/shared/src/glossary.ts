@@ -341,6 +341,46 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     ml: "എന്തെങ്കിലും തകർന്ന ശേഷമല്ല, വിശ്വസിക്കുന്നതിനു മുൻപ് ഫലം ഒരു നിയമവുമായി ഒത്തുനോക്കൽ",
     category: "config",
   },
+
+  // --- Found standing bare across the translated corpus once it was large
+  // enough to measure. Each is exam vocabulary the reader meets repeatedly, so
+  // each was worth an entry rather than an unexplained English word.
+  {
+    term: "agentic",
+    en: "describing a system where the model chooses its own next step rather than following fixed ones",
+    ml: "നിശ്ചിത ഘട്ടങ്ങൾ പിന്തുടരാതെ മോഡൽ സ്വന്തം അടുത്ത നടപടി തിരഞ്ഞെടുക്കുന്ന സിസ്റ്റത്തെ വിശേഷിപ്പിക്കുന്നത്",
+    category: "agents",
+  },
+  {
+    term: "workflow",
+    en: "a fixed sequence of steps your code controls, with the model called at set points",
+    ml: "നിങ്ങളുടെ കോഡ് നിയന്ത്രിക്കുന്ന നിശ്ചിത ഘട്ടങ്ങളുടെ ക്രമം — നിശ്ചിത ഇടങ്ങളിൽ മോഡലിനെ വിളിക്കുന്നു",
+    category: "agents",
+  },
+  {
+    term: "turn",
+    en: "one exchange in a conversation — the request and the reply that answers it",
+    ml: "ഒരു സംഭാഷണത്തിലെ ഒരു കൈമാറ്റം — ഒരു അഭ്യർഥനയും അതിനുള്ള മറുപടിയും",
+    category: "api",
+  },
+  {
+    term: "caching",
+    en: "reusing work already done on identical content instead of processing it again",
+    ml: "ഒരേ ഉള്ളടക്കത്തിൽ ഇതിനകം ചെയ്ത ജോലി വീണ്ടും പ്രോസസ്സ് ചെയ്യാതെ വീണ്ടും ഉപയോഗിക്കൽ",
+    category: "caching",
+  },
+  {
+    term: "few-shot",
+    en: "giving the model a handful of worked examples so it copies the pattern",
+    ml: "മാതൃക പകർത്താൻ മോഡലിന് ഏതാനും പൂർത്തിയാക്കിയ ഉദാഹരണങ്ങൾ നൽകൽ",
+    category: "config",
+  },
+  {
+    term: "hallucination",
+    en: "the model stating something confidently that its sources do not support",
+    ml: "ഉറവിടങ്ങൾ പിന്തുണയ്ക്കാത്ത ഒന്ന് മോഡൽ ഉറപ്പോടെ പറയുന്നത്",
+    category: "evaluation",
+  },
 ] as const;
 
 /**
