@@ -32,7 +32,19 @@ import {
   type ContentMode,
   type Locale,
 } from "@claude-cert/shared";
-import { prisma } from "../src/client";
+import { prisma, type Topic } from "../src/client";
+
+/**
+ * Same normalisation export-topic-content.ts uses for its folder names, so a
+ * section resolves by what it is called rather than by exact punctuation.
+ */
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[‐-―]/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 const REPO_ROOT = resolve(__dirname, "../../..");
 
@@ -122,8 +134,41 @@ async function resolveTopicId(fm: FrontMatter): Promise<{ id: string; title: str
 
   const isOverview = !fm.subtopic || fm.subtopic === "overview";
 
+  // The exam-logistics sections - registration, policies, sample questions,
+  // revision checklists - have no exam domain, which is exactly what marks
+  // them as logistics rather than subject matter. They used to be
+  // unaddressable here: this script keys off (cert, domain, subtopic), so the
+  // only way they ever reached the database was migrate-guides.ts reading the
+  // source HTML. That was survivable while they existed in English only, and
+  // stopped being survivable the moment they were translated.
+  //
+  // They are flat sections with no children, so a title is enough to name one.
+  // Matching is on the slug rather than the string so that punctuation the
+  // exporter or an editor may normalise - an em dash for a hyphen, a stray
+  // double space - does not turn into "no such topic".
   if (!fm.domain) {
-    throw new ContentError("front matter needs `domain` (e.g. D1) to resolve a topic");
+    if (!isOverview) {
+      throw new ContentError(
+        `\`subtopic: ${fm.subtopic}\` needs a \`domain\`; only a flat section may omit it`
+      );
+    }
+    if (!fm.title) {
+      throw new ContentError("front matter needs `domain`, or a `title` naming a flat section");
+    }
+    const flat = await prisma.topic.findMany({
+      where: { certificationId: certification.id, parentTopicId: null, examDomain: null },
+    });
+    const wanted = slugify(fm.title);
+    const matches = flat.filter((t: Topic) => slugify(t.title) === wanted);
+    if (matches.length === 0) {
+      throw new ContentError(
+        `no ${fm.cert} section titled "${fm.title}" without an exam domain`
+      );
+    }
+    if (matches.length > 1) {
+      throw new ContentError(`${matches.length} ${fm.cert} sections match "${fm.title}"`);
+    }
+    return { id: matches[0].id, title: matches[0].title };
   }
 
   const roots = await prisma.topic.findMany({
