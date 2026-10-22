@@ -9,7 +9,7 @@ export const OTP_MAX_SENDS_PER_HOUR = 5;
 export const ACCESS_TOKEN_TTL_MINUTES = 20;
 export const REFRESH_TOKEN_TTL_DAYS = 14;
 
-export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MIN_LENGTH = 6;
 
 export const EXAM_QUESTION_COUNT_PRESETS = [10, 20, 40, 60] as const;
 export const OPTION_LENGTH_IMBALANCE_THRESHOLD = 0.4; // 40%, per spec Section 10
