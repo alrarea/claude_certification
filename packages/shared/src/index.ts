@@ -1,4 +1,5 @@
 export * from "./constants";
+export * from "./password";
 export * from "./schemas/auth";
 export * from "./schemas/profile";
 export * from "./schemas/exam";

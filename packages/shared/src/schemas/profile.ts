@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PASSWORD_MIN_LENGTH } from "../constants";
+import { passwordSchema } from "../password";
 
 export const updateNameSchema = z.object({
   name: z.string().min(1).max(200),
@@ -8,11 +8,7 @@ export type UpdateNameInput = z.infer<typeof updateNameSchema>;
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z
-    .string()
-    .min(PASSWORD_MIN_LENGTH)
-    .regex(/[A-Za-z]/, "Password must contain at least one letter")
-    .regex(/[0-9]/, "Password must contain at least one number"),
+  newPassword: passwordSchema,
 });
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 

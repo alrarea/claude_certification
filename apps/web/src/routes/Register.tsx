@@ -6,6 +6,7 @@ import { useOnboardingGate } from "../lib/useOnboardingGate";
 import { AuthLayout } from "../components/AuthLayout";
 import { TextField } from "../components/TextField";
 import { PasswordField } from "../components/PasswordField";
+import { PasswordRules, passwordMeetsRules } from "../components/PasswordRules";
 import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
 import { OnboardingModal } from "../components/OnboardingModal";
@@ -24,6 +25,10 @@ export function Register() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!passwordMeetsRules(password)) {
+      setError("Password doesn't meet the requirements listed above.");
+      return;
+    }
     setSubmitting(true);
     try {
       const data = await apiFetch("/auth/register", {
@@ -65,6 +70,7 @@ export function Register() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <PasswordRules value={password} />
         {error && <Alert kind="error">{error}</Alert>}
         <Button type="submit" loading={submitting} block>
           {submitting ? "Creating account..." : "Create account"}

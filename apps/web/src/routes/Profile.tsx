@@ -5,6 +5,7 @@ import { AppShell } from "../components/AppShell";
 import { FullPageLoader } from "../components/FullPageLoader";
 import { TextField } from "../components/TextField";
 import { PasswordField } from "../components/PasswordField";
+import { PasswordRules, passwordMeetsRules } from "../components/PasswordRules";
 import { Button } from "../components/Button";
 import { Alert } from "../components/Alert";
 
@@ -47,6 +48,10 @@ export function Profile() {
   async function onChangePassword(e: FormEvent) {
     e.preventDefault();
     setStatus((s) => ({ ...s, password: null }));
+    if (!passwordMeetsRules(newPassword)) {
+      setStatus((s) => ({ ...s, password: "New password doesn't meet the requirements" }));
+      return;
+    }
     try {
       await apiFetch("/profile/password", {
         method: "POST",
@@ -130,6 +135,7 @@ export function Profile() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
+          <PasswordRules value={newPassword} />
           <div className="flex items-center gap-3">
             <Button size="sm" variant="secondary">
               Change password

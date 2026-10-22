@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { ALLOWED_EMAIL_DOMAINS, OTP_LENGTH, PASSWORD_MIN_LENGTH } from "../constants";
+import { ALLOWED_EMAIL_DOMAINS, OTP_LENGTH } from "../constants";
+import { passwordSchema as password } from "../password";
 
 const companyEmail = z
   .string()
@@ -8,12 +9,6 @@ const companyEmail = z
     (email) => ALLOWED_EMAIL_DOMAINS.some((domain) => email.toLowerCase().endsWith(`@${domain}`)),
     { message: `Email must be @${ALLOWED_EMAIL_DOMAINS.join(" or @")}` }
   );
-
-const password = z
-  .string()
-  .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
-  .regex(/[A-Za-z]/, "Password must contain at least one letter")
-  .regex(/[0-9]/, "Password must contain at least one number");
 
 export const registerSchema = z.object({
   name: z.string().min(1).max(200),
