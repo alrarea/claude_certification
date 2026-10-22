@@ -61,6 +61,22 @@ export async function apiFetch(path: string, options: RequestInit = {}, retry = 
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error ?? "Request failed", data);
+  if (!res.ok) throw new ApiError(res.status, errorMessage(data.error), data);
   return data;
+}
+
+// Validation failures come back as zod's flatten() shape
+// ({ formErrors: string[], fieldErrors: { field: string[] } }), not a
+// string - passing that straight to Error() rendered "[object Object]".
+function errorMessage(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
+    const { formErrors = [], fieldErrors = {} } = error as {
+      formErrors?: string[];
+      fieldErrors?: Record<string, string[] | undefined>;
+    };
+    const messages = [...formErrors, ...Object.values(fieldErrors).flatMap((m) => m ?? [])];
+    if (messages.length) return messages.join(". ");
+  }
+  return "Request failed";
 }
